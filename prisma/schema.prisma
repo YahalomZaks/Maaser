@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String            @id @default(uuid())
+  name          String
+  email         String            @unique
+  emailVerified Boolean           @default(false)
+  password      String?
+  role          Role              @default(USER)
+  image         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  accounts      Account[]
+  donations     Donation[]
+  incomes       Income[]
+  loginHistory  LoginHistory[]
+  notifications Notification[]
+  sessions      Session[]
+  activityLogs  UserActivityLog[]
+  settings      UserSettings?
+
+  @@map("user")
+}
+
+model Income {
+  id             String   @id @default(uuid())
+  userId         String
+  personalIncome Float
+  spouseIncome   Float?
+  month          Int
+  year           Int
+  isOneTime      Boolean  @default(false)
+  oneTimeAmount  Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
+  @@map("income")
+}
+
+model Donation {
+  id               String       @id @default(uuid())
+  userId           String
+  organizationName String
+  amount           Float
+  donationType     DonationType
+  month            Int
+  year             Int
+  limitedCurrent   Int?
+  limitedTotal     Int?
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("donation")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification")
+}
+
+model UserSettings {
+  id                        String   @id @default(uuid())
+  userId                    String   @unique
+  language                  Language @default(HE)
+  currency                  Currency @default(ILS)
+  isFirstTimeSetupCompleted Boolean  @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model UserActivityLog {
+  id              String   @id @default(uuid())
+  userId          String
+  activityType    String // LOGIN, LOGOUT, PAGE_VIEW, etc.
+  description     String
+  page            String?
+  ipAddress       String?
+  userAgent       String?
+  metadata        Json? // Additional data as JSON
+  sessionDuration Int?
+  timestamp       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_activity_log")
+}
+
+model LoginHistory {
+  id           String    @id @default(uuid())
+  userId       String
+  loginTime    DateTime  @default(now())
+  logoutTime   DateTime?
+  ipAddress    String?
+  userAgent    String?
+  loginSuccess Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_history")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum DonationType {
+  UNLIMITED
+  LIMITED
+  ONE_TIME
+}
+
+enum NotificationType {
+  FINAL_PAYMENT
+  DEBT_REMINDER
+  SYSTEM_UPDATE
+  GENERAL
+}
+
+enum Language {
+  HE
+  EN
+}
+
+enum Currency {
+  ILS
+  USD
+}
