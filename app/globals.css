@@ -1,0 +1,943 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 1rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.645 0.246 16.439);
+  --primary-foreground: oklch(0.969 0.015 12.422);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.645 0.246 16.439);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.645 0.246 16.439);
+  --sidebar-primary-foreground: oklch(0.969 0.015 12.422);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.645 0.246 16.439);
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.645 0.246 16.439);
+  --primary-foreground: oklch(0.969 0.015 12.422);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.645 0.246 16.439);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.645 0.246 16.439);
+  --sidebar-primary-foreground: oklch(0.969 0.015 12.422);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.645 0.246 16.439);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+/* Animation CSS */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Code blur effect */
+.code-blur {
+  background: linear-gradient(
+    to top,
+    rgb(15, 23, 42) 0%,
+    rgba(15, 23, 42, 0) 100%
+  );
+}
+
+/* Background Grid Pattern */
+.bg-grid-pattern {
+  background-image: linear-gradient(
+      rgba(37, 99, 235, 0.03) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Welcome Page Animations */
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transitions for dashboard elements */
+.transition-all-300 {
+  transition: all 0.3s ease;
+}
+
+.transition-width-1000 {
+  transition: width 1s ease;
+}
+
+/* Disabled styling - Work with shadcn/ui components */
+.disabled-cursor {
+  cursor: not-allowed !important;
+}
+
+/* Override for form elements specifically */
+input[disabled],
+button[disabled],
+input:disabled,
+button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5;
+}
+
+/* Ensure cursor shows on parent elements when hovering over disabled children */
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+
+/* Additional specificity for disabled states */
+button[data-slot="button"]:disabled,
+input[data-slot="input"]:disabled {
+  cursor: not-allowed !important;
+}
+
+/* ==== WELCOME PAGE CUSTOM STYLES ==== */
+
+/* Welcome Page CSS Variables */
+.welcome-page {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #0891b2;
+  --accent: #059669;
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+  --gradient-accent: linear-gradient(135deg, #0891b2 0%, #059669 100%);
+  --gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+
+  /* Font and Layout */
+  font-family: "Inter", "Heebo", sans-serif;
+  line-height: 1.6;
+  color: var(--neutral-800);
+  background: var(--neutral-50);
+  overflow-x: hidden;
+  font-weight: 400;
+  scroll-behavior: smooth;
+}
+
+/* Background Grids and Gradients */
+.welcome-bg-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(
+      rgba(37, 99, 235, 0.03) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: -2;
+}
+
+.welcome-bg-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+      circle at 20% 50%,
+      rgba(37, 99, 235, 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(8, 145, 178, 0.05) 0%,
+      transparent 50%
+    );
+  z-index: -1;
+}
+
+/* Navigation Styles */
+.welcome-navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: var(--blur-md);
+  z-index: 1000;
+  border-bottom: 1px solid var(--neutral-200);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.welcome-nav-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcome-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+
+.welcome-logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--gradient-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.welcome-nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.welcome-nav-link {
+  text-decoration: none;
+  color: var(--neutral-600);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.welcome-nav-link:hover {
+  color: var(--primary);
+}
+
+.welcome-nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  transition: width 0.2s ease;
+}
+
+.welcome-nav-link:hover::after {
+  width: 100%;
+}
+
+.welcome-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.welcome-btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.welcome-btn-primary:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.welcome-btn-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--neutral-300);
+}
+
+.welcome-btn-secondary:hover {
+  background: var(--neutral-100);
+  border-color: var(--primary);
+}
+
+.welcome-btn-large {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+
+.welcome-btn-white {
+  background: white;
+  color: var(--neutral-900);
+}
+
+.welcome-btn-white:hover {
+  background: var(--neutral-100);
+}
+
+.welcome-language-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--neutral-100);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  color: var(--neutral-700);
+}
+
+.welcome-language-selector:hover {
+  background: var(--neutral-200);
+}
+
+/* Hero Section */
+.welcome-hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 2rem;
+  padding-top: 120px;
+}
+
+.welcome-hero-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem;
+  align-items: center;
+}
+
+.welcome-hero-content {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+
+.welcome-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--gradient-surface);
+  border: 1px solid var(--neutral-200);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  color: var(--neutral-700);
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.welcome-hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  color: var(--neutral-900);
+  letter-spacing: -0.02em;
+}
+
+.welcome-gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-hero-subtitle {
+  font-size: 1.2rem;
+  color: var(--neutral-600);
+  margin-bottom: 2.5rem;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+.welcome-hero-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.welcome-hero-note {
+  background: var(--gradient-surface);
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* Animation Container */
+.welcome-animation-container {
+  position: relative;
+  width: 500px;
+  height: 400px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+
+.welcome-financial-dashboard {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--neutral-200);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.welcome-dashboard-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--neutral-800);
+}
+
+.welcome-dashboard-status {
+  padding: 0.25rem 0.75rem;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.welcome-income-display {
+  background: var(--gradient-surface);
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.welcome-income-label {
+  font-size: 0.9rem;
+  color: var(--neutral-600);
+  margin-bottom: 0.5rem;
+}
+
+.welcome-income-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: 0.25rem;
+}
+
+.welcome-income-currency {
+  font-size: 0.8rem;
+  color: var(--neutral-500);
+}
+
+.welcome-donation-flow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-donation-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.welcome-step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.welcome-step-1 .welcome-step-icon {
+  background: var(--primary);
+}
+.welcome-step-2 .welcome-step-icon {
+  background: var(--secondary);
+}
+.welcome-step-3 .welcome-step-icon {
+  background: var(--accent);
+}
+
+.welcome-step-label {
+  font-size: 0.8rem;
+  color: var(--neutral-600);
+  text-align: center;
+}
+
+.welcome-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--neutral-200);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.welcome-progress-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 1s ease;
+}
+
+.welcome-transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--neutral-50);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s ease;
+}
+
+.welcome-transaction-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.welcome-transaction-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+}
+
+.welcome-transaction-details h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--neutral-800);
+  margin-bottom: 0.1rem;
+}
+
+.welcome-transaction-details p {
+  font-size: 0.8rem;
+  color: var(--neutral-500);
+}
+
+.welcome-transaction-amount {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Features Section */
+.welcome-features {
+  padding: 8rem 2rem;
+  background: white;
+}
+
+.welcome-features-container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.welcome-section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.welcome-section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--neutral-100);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  color: var(--neutral-700);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.welcome-section-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--neutral-900);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.welcome-section-subtitle {
+  font-size: 1.1rem;
+  color: var(--neutral-600);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.welcome-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.welcome-feature-card {
+  background: var(--gradient-surface);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid var(--neutral-200);
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.welcome-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--neutral-300);
+}
+
+.welcome-feature-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--gradient-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-feature-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--neutral-900);
+}
+
+.welcome-feature-description {
+  color: var(--neutral-600);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* CTA Section */
+.welcome-cta {
+  padding: 6rem 2rem;
+  background: var(--neutral-900);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-primary);
+  opacity: 0.1;
+}
+
+.welcome-cta-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-cta-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.welcome-cta-subtitle {
+  font-size: 1.1rem;
+  color: var(--neutral-300);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.welcome-cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Footer */
+.welcome-footer {
+  background: var(--neutral-50);
+  padding: 3rem 2rem 2rem;
+  border-top: 1px solid var(--neutral-200);
+}
+
+.welcome-footer-container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.welcome-footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.welcome-footer-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: 1rem;
+}
+
+.welcome-footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.welcome-footer-link {
+  color: var(--neutral-600);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.welcome-footer-link:hover {
+  color: var(--primary);
+}
+
+.welcome-footer-bottom {
+  padding-top: 2rem;
+  border-top: 1px solid var(--neutral-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--neutral-500);
+  font-size: 0.9rem;
+}
+
+.welcome-feedback-btn {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  width: 56px;
+  height: 56px;
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.welcome-feedback-btn:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .welcome-hero-container {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+
+  .welcome-animation-container {
+    width: 400px;
+    height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-nav-links {
+    display: none;
+  }
+
+  .welcome-hero-title {
+    font-size: 2.5rem;
+  }
+
+  .welcome-animation-container {
+    width: 320px;
+    height: 280px;
+  }
+
+  .welcome-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-cta-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .welcome-footer-bottom {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}

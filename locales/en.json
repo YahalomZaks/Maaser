@@ -1,0 +1,327 @@
+{
+  "welcome": {
+    "badge": "Built for the benefit of many - completely free",
+    "title": {
+      "main": "Are you also struggling with",
+      "highlight": "tithes",
+      "suffix": "every month?"
+    },
+    "subtitle": {
+      "problem": "Can't remember how many places you donate to? How much to each? And whether it even covers the tithes you need to give?",
+      "solution": "No more struggling!",
+      "description": "All your donations are organized in one place in a friendly and convenient way."
+    },
+    "buttons": {
+      "start": "Let's get started!",
+      "howItWorks": "How does it work?"
+    },
+    "note": "The system was developed for the benefit of many. No costs, no profit motives - just a tool to help you manage tithes easily.",
+    "dashboard": {
+      "title": "Tithe Tracking",
+      "status": "Active",
+      "income": {
+        "label": "Net Monthly Income",
+        "required": "Required Tithes"
+      },
+      "steps": {
+        "step1": "Income",
+        "step2": "Calculate", 
+        "step3": "Donate"
+      },
+      "transactions": {
+        "item1": {
+          "name": "Healthcare Fund",
+          "type": "Regular donation"
+        },
+        "item2": {
+          "name": "Yeshiva",
+          "type": "Monthly donation"
+        },
+        "item3": {
+          "name": "Help for needy",
+          "type": "Weekly donation"
+        }
+      }
+    },
+    "features": {
+      "badge": "How the system helps",
+      "title": "Solution to all tithe management problems",
+      "subtitle": "All the tools you need to manage your tithes easily and with complete confidence",
+      "items": {
+        "calculator": {
+          "title": "Always know how much to give",
+          "description": "The system automatically calculates how much tithe you need to give each month according to your income. No more doubts or complicated calculations."
+        },
+        "management": {
+          "title": "All donations in one place",
+          "description": "Record all your donations - regular, one-time, or time-limited. Everything is organized and accessible with one click."
+        },
+        "balance": {
+          "title": "See if it covers everything",
+          "description": "The system clearly shows you if your donations cover the required tithes, or if you need to add more."
+        },
+        "notifications": {
+          "title": "Smart reminders",
+          "description": "Get reminders about ending donations, accumulated debts, and important updates - without being intrusive and without missing anything."
+        },
+        "tracking": {
+          "title": "Long-term tracking",
+          "description": "View the complete history of your tithes, track trends, and understand where the money goes month after month."
+        },
+        "mobile": {
+          "title": "Convenient to use anywhere",
+          "description": "The system works perfectly on mobile, tablet and computer. Update donations on the way to work or during a coffee break."
+        }
+      }
+    },
+    "cta": {
+      "title": "Ready to get started?",
+      "subtitle": "Join hundreds of users who are already saving time and managing tithes easily",
+      "buttons": {
+        "start": "Let's start now!",
+        "questions": "I have questions"
+      }
+    }
+  },
+  "home": {
+    "title": {
+      "main": "Advanced Tithe",
+      "highlight": "Management System", 
+      "suffix": "& Donations"
+    },
+    "description": "A comprehensive system for managing tithes and donations, tracking income, automatic reminders, and detailed reports. Everything in one place with maximum simplicity.",
+    "getStarted": "Get Started",
+    "features": {
+      "title": "Everything You Need for Tithe Management",
+      "description": "A comprehensive suite of tools to manage donations and track tithes simply and efficiently."
+    },
+    "getStartedSection": {
+      "title": "Ready to Get Started?",
+      "description": "Start managing your tithes and donations in an organized and professional way within minutes.",
+      "downloadButton": "Get Started"
+    }
+  },
+  "navigation": {
+    "appName": "Maaser Manager",
+    "dashboard": "Dashboard",
+    "income": "Income",
+    "donations": "Donations",
+    "settings": "Settings",
+    "admin": "Admin",
+    "profile": "Profile",
+    "logout": "Sign Out",
+    "login": "Sign In",
+    "signup": "Sign Up"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "required": "Required field",
+    "optional": "Optional",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "auth": {
+    "signin": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account", 
+      "email": "Email address",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "submit": "Sign In",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign up",
+      "orContinueWith": "Or continue with",
+      "loading": "Signing in...",
+      "success": "Sign in successful",
+      "error": "Sign in error", 
+      "invalidCredentials": "Invalid email or password",
+      "verificationEmailSent": "Verification email sent. Please check your inbox.",
+      "pleaseVerifyEmail": "Please verify your email address before signing in."
+    },
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign up here",
+      "error": "Sign in error",
+      "invalidCredentials": "Invalid email or password"
+    },
+    "signup": {
+      "title": "Sign up to Ma'aser Management System",
+      "name": "Full name",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Sign Up",
+      "hasAccount": "Already have an account?",
+      "signinLink": "Sign in here",
+      "error": "Sign up error",
+      "passwordMismatch": "Passwords don't match",
+      "weakPassword": "Password is too weak"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "email": "Email address",
+      "submit": "Send reset link",
+      "backToLogin": "Back to login",
+      "emailSent": "Password reset email sent"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard - Ma'aser Tracking",
+    "currentMonth": "Current Month",
+    "totalIncome": "Total Income",
+    "maaserToPay": "Ma'aser to Pay",
+    "maaserPaid": "Ma'aser Paid",
+    "balance": "Balance",
+    "debt": "Debt",
+    "cumulativeBalance": "Cumulative Balance",
+    "monthlyDonations": "Monthly Donations",
+    "noDonations": "No donations this month",
+    "addDonation": "Add Donation"
+  },
+  "income": {
+    "title": "Income Management",
+    "monthlyIncome": "Monthly Fixed Income",
+    "yourIncome": "Your Income",
+    "spouseIncome": "Spouse Income",
+    "totalIncome": "Total Income",
+    "maaserAmount": "Ma'aser Amount (10%)",
+    "oneTimeIncome": "One-time Income",
+    "addOneTime": "Add One-time Income",
+    "amount": "Amount",
+    "description": "Description",
+    "date": "Date",
+    "noOneTimeIncomes": "No one-time incomes",
+    "deleteConfirm": "Are you sure you want to delete this income?"
+  },
+  "donations": {
+    "title": "Donations Management",
+    "addDonation": "Add New Donation",
+    "organizationName": "Organization Name",
+    "amount": "Donation Amount",
+    "type": "Donation Type",
+    "types": {
+      "unlimited": "Unlimited (ongoing)",
+      "limited": "Limited (fixed payments)",
+      "oneTime": "One-time"
+    },
+    "details": "Additional Details",
+    "active": "Active",
+    "inactive": "Inactive",
+    "progress": "Progress",
+    "completed": "Completed",
+    "paymentOf": "Payment {current} of {total}",
+    "noDonations": "No donations recorded",
+    "deleteConfirm": "Are you sure you want to delete this donation?"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": {
+      "title": "Language",
+      "hebrew": "עברית",
+      "english": "English"
+    },
+    "currency": {
+      "title": "Currency",
+      "ils": "Israeli Shekel (₪)",
+      "usd": "US Dollar ($)"
+    },
+    "profile": {
+      "title": "Personal Information",
+      "name": "Full name",
+      "email": "Email address",
+      "changePassword": "Change Password"
+    },
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Error saving settings"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "totalUsers": "Total Users",
+      "activeUsers": "Active Users",
+      "systemHealth": "System Health",
+      "recentActivity": "Recent Activity"
+    },
+    "users": {
+      "title": "User Management",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "registrationDate": "Registration Date",
+      "lastLogin": "Last Login",
+      "status": "Status"
+    },
+    "logs": {
+      "title": "Activity Logs",
+      "user": "User",
+      "activity": "Activity",
+      "timestamp": "Time",
+      "ipAddress": "IP Address",
+      "details": "Details"
+    }
+  },
+  "firstTimeSetup": {
+    "welcome": {
+      "title": "Welcome to Ma'aser Management System!",
+      "description": "This system will help you manage and track your ma'aser (tithing) in a simple and organized way.",
+      "features": {
+        "track": "Track income and donations",
+        "calculate": "Automatic ma'aser calculation",
+        "organize": "Organize donations by types",
+        "notifications": "Payment notifications"
+      }
+    },
+    "income": {
+      "title": "Income Setup",
+      "yourIncome": "What is your monthly net income?",
+      "hasSpouse": "Do you have a spouse with income?",
+      "spouseIncome": "What is their monthly net income?"
+    },
+    "donations": {
+      "title": "Existing Donations",
+      "hasExisting": "Do you already donate to any organizations?",
+      "organizationName": "Organization/Place name",
+      "amount": "Donation amount",
+      "type": "Donation type"
+    },
+    "summary": {
+      "title": "Summary & Confirmation",
+      "monthlyIncome": "Monthly income",
+      "maaserAmount": "Monthly ma'aser",
+      "existingDonations": "Existing donations",
+      "ready": "All set! You can start using the system."
+    },
+    "navigation": {
+      "skip": "Skip this step",
+      "next": "Next",
+      "previous": "Previous",
+      "finish": "Start using the system"
+    }
+  },
+  "currency": {
+    "ils": "₪",
+    "usd": "$"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "minLength": "Must contain at least {min} characters",
+    "positiveNumber": "Must be a positive number",
+    "passwordMismatch": "Passwords don't match"
+  }
+}
