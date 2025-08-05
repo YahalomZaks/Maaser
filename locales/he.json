@@ -132,7 +132,13 @@
     "profile": "פרופיל",
     "logout": "התנתק",
     "login": "התחבר",
-    "signup": "הירשם"
+    "signup": "הירשם",
+    "features": "תכונות",
+    "technology": "טכנולוגיה"
+  },
+  "footer": {
+    "rights": "כל הזכויות שמורות",
+    "developedBy": "פותח בעם ישראל"
   },
   "auth": {
     "signin": {

@@ -44,6 +44,7 @@
 
 :root {
   --radius: 1rem;
+  --navbar-height: 80px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -282,6 +283,7 @@ input[data-slot="input"]:disabled {
   position: fixed;
   top: 0;
   width: 100%;
+  height: var(--navbar-height);
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: var(--blur-md);
   z-index: 1000;

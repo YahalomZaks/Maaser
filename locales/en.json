@@ -111,7 +111,13 @@
     "profile": "Profile",
     "logout": "Sign Out",
     "login": "Sign In",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "features": "Features",
+    "technology": "Technology"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "developedBy": "Developed with the people of Israel"
   },
   "common": {
     "loading": "Loading...",

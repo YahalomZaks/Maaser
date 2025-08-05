@@ -5,6 +5,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/providers/themeProviders";
+import Navbar from "@/components/shared/Navbar";
 
 import "./globals.css";
 
@@ -64,7 +65,10 @@ export default async function RootLayout({
 			<body className={`${latoFont.className} antialiased`}>
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					<ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-						{children}
+						<Navbar />
+						<main style={{ paddingTop: 'var(--navbar-height, 80px)' }}>
+							{children}
+						</main>
 						<Toaster richColors />
 					</ThemeProvider>
 				</NextIntlClientProvider>
