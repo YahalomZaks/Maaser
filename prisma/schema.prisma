@@ -20,6 +20,7 @@ model User {
   accounts      Account[]
   donations     Donation[]
   incomes       Income[]
+  variableIncomes VariableIncome[]
   loginHistory  LoginHistory[]
   notifications Notification[]
   sessions      Session[]
@@ -29,38 +30,25 @@ model User {
   @@map("user")
 }
 
-model Income {
-  id             String   @id @default(uuid())
-  userId         String
-  personalIncome Float
-  spouseIncome   Float?
-  month          Int
-  year           Int
-  isOneTime      Boolean  @default(false)
-  oneTimeAmount  Float?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, month, year])
-  @@map("income")
-}
-
 model Donation {
   id               String       @id @default(uuid())
   userId           String
   organizationName String
   amount           Float
+  currency         Currency     @default(ILS)
   donationType     DonationType
+  startDate        DateTime
   month            Int
   year             Int
-  limitedCurrent   Int?
-  limitedTotal     Int?
+  installmentsTotal Int?
+  installmentsPaid Int?
   isActive         Boolean      @default(true)
+  note             String?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, year, month])
   @@map("donation")
 }
 
@@ -79,16 +67,58 @@ model Notification {
 }
 
 model UserSettings {
-  id                        String   @id @default(uuid())
-  userId                    String   @unique
-  language                  Language @default(HE)
-  currency                  Currency @default(ILS)
-  isFirstTimeSetupCompleted Boolean  @default(false)
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                        String        @id @default(uuid())
+  userId                    String        @unique
+  language                  Language      @default(HE)
+  currency                  Currency      @default(ILS)
+  tithePercent              Float         @default(10)
+  fixedPersonalIncome       Float         @default(0)
+  fixedSpouseIncome         Float         @default(0)
+  includeSpouseIncome       Boolean       @default(false)
+  startingBalance           Float         @default(0)
+  carryStrategy             CarryStrategy @default(CARRY)
+  isFirstTimeSetupCompleted Boolean       @default(false)
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  user                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+model Income {
+  id             String         @id @default(uuid())
+  userId         String
+  personalIncome Float
+  spouseIncome   Float?
+  month          Int
+  year           Int
+  isOneTime      Boolean        @default(false)
+  oneTimeAmount  Float?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
+  @@map("income")
+}
+
+model VariableIncome {
+  id          String         @id @default(uuid())
+  userId      String
+  description String
+  amount      Float
+  currency    Currency       @default(ILS)
+  source      IncomeSource   @default(SELF)
+  date        DateTime
+  schedule    IncomeSchedule @default(ONE_TIME)
+  totalMonths Int?
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("variable_income")
 }
 
 model UserActivityLog {
@@ -171,8 +201,8 @@ enum Role {
 }
 
 enum DonationType {
-  UNLIMITED
-  LIMITED
+  RECURRING
+  INSTALLMENTS
   ONE_TIME
 }
 
@@ -191,4 +221,21 @@ enum Language {
 enum Currency {
   ILS
   USD
+}
+
+enum IncomeSchedule {
+  ONE_TIME
+  RECURRING
+  MULTI_MONTH
+}
+
+enum IncomeSource {
+  SELF
+  SPOUSE
+  OTHER
+}
+
+enum CarryStrategy {
+  CARRY
+  RESET
 }

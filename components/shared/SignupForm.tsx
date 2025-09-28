@@ -2,6 +2,7 @@
 
 import { AlertCircle, Check, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -50,6 +51,8 @@ const validatePassword = (password: string): PasswordValidity => {
 export function SignupForm() {
   const t = useTranslations("auth.signup");
   const locale = useLocale();
+  const router = useRouter();
+  const localePrefix = `/${locale}`;
   const [state, action, pending] = useActionState(signUpAction, undefined);
   const [formData, setFormData] = useState({
     name: "",
@@ -62,8 +65,10 @@ export function SignupForm() {
 
   useEffect(() => {
     if (state?.success) {
-      toast.success(state.message);
+      toast.success(t("success"));
       setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+      const destination = state.redirectTo ?? "/dashboard";
+      router.push(`${localePrefix}${destination}`);
     }
 
     if (state?.error) {
@@ -71,7 +76,7 @@ export function SignupForm() {
         icon: <AlertCircle className="h-4 w-4" />,
       });
     }
-  }, [state]);
+  }, [state, router, localePrefix, t]);
 
   const handleInputChange = useCallback(
     (field: "name" | "email" | "password" | "confirmPassword", value: string) => {
@@ -114,6 +119,16 @@ export function SignupForm() {
               <h1 className="text-2xl font-bold">{t("title")}</h1>
               <p className="text-balance text-muted-foreground">{t("subtitle")}</p>
             </div>
+
+            {state?.error ? (
+              <div
+                className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                role="alert"
+                aria-live="assertive"
+              >
+                {state.error}
+              </div>
+            ) : null}
 
             <div className="grid gap-2">
               <Label htmlFor="name">{t("name")}</Label>

@@ -8,9 +8,25 @@ export const SUPPORTED_CURRENCIES = ["ILS", "USD"] as const;
 export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
 export const DEFAULT_CURRENCY: CurrencyCode = "ILS";
 
+export const SUPPORTED_CARRY_STRATEGIES = ["CARRY", "RESET"] as const;
+export type CarryStrategy = (typeof SUPPORTED_CARRY_STRATEGIES)[number];
+export const DEFAULT_CARRY_STRATEGY: CarryStrategy = "CARRY";
+
+export interface FixedIncomeSettings {
+  personal: number;
+  spouse: number;
+  includeSpouse: boolean;
+}
+
 export interface UserSettingsData {
   language: LanguageCode;
   currency: CurrencyCode;
+  tithePercent: number;
+  fixedPersonalIncome: number;
+  fixedSpouseIncome: number;
+  includeSpouseIncome: boolean;
+  startingBalance: number;
+  carryStrategy: CarryStrategy;
   isFirstTimeSetupCompleted: boolean;
 }
 
@@ -43,13 +59,19 @@ export async function upsertUserSettings(
       update: {
         ...data,
         updatedAt: new Date(),
-      },
+      } as any,
       create: {
         userId,
         language: data.language || DEFAULT_LANGUAGE,
         currency: data.currency || DEFAULT_CURRENCY,
+        tithePercent: data.tithePercent ?? 10,
+        fixedPersonalIncome: data.fixedPersonalIncome ?? 0,
+        fixedSpouseIncome: data.fixedSpouseIncome ?? 0,
+        includeSpouseIncome: data.includeSpouseIncome ?? false,
+        startingBalance: data.startingBalance ?? 0,
+        carryStrategy: data.carryStrategy || DEFAULT_CARRY_STRATEGY,
         isFirstTimeSetupCompleted: data.isFirstTimeSetupCompleted || false,
-      },
+      } as any,
     });
 
     return settings;
@@ -81,6 +103,56 @@ export async function updateUserCurrency(userId: string, currency: CurrencyCode)
     return settings;
   } catch (error) {
     console.error("Error updating user currency:", error);
+    return null;
+  }
+}
+
+export async function updateTithePercent(userId: string, tithePercent: number) {
+  try {
+    const settings = await upsertUserSettings(userId, { tithePercent });
+    return settings;
+  } catch (error) {
+    console.error("Error updating tithe percent:", error);
+    return null;
+  }
+}
+
+export async function updateFixedIncome(
+  userId: string,
+  fixedIncome: FixedIncomeSettings
+) {
+  try {
+    const settings = await upsertUserSettings(userId, {
+      fixedPersonalIncome: fixedIncome.personal,
+      fixedSpouseIncome: fixedIncome.spouse,
+      includeSpouseIncome: fixedIncome.includeSpouse,
+    });
+    return settings;
+  } catch (error) {
+    console.error("Error updating fixed income:", error);
+    return null;
+  }
+}
+
+export async function updateCarryStrategy(
+  userId: string,
+  carryStrategy: CarryStrategy
+) {
+  try {
+    const settings = await upsertUserSettings(userId, { carryStrategy });
+    return settings;
+  } catch (error) {
+    console.error("Error updating carry strategy:", error);
+    return null;
+  }
+}
+
+export async function updateStartingBalance(userId: string, startingBalance: number) {
+  try {
+    const settings = await upsertUserSettings(userId, { startingBalance });
+    return settings;
+  } catch (error) {
+    console.error("Error updating starting balance:", error);
     return null;
   }
 }

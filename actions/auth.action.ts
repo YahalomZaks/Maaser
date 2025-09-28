@@ -9,6 +9,7 @@ type ActionState =
       error?: string;
       success?: boolean;
       message?: string;
+      redirectTo?: string;
     }
   | undefined;
 
@@ -44,8 +45,8 @@ export async function signUpAction(prevState: ActionState, formData: FormData) {
 
     return {
       success: true,
-      message:
-        "Sign up successful! Please check your email to verify your account.",
+      message: "Account created successfully.",
+      redirectTo: "/onboarding",
     };
   } catch (err) {
     console.error("Sign up error:", err);

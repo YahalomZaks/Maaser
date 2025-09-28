@@ -131,11 +131,26 @@
     "admin": "ניהול",
     "profile": "פרופיל",
     "logout": "התנתק",
+  "logoutSuccess": "התנתקת מהמערכת בהצלחה",
     "login": "התחבר",
     "signup": "הירשם",
     "features": "תכונות",
     "technology": "טכנולוגיה",
     "contact": "יצירת קשר"
+  },
+  "months": {
+    "january": "ינואר",
+    "february": "פברואר",
+    "march": "מרץ",
+    "april": "אפריל",
+    "may": "מאי",
+    "june": "יוני",
+    "july": "יולי",
+    "august": "אוגוסט",
+    "september": "ספטמבר",
+    "october": "אוקטובר",
+    "november": "נובמבר",
+    "december": "דצמבר"
   },
   "footer": {
     "rights": "כל הזכויות שמורות",
@@ -176,6 +191,7 @@
       "passwordMismatch": "הסיסמאות אינן תואמות",
       "weakPassword": "הסיסמה חלשה מדי",
       "pending": "מתבצעת הרשמה...",
+      "success": "החשבון נוצר בהצלחה! בואו נתחיל בהגדרה הראשונית.",
       "passwordRequirements": {
         "title": "דרישות סיסמה:",
         "length": "לפחות 6 תווים",
@@ -196,7 +212,7 @@
     }
   },
   "dashboard": {
-    "title": "דשבורד - מעקב מעשרות",
+    "title": "לוח מחוונים - מעקב מעשרות",
     "currentMonth": "החודש הנוכחי",
     "totalIncome": "סה\"כ הכנסה",
     "maaserToPay": "מעשר לתשלום",
@@ -206,7 +222,103 @@
     "cumulativeBalance": "יתרה מצטברת",
     "monthlyDonations": "תרומות החודש",
     "noDonations": "אין תרומות החודש",
-    "addDonation": "הוסף תרומה"
+    "addDonation": "הוסף תרומה",
+    "empty": {
+      "title": "אין עדיין נתונים",
+      "description": "לא נמצאו הכנסות או תרומות לתקופה שנבחרה.",
+      "hint": "הוסיפו הכנסות או תרומות כדי להתחיל לבנות את הסקירה.",
+      "actions": {
+        "income": "להוסיף הכנסות",
+        "donations": "להוסיף תרומות"
+      }
+    },
+    "overview": {
+      "badge": "שנת {year}",
+      "heading": "סקירה שנתית עבור {year}",
+      "subheading": "מעקב אחר חובות ותרומות חודשיים ב{currency}",
+      "tithePercent": "שיעור המעשר: {percent}%",
+      "carryStrategy": {
+        "carry": "מעבירים את היתרה לשנה הבאה",
+        "reset": "מאפסים את היתרה בסוף השנה"
+      },
+      "yearPickerLabel": "שנה"
+    },
+    "viewModes": {
+      "monthly": "תצוגה חודשית",
+      "yearly": "סיכום שנתי"
+    },
+    "cards": {
+      "income": {
+        "title": "הכנסה במטבע הבסיס"
+      },
+      "obligation": {
+        "title": "חובת המעשר",
+        "helper": "מחושב על פי {percent}% מההכנסה"
+      },
+      "donations": {
+        "title": "תרומות שנרשמו",
+        "helper": "סכומים שנספרים לטובת החובה בתקופה הזאת"
+      },
+      "balance": {
+        "title": "יתרה מצטברת",
+        "surplus": "אתם לפני היעד השנתי",
+        "debt": "נותר להשלים חלק מהמעשר השנתי"
+      },
+      "helperMonthly": "כולל את כל ההכנסות שהומרו לחודש {month} ({currency})",
+      "helperYearly": "כולל את כל ההכנסות שהומרו לאורך השנה ({currency})"
+    },
+    "progress": {
+      "title": "התקדמות התרומות",
+      "description": "מעקב אחר כיסוי החובה עבור {scope}",
+      "label": "התקדמות",
+      "actual": "תרומות עד כה",
+      "target": "חובה עד כה",
+      "note": "החישוב מתבסס על הכנסות ותרומות שהומרו למטבע הבסיס."
+    },
+    "table": {
+      "title": "פירוט חודשי",
+      "columns": {
+        "month": "חודש",
+        "income": "הכנסה",
+        "obligation": "חובת מעשר",
+        "donations": "תרומות",
+        "balance": "יתרה מצטברת",
+        "conversions": "המרות מטבע"
+      },
+      "conversionFlag": "{count} רשומות הומרו",
+      "noConversions": "אין המרות",
+      "status": {
+        "surplus": "עודף",
+        "debt": "חוב",
+        "even": "מאוזן"
+      }
+    },
+    "alerts": {
+      "conversions": {
+        "title": "המרות מטבע בשנה זו",
+        "description": "הסכומים המומרים מוצגים ב{currency}.",
+        "none": "לא בוצעו המרות עד כה.",
+        "item": "{count} רשומות · {sum}"
+      }
+    },
+    "actions": {
+      "title": "פעולות מהירות",
+      "description": "קפיצה מהירה לאזורים המרכזיים במערכת.",
+      "manageIncome": "ניהול הכנסות",
+      "manageDonations": "ניהול תרומות",
+      "openSettings": "פתיחת הגדרות",
+      "helper": "שער המרה בשימוש: 1$ ≈ {rate}₪"
+    },
+    "errors": {
+      "loadFailed": "לא הצלחנו לטעון את נתוני לוח הבקרה כעת.",
+      "retry": "נסו שוב"
+    },
+    "baseCurrency": {
+      "labels": {
+        "ils": "שקל חדש (₪)",
+        "usd": "דולר אמריקאי ($)"
+      }
+    }
   },
   "income": {
     "title": "ניהול הכנסות",
@@ -221,7 +333,84 @@
     "description": "תיאור",
     "date": "תאריך",
     "noOneTimeIncomes": "אין הכנסות חד פעמיות",
-    "deleteConfirm": "האם אתה בטוח שברצונך למחוק הכנסה זו?"
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק הכנסה זו?",
+    "headline": "מרחב עבודה לתכנון הכנסות",
+    "subheadline": "עקבו אחרי משכורות קבועות, הכנסות משתנות והתראות המרה לחישוב המעשר.",
+    "settings": {
+      "title": "העדפות פיננסיות",
+      "description": "קבעו את מטבע הבסיס ואחוז המעשר המשמשים לחישובים.",
+      "baseCurrency": "מטבע בסיס",
+      "baseCurrencyOptions": {
+        "ils": "שקל חדש (₪)",
+        "usd": "דולר אמריקאי ($)"
+      },
+      "baseCurrencyHelper": "כל ההכנסות מומרות למטבע זה לפי שער קבוע.",
+      "tithePercentLabel": "אחוז המעשר",
+      "tithePercentHelper": "האחוז שיוחל על ההכנסה כדי לחשב את החובה.",
+      "conversionNotice": "שער נוכחי: 1$ ≈ {rate}₪. הסכומים מומרם אוטומטית.",
+      "recalculateHint": "שינוי הגדרות אלו ישפיע על החישובים העתידיים."
+    },
+    "fixed": {
+      "title": "הכנסה חודשית קבועה",
+      "description": "תעדו משכורות או מלגות קבועות עבורכם ועבור בן/בת הזוג.",
+      "self": "ההכנסה החודשית שלך",
+      "spouse": "הכנסת בן/בת הזוג",
+      "includeSpouse": "כלול הכנסה של בן/בת הזוג",
+      "summary": "סה\"כ הכנסה חודשית קבועה"
+    },
+    "form": {
+      "title": "הוספת הכנסה משתנה",
+      "description": "רשמו בונוסים, פרויקטים חיצוניים או כל הכנסה שאינה קבועה.",
+      "reset": "ניקוי הטופס",
+      "descriptionLabel": "תיאור",
+      "amountLabel": "סכום",
+      "currencyLabel": "מטבע",
+      "sourceLabel": "מקור ההכנסה",
+      "dateLabel": "תאריך",
+      "scheduleLabel": "סוג התזמון",
+      "scheduleOptions": {
+        "oneTime": "חד פעמי",
+        "recurring": "חוזר",
+        "multiMonth": "פריסה על פני חודשים"
+      },
+      "totalMonthsLabel": "מספר החודשים",
+      "noteLabel": "הערות (אופציונלי)",
+      "submit": "הוסף הכנסה",
+      "errors": {
+        "descriptionRequired": "נא להוסיף תיאור למקור ההכנסה.",
+        "amountPositive": "הסכום חייב להיות גדול מאפס.",
+        "monthsRequired": "ספקו מספר חודשים עבור הכנסה בפריסה."
+      },
+      "success": "ההכנסה נוספה בהצלחה."
+    },
+    "sources": {
+      "self": "עצמי",
+      "spouse": "בן/בת זוג",
+      "other": "אחר"
+    },
+    "table": {
+      "title": "רשומת הכנסות משתנות",
+      "description": "כל רשומה מומרת למטבע הבסיס ונכללת בחישוב החודשי.",
+      "columns": {
+        "description": "תיאור",
+        "amount": "סכום מקורי",
+        "source": "מקור",
+        "date": "תאריך",
+        "schedule": "תזמון",
+        "baseAmount": "במטבע הבסיס"
+      },
+      "convertedFlag": "הומר למטבע הבסיס",
+      "monthCount": "{count} חודשים",
+      "empty": "אין עדיין הכנסות משתנות.",
+      "removed": "ההכנסה הוסרה."
+    },
+    "summary": {
+      "monthlyIncome": "סה\"כ הכנסה חודשית (לאחר המרה)",
+      "estimatedMaaser": "הערכת חובת המעשר",
+      "conversionTotal": "סכום שהומר החודש",
+      "noConversions": "אין המרות בשלב זה",
+      "helper": "ההערכה משלבת הכנסות קבועות ומשתנות לחודש."
+    }
   },
   "donations": {
     "title": "ניהול תרומות",
@@ -230,7 +419,7 @@
     "amount": "סכום התרומה",
     "type": "סוג התרומה",
     "types": {
-      "unlimited": "קבועה (ללא מגבלה)",
+      "unlimited": "קבועה (ללא מגבלת זמן)",
       "limited": "מוגבלת (מספר תשלומים)",
       "oneTime": "חד פעמית"
     },
@@ -241,14 +430,106 @@
     "completed": "הושלמה",
     "paymentOf": "תשלום {current} מתוך {total}",
     "noDonations": "אין תרומות רשומות",
-    "deleteConfirm": "האם אתה בטוח שברצונך למחוק תרומה זו?"
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק תרומה זו?",
+    "headline": "מרכז ניהול התרומות",
+    "subheadline": "ארגנו תרומות חד פעמיות, התחייבויות קבועות ותשלומים מתוכננים עם מודעות להמרות מטבע.",
+    "summary": {
+      "title": "סקירת התרומות הפעילות",
+      "description": "הסכומים מוצגים במטבע הבסיס שנבחר.",
+      "baseCurrencyLabel": "מטבע בסיס",
+      "baseCurrencyOptions": {
+        "ils": "שקל חדש (₪)",
+        "usd": "דולר אמריקאי ($)"
+      },
+      "conversionHint": "שער ייחוס: 1$ ≈ {rate}₪.",
+      "total": "סה\"כ תרומות (לאחר המרה)",
+      "active": "תרומות פעילות",
+      "averageProgress": "ממוצע התקדמות התשלומים",
+      "converted": "סכומים שהומרו",
+      "none": "אין המרות בשלב זה"
+    },
+    "form": {
+      "title": "הוספת תרומה",
+      "description": "תעדו התחייבות או תרומה חדשה.",
+      "reset": "ניקוי הטופס",
+      "organizationLabel": "שם הארגון או המטרה",
+      "amountLabel": "סכום",
+      "currencyLabel": "מטבע",
+      "typeLabel": "סוג תרומה",
+      "typeOptions": {
+        "oneTime": "חד פעמית",
+        "recurring": "קבועה",
+        "installments": "פריסת תשלומים"
+      },
+      "dateLabel": "תאריך התחלה",
+      "installmentsTotalLabel": "מספר תשלומים",
+      "installmentsPaidLabel": "תשלומים שבוצעו",
+      "noteLabel": "הערות (אופציונלי)",
+      "submit": "הוסף תרומה",
+      "errors": {
+        "organizationRequired": "נא להזין שם ארגון.",
+        "amountPositive": "הסכום חייב להיות גדול מאפס.",
+        "installmentsRequired": "מספר התשלומים חייב להיות לפחות 1."
+      },
+      "success": "התרומה נוספה בהצלחה."
+    },
+    "alerts": {
+      "title": "התראות מצב",
+      "description": "עקבו אחר נקודות חשובות בניהול התרומות.",
+      "progress": {
+        "title": "התקדמות תשלומים",
+        "description": "ממוצע השלמת התשלומים: {progress}%"
+      },
+      "conversions": {
+        "title": "תרומות שהומרו",
+        "description": "{count} תרומות הומרו · {sum}",
+        "none": "אין תרומות שהומרו בשלב זה."
+      },
+      "pauseReminder": {
+        "title": "הקפאת תרומות",
+        "description": "השהו תרומות שאינן פעילות כדי שלא ייכללו בחישובים."
+      }
+    },
+    "table": {
+      "title": "רשומות תרומה",
+      "description": "עקבו אחר כל התחייבות והתקדמותה עד להשלמה.",
+      "columns": {
+        "organization": "ארגון",
+        "type": "סוג",
+        "amount": "סכום",
+        "status": "סטטוס",
+        "progress": "התקדמות"
+      },
+      "installmentInfo": "תשלום {current} מתוך {total}",
+      "convertedFlag": "הומר למטבע הבסיס",
+      "baseAmount": "במטבע הבסיס: {amount}",
+      "status": {
+        "active": "פעילה",
+        "inactive": "מושהית"
+      },
+      "actions": {
+        "pause": "השהה תרומה",
+        "resume": "חדש תרומה"
+      },
+      "empty": "אין תרומות רשומות",
+      "removed": "התרומה הוסרה.",
+      "helper": "תרומות קבועות נחשבות פעילות עד שהן מופסקות או מסתיימות."
+    }
   },
   "settings": {
     "title": "הגדרות",
     "language": {
       "title": "שפה",
       "hebrew": "עברית",
-      "english": "English"
+      "english": "אנגלית",
+      "description": "בחרו את שפת הממשק וכיוון הכתיבה.",
+      "label": "שפת המערכת",
+      "options": {
+        "he": "עברית (ימין לשמאל)",
+        "en": "אנגלית (שמאל לימין)"
+      },
+      "helper": "שינוי השפה משפיע על תפריטים, טבלאות וזרימת הנגישות.",
+      "notice": "החלפת השפה תטען מחדש את לוח הבקרה בשפה שנבחרה."
     },
     "currency": {
       "title": "מטבע",
@@ -262,7 +543,71 @@
       "changePassword": "שינוי סיסמה"
     },
     "saveSuccess": "ההגדרות נשמרו בהצלחה",
-    "saveError": "שגיאה בשמירת ההגדרות"
+    "saveError": "שגיאה בשמירת ההגדרות",
+    "headline": "העדפות מערכת",
+    "subheadline": "הגדירו כיצד מנוע המעשר מטפל במטבעות, אחוזים ותזכורות.",
+    "profileSummary": {
+      "title": "ההגדרות הנוכחיות",
+      "description": "תצוגה מהירה של ההעדפות הפעילות שלך.",
+      "currencyLabel": "מטבע בסיס",
+      "currencyOptions": {
+        "ILS": "שקל חדש (₪)",
+        "USD": "דולר אמריקאי ($)"
+      },
+      "titheLabel": "אחוז מעשר",
+      "sampleAmount": "סכום לדוגמה (לאחר המרה)",
+      "helper": "שער המרה לדוגמה: 1$ ≈ {rate}₪."
+    },
+    "financial": {
+      "title": "כללי פיננסים",
+      "description": "שליטה במטבע הבסיס, אחוז המעשר והתנהגות סוף השנה.",
+      "baseCurrencyLabel": "מטבע בסיס",
+      "currencyOptions": {
+        "ils": "שקל חדש (₪)",
+        "usd": "דולר אמריקאי ($)"
+      },
+      "currencyHelper": "כל ההכנסות והתרומות מומרות למטבע זה לצורך חישובים.",
+      "titheLabel": "אחוז מעשר",
+      "titheHelper": "האחוז שמיושם על הכנסות בחישוב החיוב.",
+      "closingLabel": "טיפול בסוף שנה",
+      "closingOptions": {
+        "carry": {
+          "title": "גלגול יתרה",
+          "description": "מעבירים עודף או חוב לשנה האזרחית הבאה."
+        },
+        "reset": {
+          "title": "איפוס יתרה",
+          "description": "מתחילים כל שנה מחדש ומעבירים לארכיון את היתרה הקודמת."
+        }
+      },
+      "carryDebtForward": "גלגל יתרות שליליות לשנה הבאה"
+    },
+    "languageSectionTitle": "העדפות שפה",
+    "notifications": {
+      "title": "התראות",
+      "description": "בחרו אילו תזכורות תרצו לקבל.",
+      "monthlySummary": {
+        "title": "סיכום חודשי",
+        "description": "קבלו דוח חודשי עם הכנסות, תרומות ויתרה."
+      },
+      "conversionAlerts": {
+        "title": "התראות המרה",
+        "description": "קבלו הודעה כשמתבצעת המרה ממטבע אחר."
+      },
+      "endOfYear": {
+        "title": "תזכורת סוף שנה",
+        "description": "תזכורת לסגירת השנה ולבחירה בין גלגול או איפוס."
+      }
+    },
+    "conversionNotice": {
+      "title": "הודעת המרת מטבע",
+      "description": "ההמרות הן קירוב ומתבססות על השער שהוגדר.",
+      "warnings": "הציגו באנר אזהרה בעת המרת סכומים",
+      "helper": "מומלץ לבדוק ידנית המרות גדולות כדי לוודא דיוק."
+    },
+    "form": {
+      "success": "העדפות נשמרו."
+    }
   },
   "admin": {
     "title": "פנל ניהול",

@@ -3,28 +3,53 @@
 import {
 	ChartLine,
 	ChevronDown,
+	GaugeCircle,
+	HandCoins,
+	LayoutDashboard,
 	LogOut,
 	Menu,
 	Settings,
 	User,
+	UserCircle,
+	Wallet,
 	X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { signOut, useSession } from "@/lib/auth-client";
 
+import { Button } from "../ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+
 import { LanguageSwitcher } from "./LanguageSwitcher";
+
+type NavItem = {
+	key: string;
+	label: string;
+	icon: ReactNode;
+	href: string;
+	basePath: string;
+};
 
 const Navbar = () => {
 	const { data: session, isPending } = useSession();
 	const t = useTranslations("navigation");
 	const tCommon = useTranslations("common");
 	const locale = useLocale();
+	const router = useRouter();
 	const pathname = usePathname();
-	const [showUserMenu, setShowUserMenu] = useState(false);
+
 	const [isMounted, setIsMounted] = useState(false);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -34,106 +59,99 @@ const Navbar = () => {
 
 	useEffect(() => {
 		setIsMobileMenuOpen(false);
-		setShowUserMenu(false);
 	}, [pathname]);
 
-	const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
-	const toggleMobileMenu = useCallback(
-		() => setIsMobileMenuOpen((prev) => !prev),
-		[],
+	const localePrefix = `/${locale}`;
+	const isAuthenticated = Boolean(session);
+
+	const normalizedPath = useMemo(() => {
+		if (!pathname) {
+			return "";
+		}
+		return pathname.replace(/^\/(he|en)(?=\/|$)/, "");
+	}, [pathname]);
+
+	const authNavItems: NavItem[] = useMemo(() => {
+		if (!isAuthenticated) {
+			return [];
+		}
+		return [
+			{
+				key: "dashboard",
+				label: t("dashboard"),
+				icon: <LayoutDashboard className="h-4 w-4" />,
+				href: `${localePrefix}/dashboard`,
+				basePath: "/dashboard",
+			},
+			{
+				key: "income",
+				label: t("income"),
+				icon: <Wallet className="h-4 w-4" />,
+				href: `${localePrefix}/dashboard/income`,
+				basePath: "/dashboard/income",
+			},
+			{
+				key: "donations",
+				label: t("donations"),
+				icon: <HandCoins className="h-4 w-4" />,
+				href: `${localePrefix}/dashboard/donations`,
+				basePath: "/dashboard/donations",
+			},
+			{
+				key: "settings",
+				label: t("settings"),
+				icon: <Settings className="h-4 w-4" />,
+				href: `${localePrefix}/dashboard/settings`,
+				basePath: "/dashboard/settings",
+			},
+		];
+	}, [isAuthenticated, localePrefix, t]);
+
+	const isActive = useCallback(
+		(basePath: string) => {
+			if (!normalizedPath) {
+				return basePath === "/dashboard";
+			}
+			if (normalizedPath === "") {
+				return basePath === "/dashboard";
+			}
+			return normalizedPath === basePath || normalizedPath.startsWith(`${basePath}/`);
+		},
+		[normalizedPath],
 	);
 
-	const scrollToElement = useCallback(
-		(id: string) => {
-			const element = document.getElementById(id);
-			if (element) {
-				element.scrollIntoView({ behavior: "smooth", block: "start" });
-				closeMobileMenu();
-			}
-		},
-		[closeMobileMenu],
-	);
+	const handleLogout = useCallback(async () => {
+		await signOut({
+			fetchOptions: {
+				onSuccess: () => {
+					toast.success(t("logoutSuccess"));
+					router.push(`${localePrefix}/signin`);
+				},
+				onError: (error) => {
+					toast.error(error.error.message);
+				},
+			},
+		});
+		setIsMobileMenuOpen(false);
+	}, [localePrefix, router, t]);
+
+	const scrollToElement = useCallback((id: string) => {
+		const element = document.getElementById(id);
+		if (element) {
+			element.scrollIntoView({ behavior: "smooth", block: "start" });
+		}
+	}, []);
 
 	const scrollToFooter = useCallback(() => {
 		const footerElement = document.querySelector("footer");
 		if (footerElement) {
 			footerElement.scrollIntoView({ behavior: "smooth", block: "start" });
-			closeMobileMenu();
 		}
-	}, [closeMobileMenu]);
+	}, []);
 
-	const closeUserMenu = useCallback(() => setShowUserMenu(false), []);
-	const toggleUserMenu = useCallback(
-		() => setShowUserMenu((prev) => !prev),
-		[],
-	);
-	const handleSignOut = useCallback(() => {
-		signOut();
-		closeUserMenu();
-		closeMobileMenu();
-	}, [closeMobileMenu, closeUserMenu]);
-
-	const desktopAuthControls: ReactNode = useMemo(() => {
+	const publicAuthControls: ReactNode = useMemo(() => {
 		if (isPending) {
-			return (
-				<div className="welcome-btn welcome-btn-secondary">
-					{tCommon("loading")}
-				</div>
-			);
-		}
-
-		if (session) {
-			return (
-				<div className="relative">
-					<button
-						type="button"
-						onClick={toggleUserMenu}
-						className="welcome-btn welcome-btn-secondary flex items-center gap-2"
-					>
-						<User className="h-4 w-4" />
-						{session.user.name || session.user.email}
-						<ChevronDown className="h-4 w-4" />
-					</button>
-
-					{showUserMenu && (
-						<div className="welcome-user-menu">
-							<Link
-								href={`/${locale}/dashboard`}
-								className="welcome-user-menu-item"
-								onClick={closeUserMenu}
-							>
-								<ChartLine className="h-4 w-4" />
-								{t("dashboard")}
-							</Link>
-							<Link
-								href={`/${locale}/dashboard/profile`}
-								className="welcome-user-menu-item"
-								onClick={closeUserMenu}
-							>
-								<User className="h-4 w-4" />
-								{t("profile")}
-							</Link>
-							<Link
-								href={`/${locale}/dashboard/settings`}
-								className="welcome-user-menu-item"
-								onClick={closeUserMenu}
-							>
-								<Settings className="h-4 w-4" />
-								{t("settings")}
-							</Link>
-							<hr className="welcome-user-menu-divider" />
-							<button
-								type="button"
-								onClick={handleSignOut}
-								className="welcome-user-menu-item signout"
-							>
-								<LogOut className="h-4 w-4" />
-								{t("logout")}
-							</button>
-						</div>
-					)}
-				</div>
-			);
+			return <div className="welcome-btn welcome-btn-secondary">{tCommon("loading")}</div>;
 		}
 
 		return (
@@ -146,64 +164,133 @@ const Navbar = () => {
 				</Link>
 			</>
 		);
-	}, [closeUserMenu, handleSignOut, isPending, locale, session, showUserMenu, t, tCommon, toggleUserMenu]);
+	}, [isPending, locale, t, tCommon]);
 
-	const mobileAuthControls: ReactNode = useMemo(() => {
+	const publicMobileControls: ReactNode = useMemo(() => {
 		if (isPending) {
 			return <div className="welcome-mobile-auth-note">{tCommon("loading")}</div>;
 		}
 
-		if (session) {
-			return (
-				<div className="welcome-mobile-auth">
-					<div className="welcome-mobile-user">
-						<User className="h-4 w-4" />
-						<span>{session.user.name || session.user.email}</span>
-					</div>
-					<Link href={`/${locale}/dashboard`} onClick={closeMobileMenu} className="welcome-mobile-link">
-						{t("dashboard")}
-					</Link>
-					<Link href={`/${locale}/dashboard/profile`} onClick={closeMobileMenu} className="welcome-mobile-link">
-						{t("profile")}
-					</Link>
-					<Link href={`/${locale}/dashboard/settings`} onClick={closeMobileMenu} className="welcome-mobile-link">
-						{t("settings")}
-					</Link>
-					<button type="button" onClick={handleSignOut} className="welcome-mobile-link signout">
-						{t("logout")}
-					</button>
-				</div>
-			);
-		}
-
 		return (
 			<div className="welcome-mobile-auth-buttons">
-				<Link href={`/${locale}/signin`} onClick={closeMobileMenu} className="welcome-btn welcome-btn-secondary">
+				<Link href={`/${locale}/signin`} onClick={() => setIsMobileMenuOpen(false)} className="welcome-btn welcome-btn-secondary">
 					{t("login")}
 				</Link>
-				<Link href={`/${locale}/signup`} onClick={closeMobileMenu} className="welcome-btn welcome-btn-primary">
+				<Link href={`/${locale}/signup`} onClick={() => setIsMobileMenuOpen(false)} className="welcome-btn welcome-btn-primary">
 					{t("signup")}
 				</Link>
 			</div>
 		);
-	}, [closeMobileMenu, handleSignOut, isPending, locale, session, t, tCommon]);
+	}, [isPending, locale, t, tCommon]);
 
-	if (!isMounted) {
-		return (
-			<nav className="welcome-navbar" aria-hidden>
-				<div className="welcome-nav-container">
-					<div className="welcome-logo">
-						<div className="welcome-logo-icon">
-							<ChartLine className="h-6 w-6" />
-						</div>
-						<span>מעשרות</span>
+	const userName = session?.user?.name || session?.user?.email?.split("@")[0] || t("profile");
+	const userEmail = session?.user?.email;
+
+	const renderAuthenticatedNav = () => (
+		<nav className={`dashboard-navbar${isMobileMenuOpen ? " menu-open" : ""}`}>
+			<div className="dashboard-nav-container">
+				<div className="dashboard-logo">
+					<div className="dashboard-logo-icon">
+						<GaugeCircle className="h-5 w-5" />
 					</div>
+					<Link href={`${localePrefix}/dashboard`} className="dashboard-logo-link">
+						{t("appName")}
+					</Link>
 				</div>
-			</nav>
-		);
-	}
+				<div className="dashboard-nav-links">
+					{authNavItems.map((item) => (
+						<Link
+							key={item.key}
+							href={item.href}
+							onClick={() => setIsMobileMenuOpen(false)}
+							className={`dashboard-nav-link${isActive(item.basePath) ? " is-active" : ""}`}
+						>
+							<span className="dashboard-nav-link-icon" aria-hidden>
+								{item.icon}
+							</span>
+							<span className="dashboard-nav-link-label">{item.label}</span>
+						</Link>
+					))}
+				</div>
+				<div className="dashboard-actions">
+					<div className="dashboard-language">
+						<LanguageSwitcher />
+					</div>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="ghost" className="dashboard-user-trigger" aria-label={t("profile")}>
+								<UserCircle className="h-6 w-6" />
+								<div className="dashboard-user-meta">
+									<span className="dashboard-user-name">{userName}</span>
+									{userEmail ? <span className="dashboard-user-email">{userEmail}</span> : null}
+								</div>
+								<ChevronDown className="h-4 w-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-60">
+							<DropdownMenuLabel>{t("profile")}</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem asChild>
+								<Link href={`${localePrefix}/dashboard/profile`} className="flex items-center gap-2">
+									<User className="h-4 w-4" />
+									<span>{t("profile")}</span>
+								</Link>
+							</DropdownMenuItem>
+							<DropdownMenuItem asChild>
+								<Link href={`${localePrefix}/dashboard/settings`} className="flex items-center gap-2">
+									<Settings className="h-4 w-4" />
+									<span>{t("settings")}</span>
+								</Link>
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+								<LogOut className="h-4 w-4" />
+								<span>{t("logout")}</span>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+					<button
+						type="button"
+						className="dashboard-mobile-toggle"
+						onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+						aria-label="Toggle navigation"
+						aria-expanded={isMobileMenuOpen}
+					>
+						{isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+					</button>
+				</div>
+			</div>
+			{isMobileMenuOpen ? (
+				<div className="dashboard-mobile-menu">
+					<nav className="dashboard-mobile-links">
+						{authNavItems.map((item) => (
+							<Link
+								key={item.key}
+								href={item.href}
+								onClick={() => setIsMobileMenuOpen(false)}
+								className={`dashboard-mobile-link${isActive(item.basePath) ? " is-active" : ""}`}
+							>
+								<span className="inline-flex items-center gap-2">
+									{item.icon}
+									{item.label}
+								</span>
+							</Link>
+						))}
+					</nav>
+					<div className="dashboard-mobile-profile">
+						<p className="dashboard-mobile-name">{userName}</p>
+						{userEmail ? <p className="dashboard-mobile-email">{userEmail}</p> : null}
+					</div>
+					<button type="button" className="dashboard-mobile-logout" onClick={handleLogout}>
+						{t("logout")}
+					</button>
+					<LanguageSwitcher variant="mobile" onLocaleChange={() => setIsMobileMenuOpen(false)} />
+				</div>
+			) : null}
+		</nav>
+	);
 
-	return (
+	const renderPublicNav = () => (
 		<nav className={`welcome-navbar${isMobileMenuOpen ? " menu-open" : ""}`}>
 			<div className="welcome-nav-container">
 				<div className="welcome-logo">
@@ -216,24 +303,22 @@ const Navbar = () => {
 				</div>
 				<div className="welcome-nav-actions">
 					<div className="welcome-nav-links">
-						<button type="button" onClick={() => scrollToElement("features")}
-							className="welcome-nav-link">
+						<button type="button" onClick={() => scrollToElement("features")} className="welcome-nav-link">
 							{t("features")}
 						</button>
-						<button type="button" onClick={() => scrollToElement("tech")}
-							className="welcome-nav-link">
+						<button type="button" onClick={() => scrollToElement("tech")} className="welcome-nav-link">
 							{t("technology")}
 						</button>
 						<button type="button" onClick={scrollToFooter} className="welcome-nav-link">
 							{t("contact", { default: "" }) || "יצירת קשר"}
 						</button>
-						<LanguageSwitcher onLocaleChange={closeMobileMenu} />
-						{desktopAuthControls}
+						<LanguageSwitcher onLocaleChange={() => setIsMobileMenuOpen(false)} />
+						{publicAuthControls}
 					</div>
 					<button
 						type="button"
 						className="welcome-mobile-toggle"
-						onClick={toggleMobileMenu}
+						onClick={() => setIsMobileMenuOpen((prev) => !prev)}
 						aria-label="Toggle navigation"
 						aria-expanded={isMobileMenuOpen}
 					>
@@ -254,12 +339,29 @@ const Navbar = () => {
 							{t("contact", { default: "" }) || "יצירת קשר"}
 						</button>
 					</div>
-					<LanguageSwitcher variant="mobile" onLocaleChange={closeMobileMenu} />
-					{mobileAuthControls}
+					<LanguageSwitcher variant="mobile" onLocaleChange={() => setIsMobileMenuOpen(false)} />
+					{publicMobileControls}
 				</div>
 			)}
 		</nav>
 	);
+
+	if (!isMounted) {
+		return (
+			<nav className="welcome-navbar" aria-hidden>
+				<div className="welcome-nav-container">
+					<div className="welcome-logo">
+						<div className="welcome-logo-icon">
+							<ChartLine className="h-6 w-6" />
+						</div>
+						<span>מעשרות</span>
+					</div>
+				</div>
+			</nav>
+		);
+	}
+
+	return isAuthenticated ? renderAuthenticatedNav() : renderPublicNav();
 };
 
 export default Navbar;

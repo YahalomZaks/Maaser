@@ -76,13 +76,16 @@ export default async function RootLayout({
 				<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer />
 			</head>
 			<body
-				className={`${interFont.variable} ${heeboFont.variable} ${latoFont.variable} ${latoFont.className} antialiased`}
+				className={`${interFont.variable} ${heeboFont.variable} ${latoFont.variable} ${latoFont.className} antialiased bg-neutral-50 text-neutral-900 min-h-screen`}
 				suppressHydrationWarning
 			>
 				<NextIntlClientProvider locale={locale} messages={messages}>
-					<ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+						<ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
 						<Navbar />
-						<main style={{ paddingTop: "var(--navbar-height, 80px)" }}>
+							<main
+								className="relative min-h-screen bg-gradient-to-b from-white via-[#f5f8ff] to-[#eef2f8]"
+								style={{ paddingTop: "var(--navbar-height, 80px)" }}
+							>
 							{children}
 						</main>
 						<Toaster richColors />

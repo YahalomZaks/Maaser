@@ -19,6 +19,7 @@ export function LoginForm() {
 	const [isPending, startTransition] = useTransition();
 	const [show, setShow] = useState(false);
 	const [email, setEmail] = useState("");
+	const [formError, setFormError] = useState<string | null>(null);
 	const router = useRouter();
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -28,6 +29,7 @@ export function LoginForm() {
 		const password = formData.get("password") as string;
 
 		startTransition(async () => {
+			setFormError(null);
 			await signIn.email(
 				{
 					email,
@@ -43,13 +45,13 @@ export function LoginForm() {
 						toast.success(t('success'));
 					},
 					onError: (error) => {
-						if (error.error.status === 403) {
-							toast.error(error.error.message);
-							setShow(true);
-							return;
-						}
+						const message = error?.error?.message || t('error');
 						toast.dismiss();
-						toast.error(t('error'));
+						toast.error(message);
+						setFormError(message);
+						if (error?.error?.status === 403) {
+							setShow(true);
+						}
 					},
 				},
 			);
@@ -83,6 +85,11 @@ export function LoginForm() {
 								<h1 className="text-2xl font-bold">{t('title')}</h1>
 								<p className="text-balance text-muted-foreground">{t('subtitle')}</p>
 							</div>
+							{formError ? (
+								<div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert" aria-live="assertive">
+									{formError}
+								</div>
+							) : null}
 							<div className="grid gap-2">
 								<Label htmlFor="email">{t('email')}</Label>
 								<Input
@@ -92,6 +99,7 @@ export function LoginForm() {
 									onChange={(e) => {
 										setEmail(e.target.value);
 										setShow(false); // Reset show state on email change
+										setFormError(null);
 									}}
 									name="email"
 									placeholder={t('emailPlaceholder')}
@@ -105,7 +113,16 @@ export function LoginForm() {
 										{t('forgotPassword')}
 									</Link>
 								</div>
-								<Input id="password" disabled={isPending} type="password" name="password" required />
+								<Input
+									id="password"
+									disabled={isPending}
+									type="password"
+									name="password"
+									required
+									onChange={() => {
+										setFormError(null);
+									}}
+								/>
 							</div>
 							<Button type="submit" disabled={isPending} className="w-full cursor-pointer ">
 								{t('submit')}
