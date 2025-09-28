@@ -134,7 +134,8 @@
     "login": "התחבר",
     "signup": "הירשם",
     "features": "תכונות",
-    "technology": "טכנולוגיה"
+    "technology": "טכנולוגיה",
+    "contact": "יצירת קשר"
   },
   "footer": {
     "rights": "כל הזכויות שמורות",
@@ -161,8 +162,11 @@
     },
     "signup": {
       "title": "הרשמה למערכת ניהול מעשרות",
+      "subtitle": "הירשמו כדי להתחיל",
       "name": "שם מלא",
+      "namePlaceholder": "ישראל ישראלי",
       "email": "כתובת אימייל",
+      "emailPlaceholder": "example@email.com",
       "password": "סיסמה",
       "confirmPassword": "אימות סיסמה",
       "submit": "הירשם",
@@ -170,7 +174,18 @@
       "signinLink": "התחבר כאן",
       "error": "שגיאה בהרשמה",
       "passwordMismatch": "הסיסמאות אינן תואמות",
-      "weakPassword": "הסיסמה חלשה מדי"
+      "weakPassword": "הסיסמה חלשה מדי",
+      "pending": "מתבצעת הרשמה...",
+      "passwordRequirements": {
+        "title": "דרישות סיסמה:",
+        "length": "לפחות 6 תווים",
+        "lowercase": "אות קטנה",
+        "uppercase": "אות גדולה",
+        "number": "ספרה",
+        "special": "תו מיוחד",
+        "match": "הסיסמאות תואמות",
+        "mismatch": "הסיסמאות אינן תואמות"
+      }
     },
     "resetPassword": {
       "title": "איפוס סיסמה",

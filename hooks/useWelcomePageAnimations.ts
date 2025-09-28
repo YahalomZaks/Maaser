@@ -207,22 +207,7 @@ export const useWelcomePageAnimations = () => {
       });
     }
 
-    // Language selector
-    const languageSelector = document.querySelector(
-      ".welcome-language-selector"
-    ) as HTMLElement;
-    if (languageSelector) {
-      languageSelector.addEventListener("click", function (this: HTMLElement) {
-        const chevron = this.querySelector(".fa-chevron-down") as HTMLElement;
-        if (chevron) {
-          gsap.to(chevron, {
-            rotation: chevron.style.transform.includes("180") ? 0 : 180,
-            duration: 0.3,
-            ease: "power2.out",
-          });
-        }
-      });
-    }
+    // Language selector animation handled in component CSS
 
     // Button hover effects
     document.querySelectorAll(".welcome-btn").forEach((btn) => {

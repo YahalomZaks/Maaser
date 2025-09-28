@@ -2,7 +2,8 @@
 
 import { AlertCircle, Check, X } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { signUpAction } from "@/actions/auth.action";
@@ -11,189 +12,222 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+interface PasswordValidity {
+  checks: {
+    length: boolean;
+    lowercase: boolean;
+    uppercase: boolean;
+    number: boolean;
+    special: boolean;
+  };
+  score: number;
+  isValid: boolean;
+}
 
-// Password validation function
-const validatePassword = (password: string) => {
-	const checks = {
-		length: password.length >= 6,
-		lowercase: /[a-z]/.test(password),
-		uppercase: /[A-Z]/.test(password),
-		number: /\d/.test(password),
-		special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-	};
-	
-	const score = Object.values(checks).filter(Boolean).length;
-	return { checks, score, isValid: checks.length && score >= 3 };
+type PasswordCheck = keyof PasswordValidity["checks"];
+
+const PASSWORD_CHECK_ORDER: PasswordCheck[] = [
+  "length",
+  "lowercase",
+  "uppercase",
+  "number",
+  "special",
+];
+
+const validatePassword = (password: string): PasswordValidity => {
+  const checks = {
+    length: password.length >= 6,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  } satisfies PasswordValidity["checks"];
+
+  const score = PASSWORD_CHECK_ORDER.reduce((count, key) => (checks[key] ? count + 1 : count), 0);
+  return { checks, score, isValid: password.length > 0 && score >= 3 };
 };
 
 export function SignupForm() {
-	const [state, action, pending] = useActionState(signUpAction, undefined);
-	const [formData, setFormData] = useState({
-		name: "",
-		email: "",
-		password: "",
-		confirmPassword: ""
-	});
-	const [passwordValidation, setPasswordValidation] = useState(validatePassword(""));
-	const [showPasswordHelp, setShowPasswordHelp] = useState(false);
+  const t = useTranslations("auth.signup");
+  const locale = useLocale();
+  const [state, action, pending] = useActionState(signUpAction, undefined);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidity>(() => validatePassword(""));
+  const [showPasswordHelp, setShowPasswordHelp] = useState(false);
 
-	useEffect(() => {
-		if (state?.success) {
-			toast.success(state.message);
-			// Clear form only on success
-			setFormData({
-				name: "",
-				email: "",
-				password: "",
-				confirmPassword: ""
-			});
-		}
+  useEffect(() => {
+    if (state?.success) {
+      toast.success(state.message);
+      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+    }
 
-		if (state?.error) {
-			toast.error(state.error, {
-				icon: <AlertCircle className="h-4 w-4" />,
-			});
-			// Don't clear form on error - keep user's data
-		}
-	}, [state]);
+    if (state?.error) {
+      toast.error(state.error, {
+        icon: <AlertCircle className="h-4 w-4" />,
+      });
+    }
+  }, [state]);
 
-	const handleInputChange = (field: string, value: string) => {
-		setFormData(prev => ({ ...prev, [field]: value }));
-		
-		if (field === "password") {
-			setPasswordValidation(validatePassword(value));
-		}
-	};
+  const handleInputChange = useCallback(
+    (field: "name" | "email" | "password" | "confirmPassword", value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
 
-	const handleSubmit = (formData: FormData) => {
-		// The form should already have the correct values since we're using controlled inputs
-		action(formData);
-	};
+      if (field === "password") {
+        setPasswordValidation(validatePassword(value));
+      }
+    },
+    [],
+  );
 
-	return (
-		<div className="flex flex-col gap-6">
-			<Card className="overflow-hidden">
-				<CardContent className="max-w-lg mx-auto w-full">
-					<form className="md:p-8" action={handleSubmit}>
-						<div className="flex flex-col gap-6">
-							<div className="flex flex-col items-center text-center">
-								<h1 className="text-2xl font-bold">Create an account</h1>
-								<p className="text-balance text-muted-foreground">Sign up to get started</p>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="name">Full Name</Label>
-								<Input 
-									id="name" 
-									type="text" 
-									name="name" 
-									value={formData.name}
-									onChange={(e) => handleInputChange("name", e.target.value)}
-									disabled={pending} 
-									placeholder="John Doe" 
-									required 
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="email">Email</Label>
-								<Input 
-									id="email" 
-									type="email" 
-									name="email" 
-									value={formData.email}
-									onChange={(e) => handleInputChange("email", e.target.value)}
-									disabled={pending} 
-									placeholder="m@example.com" 
-									required 
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="password">Password</Label>
-								<Input 
-									id="password" 
-									name="password" 
-									type="password" 
-									value={formData.password}
-									onChange={(e) => handleInputChange("password", e.target.value)}
-									onFocus={() => setShowPasswordHelp(true)}
-									disabled={pending} 
-									required 
-								/>
-								{showPasswordHelp && (
-									<div className="mt-2 p-3 bg-muted rounded-md text-sm">
-										<div className="flex items-center gap-2 mb-2">
-											<span className="font-medium">Password requirements:</span>
-											{passwordValidation.isValid ? (
-												<Check className="h-4 w-4 text-green-500" />
-											) : (
-												<X className="h-4 w-4 text-red-500" />
-											)}
-										</div>
-										<div className="space-y-1">
-											<div className={`flex items-center gap-2 ${passwordValidation.checks.length ? 'text-green-600' : 'text-red-600'}`}>
-												{passwordValidation.checks.length ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-												<span>At least 6 characters</span>
-											</div>
-											<div className={`flex items-center gap-2 ${passwordValidation.checks.lowercase ? 'text-green-600' : 'text-gray-500'}`}>
-												{passwordValidation.checks.lowercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-												<span>Lowercase letter</span>
-											</div>
-											<div className={`flex items-center gap-2 ${passwordValidation.checks.uppercase ? 'text-green-600' : 'text-gray-500'}`}>
-												{passwordValidation.checks.uppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-												<span>Uppercase letter</span>
-											</div>
-											<div className={`flex items-center gap-2 ${passwordValidation.checks.number ? 'text-green-600' : 'text-gray-500'}`}>
-												{passwordValidation.checks.number ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-												<span>Number</span>
-											</div>
-											<div className={`flex items-center gap-2 ${passwordValidation.checks.special ? 'text-green-600' : 'text-gray-500'}`}>
-												{passwordValidation.checks.special ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-												<span>Special character</span>
-											</div>
-										</div>
-									</div>
-								)}
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="confirmPassword">Confirm Password</Label>
-								<Input 
-									id="confirmPassword" 
-									name="confirmPassword" 
-									type="password" 
-									value={formData.confirmPassword}
-									onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-									required 
-								/>
-								{formData.confirmPassword && formData.password !== formData.confirmPassword && (
-									<div className="flex items-center gap-2 text-red-600 text-sm mt-1">
-										<X className="h-3 w-3" />
-										<span>Passwords do not match</span>
-									</div>
-								)}
-								{formData.confirmPassword && formData.password === formData.confirmPassword && formData.password && (
-									<div className="flex items-center gap-2 text-green-600 text-sm mt-1">
-										<Check className="h-3 w-3" />
-										<span>Passwords match</span>
-									</div>
-								)}
-							</div>
-							<Button 
-								type="submit" 
-								className="w-full" 
-								disabled={pending || !passwordValidation.isValid || formData.password !== formData.confirmPassword}
-							>
-								{pending ? "Signing up..." : "Sign Up"}
-							</Button>
-							{/* Social login will be enabled when you add Google/GitHub credentials to .env */}
-							<div className="text-center text-sm">
-								Already have an account?{" "}
-								<Link href="/signin" className="underline underline-offset-4">
-									Sign in
-								</Link>
-							</div>
-						</div>
-					</form>
-				</CardContent>
-			</Card>
-		</div>
-	);
+  const handleSubmit = useCallback(
+    (payload: FormData) => {
+      action(payload);
+    },
+    [action],
+  );
+
+  const requirements = useMemo(
+    () => [
+      { key: "length" as const, label: t("passwordRequirements.length") },
+      { key: "lowercase" as const, label: t("passwordRequirements.lowercase") },
+      { key: "uppercase" as const, label: t("passwordRequirements.uppercase") },
+      { key: "number" as const, label: t("passwordRequirements.number") },
+      { key: "special" as const, label: t("passwordRequirements.special") },
+    ],
+    [t],
+  );
+
+  const passwordsMatch = formData.password.length > 0 && formData.password === formData.confirmPassword;
+  const passwordsMismatch = formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="overflow-hidden">
+        <CardContent className="mx-auto w-full max-w-lg">
+          <form action={handleSubmit} className="flex flex-col gap-6 md:p-8">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h1 className="text-2xl font-bold">{t("title")}</h1>
+              <p className="text-balance text-muted-foreground">{t("subtitle")}</p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="name">{t("name")}</Label>
+              <Input
+                id="name"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={(event) => handleInputChange("name", event.target.value)}
+                disabled={pending}
+                placeholder={t("namePlaceholder")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="email">{t("email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={(event) => handleInputChange("email", event.target.value)}
+                disabled={pending}
+                placeholder={t("emailPlaceholder")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="password">{t("password")}</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={(event) => handleInputChange("password", event.target.value)}
+                onFocus={() => setShowPasswordHelp(true)}
+                disabled={pending}
+                required
+              />
+              {showPasswordHelp && (
+                <div className="mt-2 rounded-md bg-muted p-3 text-sm">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="font-medium">{t("passwordRequirements.title")}</span>
+                    {passwordValidation.isValid ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <X className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    {requirements.map(({ key, label }) => {
+                      const passed = passwordValidation.checks[key];
+                      return (
+                        <div
+                          key={key}
+                          className={`flex items-center gap-2 ${passed ? "text-green-600" : "text-gray-500"}`}
+                        >
+                          {passed ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                          <span>{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(event) => handleInputChange("confirmPassword", event.target.value)}
+                required
+              />
+              {passwordsMismatch && (
+                <div className="mt-1 flex items-center gap-2 text-sm text-red-600">
+                  <X className="h-3 w-3" />
+                  <span>{t("passwordRequirements.mismatch")}</span>
+                </div>
+              )}
+              {passwordsMatch && (
+                <div className="mt-1 flex items-center gap-2 text-sm text-green-600">
+                  <Check className="h-3 w-3" />
+                  <span>{t("passwordRequirements.match")}</span>
+                </div>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={
+                pending ||
+                !passwordValidation.isValid ||
+                formData.password !== formData.confirmPassword
+              }
+            >
+              {pending ? t("pending") : t("submit")}
+            </Button>
+
+            <div className="text-center text-sm">
+              {t("hasAccount")} {" "}
+              <Link href={`/${locale}/signin`} className="underline underline-offset-4">
+                {t("signinLink")}
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

@@ -113,7 +113,8 @@
     "login": "Sign In",
     "signup": "Sign Up",
     "features": "Features",
-    "technology": "Technology"
+    "technology": "Technology",
+    "contact": "Contact"
   },
   "footer": {
     "rights": "All rights reserved",
@@ -161,8 +162,11 @@
     },
     "signup": {
       "title": "Sign up to Ma'aser Management System",
+      "subtitle": "Sign up to get started",
       "name": "Full name",
+      "namePlaceholder": "John Doe",
       "email": "Email address",
+      "emailPlaceholder": "you@email.com",
       "password": "Password",
       "confirmPassword": "Confirm password",
       "submit": "Sign Up",
@@ -170,7 +174,18 @@
       "signinLink": "Sign in here",
       "error": "Sign up error",
       "passwordMismatch": "Passwords don't match",
-      "weakPassword": "Password is too weak"
+      "weakPassword": "Password is too weak",
+      "pending": "Signing up...",
+      "passwordRequirements": {
+        "title": "Password requirements:",
+        "length": "At least 6 characters",
+        "lowercase": "Lowercase letter",
+        "uppercase": "Uppercase letter",
+        "number": "Number",
+        "special": "Special character",
+        "match": "Passwords match",
+        "mismatch": "Passwords do not match"
+      }
     },
     "resetPassword": {
       "title": "Reset Password",

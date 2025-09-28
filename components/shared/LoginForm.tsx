@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import { sendVerificationEmail, signIn } from "@/lib/auth-client";
 
 export function LoginForm() {
 	const t = useTranslations('auth.signin');
+	const locale = useLocale();
 	const [isPending, startTransition] = useTransition();
 	const [show, setShow] = useState(false);
 	const [email, setEmail] = useState("");
@@ -37,7 +38,7 @@ export function LoginForm() {
 						toast.loading(t('loading'));
 					},
 					onSuccess: () => {
-						router.push("/dashboard");
+						router.push(`/${locale}/dashboard`);
 						toast.dismiss();
 						toast.success(t('success'));
 					},
@@ -59,7 +60,7 @@ export function LoginForm() {
 		await sendVerificationEmail(
 			{
 				email,
-				callbackURL: "/login", // The redirect URL after verification
+				callbackURL: `/${locale}/signin`,
 			},
 			{
 				onError: (error) => {
@@ -100,7 +101,7 @@ export function LoginForm() {
 							<div className="grid gap-2">
 								<div className="flex items-center">
 									<Label htmlFor="password">{t('password')}</Label>
-									<Link href="/forget-password" className="ml-auto text-sm underline-offset-2 hover:underline">
+									<Link href={`/${locale}/forget-password`} className="ml-auto text-sm underline-offset-2 hover:underline">
 										{t('forgotPassword')}
 									</Link>
 								</div>
@@ -123,7 +124,7 @@ export function LoginForm() {
 							{/* <SocialLogin /> */}
 							<div className="text-center text-sm">
 								{t('noAccount')}{" "}
-								<Link href="/signup" className="underline underline-offset-4">
+								<Link href={`/${locale}/signup`} className="underline underline-offset-4">
 									{t('signupLink')}
 								</Link>
 							</div>

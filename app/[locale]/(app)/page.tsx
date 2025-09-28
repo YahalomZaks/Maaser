@@ -152,30 +152,6 @@ const HomePage = () => {
     <div className="welcome-bg-grid" />
     <div className="welcome-bg-gradient" />
 
-      {/* Navigation */}
-      <nav className="welcome-navbar">
-        <div className="welcome-nav-container">
-          <div className="welcome-logo">
-            <div className="welcome-logo-icon">
-              <i className="fas fa-chart-line" />
-            </div>
-            <span>מעשרות</span>
-          </div>
-          <div className="welcome-nav-links">
-            <a href="#features" className="welcome-nav-link">איך זה עוזר</a>
-            <a href="#about" className="welcome-nav-link">אודות</a>
-            <a href="#contact" className="welcome-nav-link">יצירת קשר</a>
-            <div className="welcome-language-selector">
-              <span>🇮🇱</span>
-              <span>עברית</span>
-              <i className="fas fa-chevron-down" style={{ fontSize: '0.8rem' }} />
-            </div>
-            <Link href={`/${locale}/signin`} className="welcome-btn welcome-btn-secondary">התחבר</Link>
-            <Link href={`/${locale}/signup`} className="welcome-btn welcome-btn-primary">הירשם בחינם</Link>
-          </div>
-        </div>
-      </nav>
-      
       {/* Hero Section */}
       <section className="welcome-hero">
         <div className="welcome-hero-container">
