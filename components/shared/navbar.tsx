@@ -1,46 +1,122 @@
 "use client";
 
+import { ChartLine, ChevronDown, LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
-import { useSession, signOut } from "@/lib/auth-client";
-import { useTranslations } from 'next-intl';
-import { ChevronDown, User, Settings, LogOut, ChartLine } from "lucide-react";
-import { useState } from "react";
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState, type ReactNode } from "react";
+
+import { signOut, useSession } from "@/lib/auth-client";
+
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const Navbar = () => {
 	const { data: session, isPending } = useSession();
 	const t = useTranslations('navigation');
+	const locale = useLocale();
 	const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-	const scrollToFeatures = () => {
-		const featuresSection = document.getElementById('features');
-		if (featuresSection) {
-			featuresSection.scrollIntoView({
-				behavior: 'smooth',
-				block: 'start'
-			});
-		}
-	};
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
-	const scrollToTechStack = () => {
-		const techSection = document.getElementById('tech');
-		if (techSection) {
-			techSection.scrollIntoView({
-				behavior: 'smooth',
-				block: 'start'
-			});
+	if (!isMounted) {
+		return (
+			<nav className="welcome-navbar" aria-hidden>
+				<div className="welcome-nav-container" />
+			</nav>
+		);
+	}
+
+	const scrollToElement = (id: string) => {
+		const element = document.getElementById(id);
+		if (element) {
+			element.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 	};
 
 	const scrollToFooter = () => {
 		const footerElement = document.querySelector('footer');
 		if (footerElement) {
-			footerElement.scrollIntoView({
-				behavior: 'smooth',
-				block: 'start'
-			});
+			footerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 	};
+
+	const closeUserMenu = () => setShowUserMenu(false);
+	const toggleUserMenu = () => setShowUserMenu((prev) => !prev);
+	const handleSignOut = () => {
+		signOut();
+		closeUserMenu();
+	};
+
+	let authControls: ReactNode;
+
+	if (isPending) {
+		authControls = <div className="welcome-btn welcome-btn-secondary">טוען...</div>;
+	} else if (session) {
+		authControls = (
+			<div className="relative">
+				<button
+					type="button"
+					onClick={toggleUserMenu}
+					className="welcome-btn welcome-btn-secondary flex items-center gap-2"
+				>
+					<User className="h-4 w-4" />
+					{session.user.name || session.user.email}
+					<ChevronDown className="h-4 w-4" />
+				</button>
+
+				{showUserMenu && (
+					<div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+						<Link
+							href={`/${locale}/dashboard`}
+							className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+							onClick={closeUserMenu}
+						>
+							<ChartLine className="h-4 w-4" />
+							{t('dashboard')}
+						</Link>
+						<Link
+							href={`/${locale}/dashboard/profile`}
+							className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+							onClick={closeUserMenu}
+						>
+							<User className="h-4 w-4" />
+							{t('profile')}
+						</Link>
+						<Link
+							href={`/${locale}/dashboard/settings`}
+							className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+							onClick={closeUserMenu}
+						>
+							<Settings className="h-4 w-4" />
+							{t('settings')}
+						</Link>
+						<hr className="border-gray-200" />
+						<button
+							type="button"
+							onClick={handleSignOut}
+							className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+						>
+							<LogOut className="h-4 w-4" />
+							{t('logout')}
+						</button>
+					</div>
+				)}
+			</div>
+		);
+	} else {
+		authControls = (
+			<>
+				<Link href={`/${locale}/signin`} className="welcome-btn welcome-btn-secondary">
+					{t('login')}
+				</Link>
+				<Link href={`/${locale}/signup`} className="welcome-btn welcome-btn-primary">
+					{t('signup')}
+				</Link>
+			</>
+		);
+	}
 
 	return (
 		<nav className="welcome-navbar">
@@ -49,27 +125,30 @@ const Navbar = () => {
 					<div className="welcome-logo-icon">
 						<ChartLine className="h-6 w-6" />
 					</div>
-					<Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+					<Link href={`/${locale}`} style={{ textDecoration: 'none', color: 'inherit' }}>
 						<span>מעשרות</span>
 					</Link>
 				</div>
 				
 				<div className="welcome-nav-links">
 					<button 
-						onClick={scrollToFeatures}
+						type="button"
+						onClick={() => scrollToElement('features')}
 						className="welcome-nav-link"
 						style={{ background: 'none', border: 'none', cursor: 'pointer' }}
 					>
 						{t('features')}
 					</button>
 					<button 
-						onClick={scrollToTechStack}
+						type="button"
+						onClick={() => scrollToElement('tech')}
 						className="welcome-nav-link"
 						style={{ background: 'none', border: 'none', cursor: 'pointer' }}
 					>
 						{t('technology')}
 					</button>
 					<button 
+						type="button"
 						onClick={scrollToFooter}
 						className="welcome-nav-link"
 						style={{ background: 'none', border: 'none', cursor: 'pointer' }}
@@ -78,70 +157,7 @@ const Navbar = () => {
 					</button>
 					
 					<LanguageSwitcher />
-					
-					{isPending ? (
-						<div className="welcome-btn welcome-btn-secondary">טוען...</div>
-					) : session ? (
-						<div className="relative">
-							<button
-								onClick={() => setShowUserMenu(!showUserMenu)}
-								className="welcome-btn welcome-btn-secondary flex items-center gap-2"
-							>
-								<User className="h-4 w-4" />
-								{session.user.name || session.user.email}
-								<ChevronDown className="h-4 w-4" />
-							</button>
-							
-							{showUserMenu && (
-								<div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-									<Link
-										href="/dashboard"
-										className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
-										onClick={() => setShowUserMenu(false)}
-									>
-										<ChartLine className="h-4 w-4" />
-										{t('dashboard')}
-									</Link>
-									<Link
-										href="/dashboard/profile"
-										className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-										onClick={() => setShowUserMenu(false)}
-									>
-										<User className="h-4 w-4" />
-										{t('profile')}
-									</Link>
-									<Link
-										href="/dashboard/settings"
-										className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-										onClick={() => setShowUserMenu(false)}
-									>
-										<Settings className="h-4 w-4" />
-										{t('settings')}
-									</Link>
-									<hr className="border-gray-200" />
-									<button
-										onClick={() => {
-											signOut();
-											setShowUserMenu(false);
-										}}
-										className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
-									>
-										<LogOut className="h-4 w-4" />
-										{t('logout')}
-									</button>
-								</div>
-							)}
-						</div>
-					) : (
-						<>
-							<Link href="/signin" className="welcome-btn welcome-btn-secondary">
-								{t('login')}
-							</Link>
-							<Link href="/signup" className="welcome-btn welcome-btn-primary">
-								{t('signup')}
-							</Link>
-						</>
-					)}
+					{authControls}
 				</div>
 			</div>
 		</nav>

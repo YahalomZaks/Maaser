@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { logPageView, getClientIP } from "@/lib/activity-logger";
+import type { NextRequest } from "next/server";
+
+import { logPageView } from "@/lib/activity-logger";
 import { auth } from "@/lib/auth";
 
 /**
@@ -73,7 +74,9 @@ export class SessionTracker {
 
   static getSessionDuration(userId: string): number {
     const session = this.sessions.get(userId);
-    if (!session) return 0;
+    if (!session) {
+      return 0;
+    }
 
     return Math.floor((Date.now() - session.startTime) / 1000); // Duration in seconds
   }

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
 import { auth } from "@/lib/auth";
 
 // Routes that require admin privileges
@@ -72,7 +74,7 @@ export async function authMiddleware(request: NextRequest) {
 }
 
 // Helper function to check if user is admin (for use in components)
-export async function isUserAdmin(userId: string): Promise<boolean> {
+export async function isUserAdmin(_userId: string): Promise<boolean> {
   try {
     // This would typically query the database
     // For now, we'll implement this in a separate utility

@@ -26,11 +26,9 @@ async function main() {
 
     if (admins.length > 0) {
       console.log("\n✅ Current admin users:");
-      admins.forEach((admin, index) => {
+      admins.forEach((adminUser: (typeof admins)[number], index: number) => {
         console.log(
-          `${index + 1}. ${admin.email} (${
-            admin.name
-          }) - Created: ${admin.createdAt.toLocaleDateString()}`
+          `${index + 1}. ${adminUser.email} (${adminUser.name}) - Created: ${adminUser.createdAt.toLocaleDateString()}`
         );
       });
     } else {

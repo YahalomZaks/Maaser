@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { logActivity, getClientIP } from "@/lib/activity-logger";
-import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+import { getClientIP, logActivity } from "@/lib/activity-logger";
 
 export async function POST(request: NextRequest) {
   try {

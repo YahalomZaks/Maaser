@@ -1,3 +1,6 @@
+import { createElement, type ReactNode } from "react";
+import { Fingerprint, KeyRound, Link2 } from "lucide-react";
+
 // Code snippets for different authentication strategies
 export const authCodeSnippets = {
 	oauth: `// OAuth authentication with multiple providers
@@ -134,6 +137,41 @@ export function MagicLinkForm() {
   );
 }`,
 };
+
+const iconClassName = "h-6 w-6 text-primary";
+
+type AuthTabId = keyof typeof authCodeSnippets;
+
+export interface AuthTab {
+  id: AuthTabId;
+  title: string;
+  description: string;
+  icon: ReactNode;
+}
+
+export const authTabs: AuthTab[] = [
+  {
+    id: "oauth",
+    title: "Social & OAuth",
+    description:
+      "Allow users to sign in with popular providers like Google, GitHub, or Microsoft in just a few clicks.",
+    icon: createElement(Fingerprint, { className: iconClassName }),
+  },
+  {
+    id: "emailPassword",
+    title: "Email & Password",
+    description:
+      "Offer the classic email and password experience with validation, errors, and secure handling built-in.",
+    icon: createElement(KeyRound, { className: iconClassName }),
+  },
+  {
+    id: "magicLink",
+    title: "Magic Link",
+    description:
+      "Provide a passwordless sign-in flow that sends a secure link for fast, frictionless access.",
+    icon: createElement(Link2, { className: iconClassName }),
+  },
+];
 
 // Code examples
 export const cloneCode = `git clone https://github.com/Abdullah-dev0/SecureStart.git`;

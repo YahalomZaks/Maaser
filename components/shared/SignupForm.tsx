@@ -11,7 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import SocialLogin from "./SocialLogin";
 
 // Password validation function
 const validatePassword = (password: string) => {
@@ -68,13 +67,6 @@ export function SignupForm() {
 
 	const handleSubmit = (formData: FormData) => {
 		// The form should already have the correct values since we're using controlled inputs
-		console.log("Form submission data:", {
-			name: formData.get("name"),
-			email: formData.get("email"),
-			password: formData.get("password") ? "***" : "(empty)",
-			confirmPassword: formData.get("confirmPassword") ? "***" : "(empty)"
-		});
-		
 		action(formData);
 	};
 

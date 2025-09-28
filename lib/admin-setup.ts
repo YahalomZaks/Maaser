@@ -1,5 +1,4 @@
 import { prismaClient } from "@/lib/prisma";
-import { Role } from "@prisma/client";
 
 /**
  * Set up first admin user based on environment variable
@@ -10,7 +9,7 @@ export async function setupFirstAdmin() {
     const adminEmail = process.env.FIRST_ADMIN_EMAIL;
 
     if (!adminEmail) {
-      console.log("No FIRST_ADMIN_EMAIL environment variable set");
+      console.warn("No FIRST_ADMIN_EMAIL environment variable set");
       return null;
     }
 
@@ -20,13 +19,12 @@ export async function setupFirstAdmin() {
     });
 
     if (!user) {
-      console.log(`User with email ${adminEmail} not found`);
+      console.warn(`User with email ${adminEmail} not found`);
       return null;
     }
 
     // If user is already admin, no need to update
     if (user.role === "ADMIN") {
-      console.log(`User ${adminEmail} is already an admin`);
       return user;
     }
 
@@ -35,8 +33,6 @@ export async function setupFirstAdmin() {
       where: { email: adminEmail },
       data: { role: "ADMIN" },
     });
-
-    console.log(`Successfully upgraded ${adminEmail} to admin role`);
     return updatedUser;
   } catch (error) {
     console.error("Error setting up first admin:", error);
@@ -56,7 +52,7 @@ export async function setFirstUserAsAdmin() {
     });
 
     if (existingAdmin) {
-      console.log("Admin already exists, skipping auto-admin setup");
+      console.warn("Admin already exists, skipping auto-admin setup");
       return existingAdmin;
     }
 
@@ -66,7 +62,7 @@ export async function setFirstUserAsAdmin() {
     });
 
     if (!firstUser) {
-      console.log("No users found");
+      console.warn("No users found");
       return null;
     }
 
@@ -76,7 +72,6 @@ export async function setFirstUserAsAdmin() {
       data: { role: "ADMIN" },
     });
 
-    console.log(`Successfully set first user ${firstUser.email} as admin`);
     return updatedUser;
   } catch (error) {
     console.error("Error setting first user as admin:", error);

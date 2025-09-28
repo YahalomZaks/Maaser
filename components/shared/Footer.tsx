@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { useTranslations } from 'next-intl';
 
 const Footer = () => {
-	const t = useTranslations('footer');
-
 	return (
 		<footer className="welcome-footer">
 			<div className="welcome-footer-container">

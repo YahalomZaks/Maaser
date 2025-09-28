@@ -159,11 +159,6 @@
       "verificationEmailSent": "Verification email sent. Please check your inbox.",
       "pleaseVerifyEmail": "Please verify your email address before signing in."
     },
-      "noAccount": "Don't have an account?",
-      "signupLink": "Sign up here",
-      "error": "Sign in error",
-      "invalidCredentials": "Invalid email or password"
-    },
     "signup": {
       "title": "Sign up to Ma'aser Management System",
       "name": "Full name",

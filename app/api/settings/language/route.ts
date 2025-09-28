@@ -1,8 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { updateUserLanguage } from "@/lib/user-settings";
-import { Language } from "@prisma/client";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
 import { logSettingsUpdate } from "@/lib/activity-logger";
+import { auth } from "@/lib/auth";
+import { SUPPORTED_LANGUAGES, updateUserLanguage } from "@/lib/user-settings";
+import type { LanguageCode } from "@/lib/user-settings";
+
+function normalizeLanguage(value: unknown): LanguageCode | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const upperValue = value.toUpperCase();
+  return SUPPORTED_LANGUAGES.includes(
+    upperValue as (typeof SUPPORTED_LANGUAGES)[number]
+  )
+    ? (upperValue as LanguageCode)
+    : null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,10 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { language } = body;
+    const language = normalizeLanguage(body.language);
 
-    // Validate language
-    if (!language || !Object.values(Language).includes(language)) {
+    if (!language) {
       return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
 

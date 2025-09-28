@@ -234,7 +234,7 @@ input[data-slot="input"]:disabled {
   --blur-md: blur(8px);
 
   /* Font and Layout */
-  font-family: "Inter", "Heebo", sans-serif;
+  font-family: var(--font-inter), var(--font-heebo), var(--font-lato), sans-serif;
   line-height: 1.6;
   color: var(--neutral-800);
   background: var(--neutral-50);

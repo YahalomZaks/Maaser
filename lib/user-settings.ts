@@ -1,9 +1,16 @@
 import { prismaClient } from "@/lib/prisma";
-import { Language, Currency } from "@prisma/client";
+
+export const SUPPORTED_LANGUAGES = ["HE", "EN"] as const;
+export type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number];
+export const DEFAULT_LANGUAGE: LanguageCode = "HE";
+
+export const SUPPORTED_CURRENCIES = ["ILS", "USD"] as const;
+export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
+export const DEFAULT_CURRENCY: CurrencyCode = "ILS";
 
 export interface UserSettingsData {
-  language: Language;
-  currency: Currency;
+  language: LanguageCode;
+  currency: CurrencyCode;
   isFirstTimeSetupCompleted: boolean;
 }
 
@@ -39,8 +46,8 @@ export async function upsertUserSettings(
       },
       create: {
         userId,
-        language: data.language || Language.HE,
-        currency: data.currency || Currency.ILS,
+        language: data.language || DEFAULT_LANGUAGE,
+        currency: data.currency || DEFAULT_CURRENCY,
         isFirstTimeSetupCompleted: data.isFirstTimeSetupCompleted || false,
       },
     });
@@ -55,7 +62,7 @@ export async function upsertUserSettings(
 /**
  * Update user language preference
  */
-export async function updateUserLanguage(userId: string, language: Language) {
+export async function updateUserLanguage(userId: string, language: LanguageCode) {
   try {
     const settings = await upsertUserSettings(userId, { language });
     return settings;
@@ -68,7 +75,7 @@ export async function updateUserLanguage(userId: string, language: Language) {
 /**
  * Update user currency preference
  */
-export async function updateUserCurrency(userId: string, currency: Currency) {
+export async function updateUserCurrency(userId: string, currency: CurrencyCode) {
   try {
     const settings = await upsertUserSettings(userId, { currency });
     return settings;
@@ -112,7 +119,7 @@ export async function needsFirstTimeSetup(userId: string): Promise<boolean> {
 export async function getUserLocale(userId: string): Promise<"he" | "en"> {
   try {
     const settings = await getUserSettings(userId);
-    return settings?.language === Language.EN ? "en" : "he";
+    return settings?.language === "EN" ? "en" : "he";
   } catch (error) {
     console.error("Error getting user locale:", error);
     return "he"; // Default to Hebrew

@@ -1,6 +1,7 @@
-import { prismaClient } from "@/lib/prisma";
-import { getCurrentSession } from "@/lib/auth-utils";
+import type { Prisma } from "@prisma/client";
 import type { NextRequest } from "next/server";
+
+import { prismaClient } from "@/lib/prisma";
 
 // Types for different activity types
 export type ActivityType =
@@ -18,13 +19,15 @@ export type ActivityType =
   | "PASSWORD_CHANGE"
   | "ADMIN_ACTION";
 
+type ActivityMetadata = Prisma.JsonValue;
+
 export interface ActivityLogData {
   userId: string;
   activityType: ActivityType;
   description: string;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: ActivityMetadata;
   page?: string;
   sessionDuration?: number;
 }
@@ -47,10 +50,6 @@ export async function logActivity(data: ActivityLogData) {
         timestamp: new Date(),
       },
     });
-
-    console.log(
-      `📝 Activity logged: ${data.activityType} for user ${data.userId}`
-    );
     return activity;
   } catch (error) {
     console.error("Error logging activity:", error);
@@ -183,12 +182,20 @@ export async function logSettingsUpdate(
   details: string,
   request?: NextRequest
 ) {
-  const activityType =
-    type === "SETTINGS"
-      ? "SETTINGS_UPDATE"
-      : type === "PROFILE"
-      ? "PROFILE_UPDATE"
-      : "PASSWORD_CHANGE";
+  let activityType: ActivityType;
+
+  switch (type) {
+    case "PROFILE":
+      activityType = "PROFILE_UPDATE";
+      break;
+    case "PASSWORD":
+      activityType = "PASSWORD_CHANGE";
+      break;
+    case "SETTINGS":
+    default:
+      activityType = "SETTINGS_UPDATE";
+      break;
+  }
 
   const ipAddress = getClientIP(request);
   const userAgent = request?.headers.get("user-agent") || undefined;
@@ -229,7 +236,9 @@ export async function logAdminAction(
  * Get client IP address from request
  */
 export function getClientIP(request?: NextRequest): string | undefined {
-  if (!request) return undefined;
+  if (!request) {
+    return undefined;
+  }
 
   // Try different headers for IP address
   const xForwardedFor = request.headers.get("x-forwarded-for");
@@ -285,24 +294,19 @@ export async function getAllUsersActivity(
   endDate?: Date
 ) {
   try {
-    const where: any = {};
-
-    if (activityType) {
-      where.activityType = activityType;
-    }
-
-    if (userId) {
-      where.userId = userId;
-    }
-
-    if (startDate || endDate) {
-      where.timestamp = {};
-      if (startDate) where.timestamp.gte = startDate;
-      if (endDate) where.timestamp.lte = endDate;
-    }
-
     const activities = await prismaClient.userActivityLog.findMany({
-      where,
+      where: {
+        ...(activityType ? { activityType } : {}),
+        ...(userId ? { userId } : {}),
+        ...(startDate || endDate
+          ? {
+              timestamp: {
+                ...(startDate ? { gte: startDate } : {}),
+                ...(endDate ? { lte: endDate } : {}),
+              },
+            }
+          : {}),
+      },
       include: {
         user: {
           select: {

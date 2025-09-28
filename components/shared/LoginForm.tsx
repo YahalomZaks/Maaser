@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { useTranslations } from 'next-intl';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { sendVerificationEmail, signIn } from "@/lib/auth-client";
 
-import SocialLogin from "./SocialLogin";
 
 export function LoginForm() {
 	const t = useTranslations('auth.signin');

@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware, APIError } from "better-auth/api";
-import { logLogin, logLogout } from "@/lib/activity-logger";
 
 // import { sendEmailAction } from "@/actions/sendEmail.action."; // temporarily disabled
 import { prismaClient } from "@/lib/prisma";
@@ -97,7 +96,6 @@ export const auth = betterAuth({
             where: { email },
             data: { role: "ADMIN" },
           });
-          console.log(`✅ Automatically set ${email} as admin`);
         } catch (error) {
           console.error("Error setting admin role:", error);
         }

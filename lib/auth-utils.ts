@@ -1,12 +1,17 @@
-import { auth } from "@/lib/auth";
-import { Role } from "@prisma/client";
-import type { NextRequest } from "next/server";
 import { headers } from "next/headers";
+import type { NextRequest } from "next/server";
+
+import { auth } from "@/lib/auth";
+
+export const USER_ROLES = ["USER", "ADMIN"] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
+export type AuthSession = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 /**
  * Get the current user session (for server components)
  */
-export async function getCurrentSession(request?: NextRequest) {
+export async function getCurrentSession(request?: NextRequest): Promise<AuthSession> {
   try {
     const headersList = request?.headers || (await headers());
 
@@ -24,13 +29,17 @@ export async function getCurrentSession(request?: NextRequest) {
  * Check if user has required role
  */
 export function hasRole(
-  userRole: Role | undefined,
-  requiredRole: Role
+  userRole: UserRole | undefined,
+  requiredRole: UserRole
 ): boolean {
-  if (!userRole) return false;
+  if (!userRole) {
+    return false;
+  }
 
   // Admin has access to everything
-  if (userRole === "ADMIN") return true;
+  if (userRole === "ADMIN") {
+    return true;
+  }
 
   // Check exact role match
   return userRole === requiredRole;
@@ -39,22 +48,44 @@ export function hasRole(
 /**
  * Check if user is admin
  */
-export function isAdmin(userRole: Role | undefined): boolean {
+export function isAdmin(userRole: UserRole | undefined): boolean {
   return userRole === "ADMIN";
 }
 
 /**
  * Check if user is authenticated
  */
-export function isAuthenticated(session: any): boolean {
-  return !!session?.user;
+export function isAuthenticated(session: unknown): boolean {
+  if (typeof session !== "object" || session === null) {
+    return false;
+  }
+
+  return "user" in session && Boolean((session as { user?: unknown }).user);
 }
 
 /**
  * Get user role from session
  */
-export function getUserRole(session: any): Role | undefined {
-  return session?.user?.role;
+export function getUserRole(session: unknown): UserRole | undefined {
+  if (typeof session !== "object" || session === null) {
+    return undefined;
+  }
+
+  const user = (session as { user?: unknown }).user;
+
+  if (typeof user !== "object" || user === null) {
+    return undefined;
+  }
+
+  const role = (user as { role?: unknown }).role;
+
+  if (typeof role !== "string") {
+    return undefined;
+  }
+
+  const normalizedRole = role.toUpperCase() as UserRole;
+
+  return USER_ROLES.includes(normalizedRole) ? normalizedRole : undefined;
 }
 
 /**
@@ -62,7 +93,7 @@ export function getUserRole(session: any): Role | undefined {
  */
 export function checkRouteAccess(
   pathname: string,
-  userRole: Role | undefined,
+  userRole: UserRole | undefined,
   isLoggedIn: boolean
 ): string | null {
   // Admin routes

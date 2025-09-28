@@ -1,7 +1,8 @@
 "use client";
 
+import { Bug, Lightbulb, Send, X } from "lucide-react";
 import { useState } from "react";
-import { MessageCircle, X, Bug, Lightbulb, Send } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +25,7 @@ const FeedbackButton = ({ className = "" }: FeedbackButtonProps) => {
     e.preventDefault();
     
     // Here you would normally send the feedback to your API
-    console.log("Feedback submitted:", {
+    console.warn("Feedback submitted:", {
       type: feedbackType,
       ...formData
     });
@@ -50,15 +51,27 @@ const FeedbackButton = ({ className = "" }: FeedbackButtonProps) => {
     setFormData({ name: "", email: "", message: "" });
   };
 
+  const getModalTitle = () => {
+    if (step === "select") {
+      return "דיווח ומשוב";
+    }
+
+    if (feedbackType === "bug") {
+      return "דיווח על תקלה";
+    }
+
+    return "הצעת שיפור";
+  };
+
   return (
     <>
       {/* Feedback Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="welcome-feedback-btn"
+        className={`welcome-feedback-btn ${className}`.trim()}
         title="יש הצעה או שאלה? נשמח לשמוע"
       >
-        <i className="fas fa-comment-dots"></i>
+  <i className="fas fa-comment-dots" />
       </button>
 
       {/* Modal */}
@@ -67,10 +80,7 @@ const FeedbackButton = ({ className = "" }: FeedbackButtonProps) => {
           <div className="bg-background rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold">
-                {step === "select" ? "דיווח ומשוב" : 
-                 feedbackType === "bug" ? "דיווח על תקלה" : "הצעת שיפור"}
-              </h2>
+              <h2 className="text-xl font-bold">{getModalTitle()}</h2>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors"

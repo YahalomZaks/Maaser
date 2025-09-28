@@ -1,17 +1,33 @@
 import type { Metadata } from "next";
-import { Lato } from "next/font/google";
-import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { Heebo, Inter, Lato } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
+import Navbar from "@/components/shared/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/providers/themeProviders";
-import Navbar from "@/components/shared/Navbar";
 
 import "./globals.css";
 
+const interFont = Inter({
+	variable: "--font-inter",
+	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700", "800"],
+	display: "swap",
+});
+
+const heeboFont = Heebo({
+	variable: "--font-heebo",
+	subsets: ["hebrew", "latin"],
+	weight: ["300", "400", "500", "600", "700"],
+	display: "swap",
+});
+
 const latoFont = Lato({
+	variable: "--font-lato",
 	subsets: ["latin"],
 	weight: ["400", "700"],
+	display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -50,23 +66,23 @@ export default async function RootLayout({
 }>) {
 	const locale = await getLocale();
 	const messages = await getMessages();
-	const isRTL = locale === 'he';
+	const isRTL = locale === "he";
 
 	return (
-		<html lang={locale} dir={isRTL ? 'rtl' : 'ltr'} suppressHydrationWarning>
+		<html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
 			<head>
-				<link rel="preconnect" href="https://fonts.googleapis.com" />
-				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-				<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 				<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 				<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer />
 				<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer />
 			</head>
-			<body className={`${latoFont.className} antialiased`}>
+			<body
+				className={`${interFont.variable} ${heeboFont.variable} ${latoFont.variable} ${latoFont.className} antialiased`}
+				suppressHydrationWarning
+			>
 				<NextIntlClientProvider locale={locale} messages={messages}>
 					<ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
 						<Navbar />
-						<main style={{ paddingTop: 'var(--navbar-height, 80px)' }}>
+						<main style={{ paddingTop: "var(--navbar-height, 80px)" }}>
 							{children}
 						</main>
 						<Toaster richColors />
