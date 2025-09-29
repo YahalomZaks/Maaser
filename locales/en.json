@@ -419,6 +419,8 @@
     "amount": "Donation Amount",
     "type": "Donation Type",
     "types": {
+      "recurring": "Recurring",
+      "installments": "Installments",
       "unlimited": "Unlimited (ongoing)",
       "limited": "Limited (fixed payments)",
       "oneTime": "One-time"
@@ -638,17 +640,21 @@
   },
   "firstTimeSetup": {
     "welcome": {
+      "badge": "Quick onboarding",
       "title": "Welcome to Ma'aser Management System!",
+      "subtitle": "Let's capture the essentials so your dashboard feels personal from the very first visit.",
       "description": "This system will help you manage and track your ma'aser (tithing) in a simple and organized way.",
       "features": {
         "track": "Track income and donations",
         "calculate": "Automatic ma'aser calculation",
         "organize": "Organize donations by types",
         "notifications": "Payment notifications"
-      }
+      },
+      "note": "All of the answers can be updated later—this is just a quick start so you're never looking at an empty screen."
     },
     "income": {
       "title": "Income Setup",
+      "description": "Set your base currency, tithe rate, and monthly income so calculations stay accurate.",
       "yourIncome": "What is your monthly net income?",
       "hasSpouse": "Do you have a spouse with income?",
       "spouseIncome": "What is their monthly net income?"
@@ -658,14 +664,22 @@
       "hasExisting": "Do you already donate to any organizations?",
       "organizationName": "Organization/Place name",
       "amount": "Donation amount",
-      "type": "Donation type"
+      "type": "Donation type",
+      "currency": "Currency",
+      "helper": "Capture any commitments you already have so we can include them in the first dashboard snapshot.",
+      "addButton": "Add donation",
+      "listTitle": "Donations you'll start with",
+      "empty": "No donations added yet.",
+      "note": "You can add as many donations as you need later from the Donations workspace—it only takes a few seconds."
     },
     "summary": {
       "title": "Summary & Confirmation",
+      "description": "Review the details, add any donations you already track, and you're ready to explore the dashboard.",
       "monthlyIncome": "Monthly income",
       "maaserAmount": "Monthly ma'aser",
       "existingDonations": "Existing donations",
-      "ready": "All set! You can start using the system."
+      "ready": "All set! You can start using the system.",
+      "note": "Need to tweak something? You can revisit all of these preferences from the income and donations pages at any time."
     },
     "navigation": {
       "skip": "Skip this step",
