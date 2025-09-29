@@ -13,6 +13,7 @@ import { convertCurrency, formatCurrency } from "@/lib/finance";
 import type { CurrencyCode, DonationEntry, DonationType } from "@/types/finance";
 
 const donationTypes: DonationType[] = ["oneTime", "recurring", "installments"];
+const INSTALLMENT_OPTIONS = Array.from({ length: 60 }, (_, index) => String(index + 1));
 
 interface DonationFormState {
 	organization: string;
@@ -20,7 +21,7 @@ interface DonationFormState {
 	currency: CurrencyCode;
 	type: DonationType;
 	startDate: string;
-	installmentsTotal: string;
+	installmentsRemaining: string;
 	installmentsPaid: string;
 	note: string;
 }
@@ -56,7 +57,7 @@ export function DonationsManager() {
 		currency: "ILS",
 		type: "recurring",
 		startDate: todayISO(),
-		installmentsTotal: "6",
+		installmentsRemaining: "6",
 		installmentsPaid: "0",
 		note: "",
 	});
@@ -188,7 +189,7 @@ export function DonationsManager() {
 			currency: baseCurrency,
 			type: "recurring",
 			startDate: todayISO(),
-			installmentsTotal: "6",
+			installmentsRemaining: "6",
 			installmentsPaid: "0",
 			note: "",
 		});
@@ -206,10 +207,28 @@ export function DonationsManager() {
 			toast.error(t("form.errors.amountPositive"));
 			return;
 		}
-		if (formState.type === "installments" && Number(formState.installmentsTotal) < 1) {
-			toast.error(t("form.errors.installmentsRequired"));
-			return;
+		if (formState.type === "installments") {
+			const remaining = Number(formState.installmentsRemaining);
+			const paid = Number(formState.installmentsPaid || 0);
+			if (!Number.isFinite(remaining) || remaining < 1) {
+				toast.error(t("form.errors.installmentsRequired"));
+				return;
+			}
+			if (!Number.isFinite(paid) || paid < 0) {
+				toast.error(t("form.errors.installmentsPaidNonNegative"));
+				return;
+			}
+			if (remaining + paid < 1) {
+				toast.error(t("form.errors.installmentsRequired"));
+				return;
+			}
 		}
+
+		const paidCount = formState.type === "installments" ? Math.max(0, Number(formState.installmentsPaid || 0)) : null;
+		const remainingCount = formState.type === "installments" ? Math.max(0, Number(formState.installmentsRemaining || 0)) : null;
+		const totalInstallments = formState.type === "installments" && remainingCount !== null && paidCount !== null
+			? remainingCount + paidCount
+			: null;
 
 		const payload = {
 			organization: formState.organization.trim(),
@@ -217,8 +236,8 @@ export function DonationsManager() {
 			currency: formState.currency,
 			type: formState.type,
 			startDate: formState.startDate,
-			installmentsTotal: formState.type === "installments" ? Number(formState.installmentsTotal) : null,
-			installmentsPaid: formState.type === "installments" ? Number(formState.installmentsPaid ?? 0) : null,
+			installmentsTotal: totalInstallments,
+			installmentsPaid: paidCount,
 			note: formState.note?.trim() || null,
 		};
 
@@ -415,15 +434,20 @@ export function DonationsManager() {
 							{formState.type === "installments" && (
 								<>
 									<div className="space-y-2">
-										<Label htmlFor="installments-total">{t("form.installmentsTotalLabel")}</Label>
-										<Input
-											type="number"
-											id="installments-total"
-											min={1}
-											value={formState.installmentsTotal}
-											onChange={(event) => handleFormChange("installmentsTotal", event.target.value)}
+										<Label htmlFor="installments-remaining">{t("form.installmentsRemainingLabel")}</Label>
+										<select
+											id="installments-remaining"
+											value={formState.installmentsRemaining}
+											onChange={(event) => handleFormChange("installmentsRemaining", event.target.value)}
+											className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 											required
-										/>
+										>
+											{INSTALLMENT_OPTIONS.map((option) => (
+												<option key={option} value={option}>
+													{option}
+												</option>
+											))}
+										</select>
 									</div>
 									<div className="space-y-2">
 										<Label htmlFor="installments-paid">{t("form.installmentsPaidLabel")}</Label>

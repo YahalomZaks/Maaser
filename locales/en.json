@@ -464,14 +464,15 @@
         "installments": "Installments"
       },
       "dateLabel": "Start date",
-      "installmentsTotalLabel": "Total installments",
+      "installmentsRemainingLabel": "Payments remaining",
       "installmentsPaidLabel": "Installments paid",
       "noteLabel": "Notes (optional)",
       "submit": "Add donation",
       "errors": {
         "organizationRequired": "Please provide the organization name.",
         "amountPositive": "Amount must be greater than zero.",
-        "installmentsRequired": "Installments must be at least 1."
+        "installmentsRequired": "Installments must be at least 1.",
+        "installmentsPaidNonNegative": "Installments paid can't be negative."
       },
       "success": "Donation added successfully."
     },
@@ -657,7 +658,8 @@
       "description": "Set your base currency, tithe rate, and monthly income so calculations stay accurate.",
       "yourIncome": "What is your monthly net income?",
       "hasSpouse": "Do you have a spouse with income?",
-      "spouseIncome": "What is their monthly net income?"
+      "spouseIncome": "What is their monthly net income?",
+      "helperNote": "You can always update or add more entries later from the Income page. If you don't have a fixed amount, add monthly variable income there each month."
     },
     "donations": {
       "title": "Existing Donations",
@@ -666,8 +668,10 @@
       "amount": "Donation amount",
       "type": "Donation type",
       "currency": "Currency",
+  "installmentsRemainingLabel": "How many payments are left?",
+  "installmentsRemainingNote": "{count} payments remaining",
       "helper": "Capture any commitments you already have so we can include them in the first dashboard snapshot.",
-      "addButton": "Add donation",
+      "addButton": "Save donation",
       "listTitle": "Donations you'll start with",
       "empty": "No donations added yet.",
       "note": "You can add as many donations as you need later from the Donations workspace—it only takes a few seconds."

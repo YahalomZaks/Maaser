@@ -29,6 +29,7 @@ interface DonationDraft {
   amount: string;
   currency: CurrencyCode;
   type: DonationType;
+  installmentsRemaining: string;
 }
 
 const STEP_ORDER = ["welcome", "income", "summary"] as const;
@@ -39,6 +40,8 @@ const BRAND_ICONS = [
   { Icon: Globe2, label: "Global reach" },
   { Icon: Building2, label: "Workspace" },
 ];
+
+const INSTALLMENT_OPTIONS = Array.from({ length: 36 }, (_, index) => String(index + 1));
 
 export function OnboardingWizard() {
   const locale = useLocale();
@@ -57,7 +60,7 @@ export function OnboardingWizard() {
     language: locale.toUpperCase(),
     currency: defaultCurrency,
     tithePercent: 10,
-    personalIncome: "",
+    personalIncome: "0",
     spouseIncome: "",
     includeSpouseIncome: false,
   });
@@ -67,6 +70,7 @@ export function OnboardingWizard() {
     amount: "",
     currency: defaultCurrency,
     type: "recurring",
+    installmentsRemaining: "6",
   });
 
   useEffect(() => {
@@ -134,7 +138,12 @@ export function OnboardingWizard() {
       return;
     }
     setDonations((prev) => [...prev, { ...donationDraft }]);
-    setDonationDraft((prev) => ({ ...prev, organization: "", amount: "" }));
+    setDonationDraft((prev) => ({
+      ...prev,
+      organization: "",
+      amount: "",
+      installmentsRemaining: prev.installmentsRemaining || "6",
+    }));
   }, [donationDraft]);
 
   const handleRemoveDonation = useCallback((index: number) => {
@@ -155,6 +164,14 @@ export function OnboardingWizard() {
               currency: donation.currency,
               type: donation.type,
               startDate: new Date().toISOString().slice(0, 10),
+              installmentsTotal:
+                donation.type === "installments"
+                  ? (() => {
+                    const remaining = Number(donation.installmentsRemaining) || 0;
+                    return remaining > 0 ? remaining : null;
+                  })()
+                  : null,
+              installmentsPaid: donation.type === "installments" ? 0 : null,
             }));
 
         const payload = skip
@@ -222,17 +239,28 @@ export function OnboardingWizard() {
   }, [form.tithePercent, totalFixedIncome]);
 
   const canProceedFromIncome = useMemo(() => {
-    if (!form.personalIncome) {
+    if (form.personalIncome.trim().length === 0) {
       return false;
     }
     if (form.includeSpouseIncome) {
-      return form.spouseIncome.length > 0;
+      return form.spouseIncome.trim().length > 0;
     }
     return true;
   }, [form.includeSpouseIncome, form.personalIncome, form.spouseIncome]);
 
   const canProceed = step === "income" ? canProceedFromIncome : true;
-  const canAddDonation = donationDraft.organization.trim().length > 0 && Number(donationDraft.amount) > 0;
+  const canAddDonation = useMemo(() => {
+    if (donationDraft.organization.trim().length === 0) {
+      return false;
+    }
+    if (!(Number(donationDraft.amount) > 0)) {
+      return false;
+    }
+    if (donationDraft.type === "installments") {
+      return Number(donationDraft.installmentsRemaining) > 0;
+    }
+    return true;
+  }, [donationDraft.amount, donationDraft.installmentsRemaining, donationDraft.organization, donationDraft.type]);
 
   return (
     <Card className="overflow-hidden border-none shadow-xl">
@@ -344,6 +372,7 @@ export function OnboardingWizard() {
                   onChange={(event) => handleChange("personalIncome", event.target.value)}
                   placeholder="0"
                 />
+                <p className="text-xs text-muted-foreground">{t("income.helperNote")}</p>
               </div>
 
               <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 p-3">
@@ -457,6 +486,23 @@ export function OnboardingWizard() {
                     ))}
                   </select>
                 </div>
+                {donationDraft.type === "installments" && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="donationInstallments">{t("donations.installmentsRemainingLabel")}</Label>
+                    <select
+                      id="donationInstallments"
+                      value={donationDraft.installmentsRemaining}
+                      onChange={(event) => handleDonationDraftChange("installmentsRemaining", event.target.value)}
+                      className="rounded-md border border-border bg-white px-3 py-2 text-sm shadow-sm"
+                    >
+                      {INSTALLMENT_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <Button
                 type="button"
@@ -484,6 +530,11 @@ export function OnboardingWizard() {
                           <p className="text-xs text-muted-foreground">
                             {new Intl.NumberFormat(locale, { style: "currency", currency: donation.currency }).format(Number(donation.amount) || 0)} · {tDonationTypes(donation.type)}
                           </p>
+                          {donation.type === "installments" && Number(donation.installmentsRemaining) > 0 ? (
+                            <p className="text-xs text-muted-foreground">
+                              {t("donations.installmentsRemainingNote", { count: donation.installmentsRemaining })}
+                            </p>
+                          ) : null}
                         </div>
                         <Button
                           type="button"
