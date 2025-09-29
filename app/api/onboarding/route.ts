@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { auth } from "@/lib/auth";
 import { logDonationActivity, logIncomeActivity, logSettingsUpdate } from "@/lib/activity-logger";
+import { auth } from "@/lib/auth";
 import {
   getUserFinancialSettings,
   createVariableIncomeEntry,
@@ -67,26 +67,32 @@ export async function GET(request: NextRequest) {
 }
 
 function normalizeCurrency(value?: string): CurrencyCode {
-  if (!value) return DEFAULT_CURRENCY;
+  if (!value) {
+    return DEFAULT_CURRENCY;
+  }
   const upper = value.toUpperCase();
   return SUPPORTED_CURRENCIES.includes(upper as (typeof SUPPORTED_CURRENCIES)[number])
     ? (upper as CurrencyCode)
     : DEFAULT_CURRENCY;
 }
 
-function normalizeLanguage(value?: string) {
-  if (!value) return SUPPORTED_LANGUAGES[0];
+function normalizeLanguage(value?: string): (typeof SUPPORTED_LANGUAGES)[number] {
+  if (!value) {
+    return SUPPORTED_LANGUAGES[0];
+  }
   const upper = value.toUpperCase();
   return SUPPORTED_LANGUAGES.includes(upper as (typeof SUPPORTED_LANGUAGES)[number])
     ? (upper as (typeof SUPPORTED_LANGUAGES)[number])
     : SUPPORTED_LANGUAGES[0];
 }
 
-function normalizeCarryStrategy(value?: string) {
-  if (!value) return DEFAULT_CARRY_STRATEGY;
+function normalizeCarryStrategy(value?: string): (typeof SUPPORTED_CARRY_STRATEGIES)[number] {
+  if (!value) {
+    return DEFAULT_CARRY_STRATEGY;
+  }
   const upper = value.toUpperCase();
   return SUPPORTED_CARRY_STRATEGIES.includes(upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
-    ? upper
+    ? (upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
     : DEFAULT_CARRY_STRATEGY;
 }
 
@@ -160,7 +166,7 @@ export async function POST(request: NextRequest) {
       startingBalance,
       carryStrategy,
       isFirstTimeSetupCompleted: true,
-    } as any);
+    });
 
     await logSettingsUpdate(session.user.id, "SETTINGS", "Completed onboarding wizard", request);
 

@@ -127,11 +127,10 @@
     "dashboard": "דשבורד",
     "income": "הכנסות",
     "donations": "תרומות",
-    "settings": "הגדרות",
-    "admin": "ניהול",
-    "profile": "פרופיל",
+  "settings": "הגדרות",
+  "admin": "ניהול",
     "logout": "התנתק",
-  "logoutSuccess": "התנתקת מהמערכת בהצלחה",
+    "logoutSuccess": "התנתקת מהמערכת בהצלחה",
     "login": "התחבר",
     "signup": "הירשם",
     "features": "תכונות",
@@ -200,7 +199,8 @@
         "number": "ספרה",
         "special": "תו מיוחד",
         "match": "הסיסמאות תואמות",
-        "mismatch": "הסיסמאות אינן תואמות"
+        "mismatch": "הסיסמאות אינן תואמות",
+        "invalid": "נא לעמוד בלפחות שלוש מדרישות הסיסמה."
       }
     },
     "resetPassword": {

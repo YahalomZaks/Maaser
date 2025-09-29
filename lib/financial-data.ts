@@ -1,50 +1,64 @@
-import { prismaClient } from "@/lib/prisma";
+import type {
+  Currency as CurrencyDb,
+  Donation as DonationRecord,
+  DonationType as DonationTypeDb,
+  Income as IncomeRecord,
+  IncomeSchedule as IncomeScheduleDb,
+  IncomeSource as IncomeSourceDb,
+  UserSettings as UserSettingsRecord,
+  VariableIncome as VariableIncomeRecord,
+} from "@prisma/client";
+
 import { convertCurrency } from "@/lib/finance";
-import type { CurrencyCode, DonationEntry, MonthlySnapshot, VariableIncome, YearSnapshot } from "@/types/finance";
-import type { CarryStrategy, FixedIncomeSettings } from "@/lib/user-settings";
+import { prismaClient } from "@/lib/prisma";
 import { DEFAULT_CARRY_STRATEGY, DEFAULT_CURRENCY, DEFAULT_LANGUAGE } from "@/lib/user-settings";
+import type { CarryStrategy, FixedIncomeSettings } from "@/lib/user-settings";
+import type { CurrencyCode, DonationEntry, MonthlySnapshot, VariableIncome, YearSnapshot } from "@/types/finance";
 
 const DEFAULT_STRATEGY = DEFAULT_CARRY_STRATEGY;
-const prisma = prismaClient as any;
+const prisma = prismaClient;
 
-const scheduleToDb = {
+const scheduleToDb: Record<VariableIncome["schedule"], IncomeScheduleDb> = {
   oneTime: "ONE_TIME",
   recurring: "RECURRING",
   multiMonth: "MULTI_MONTH",
-} as const;
+};
 
-const scheduleFromDb = {
+const scheduleFromDb: Record<IncomeScheduleDb, VariableIncome["schedule"]> = {
   ONE_TIME: "oneTime",
   RECURRING: "recurring",
   MULTI_MONTH: "multiMonth",
-} as const satisfies Record<string, VariableIncome["schedule"]>;
+};
 
-const sourceToDb = {
+const sourceToDb: Record<VariableIncome["source"], IncomeSourceDb> = {
   self: "SELF",
   spouse: "SPOUSE",
   other: "OTHER",
-} as const;
+};
 
-const sourceFromDb = {
+const sourceFromDb: Record<IncomeSourceDb, VariableIncome["source"]> = {
   SELF: "self",
   SPOUSE: "spouse",
   OTHER: "other",
-} as const satisfies Record<string, VariableIncome["source"]>;
+};
 
-const donationTypeToDb = {
+const donationTypeToDb: Record<DonationEntry["type"], DonationTypeDb> = {
   oneTime: "ONE_TIME",
   recurring: "RECURRING",
   installments: "INSTALLMENTS",
-} as const;
+};
 
-const donationTypeFromDb = {
+const donationTypeFromDb: Record<DonationTypeDb, DonationEntry["type"]> = {
   ONE_TIME: "oneTime",
   RECURRING: "recurring",
   INSTALLMENTS: "installments",
-} as const satisfies Record<string, DonationEntry["type"]>;
+};
 
-function normalizeCurrency(value: unknown): CurrencyCode {
-  return (value === "USD" ? "USD" : "ILS") satisfies CurrencyCode;
+function normalizeCurrency(value: CurrencyCode | CurrencyDb | null | undefined): CurrencyCode {
+  if (value === "USD") {
+    return "USD";
+  }
+  return "ILS";
 }
 
 export interface UserFinancialSettings {
@@ -73,28 +87,32 @@ function buildDefaultSettings(): UserFinancialSettings {
   };
 }
 
+function mapUserSettingsRecord(record: UserSettingsRecord | null): UserFinancialSettings {
+  if (!record) {
+    return buildDefaultSettings();
+  }
+
+  return {
+    language: record.language.toLowerCase(),
+    currency: normalizeCurrency(record.currency),
+    tithePercent: record.tithePercent ?? 10,
+    fixedIncome: {
+      personal: record.fixedPersonalIncome ?? 0,
+      spouse: record.fixedSpouseIncome ?? 0,
+      includeSpouse: record.includeSpouseIncome ?? false,
+    },
+    startingBalance: record.startingBalance ?? 0,
+    carryStrategy: record.carryStrategy ?? DEFAULT_STRATEGY,
+    isFirstTimeSetupCompleted: record.isFirstTimeSetupCompleted ?? false,
+  };
+}
+
 export async function getUserFinancialSettings(userId: string): Promise<UserFinancialSettings> {
   const settings = await prisma.userSettings.findUnique({
     where: { userId },
   });
 
-  if (!settings) {
-    return buildDefaultSettings();
-  }
-
-  return {
-    language: (settings.language ?? DEFAULT_LANGUAGE).toLowerCase(),
-    currency: normalizeCurrency(settings.currency),
-    tithePercent: (settings as any).tithePercent ?? 10,
-    fixedIncome: {
-      personal: (settings as any).fixedPersonalIncome ?? 0,
-      spouse: (settings as any).fixedSpouseIncome ?? 0,
-      includeSpouse: (settings as any).includeSpouseIncome ?? false,
-    },
-    startingBalance: (settings as any).startingBalance ?? 0,
-    carryStrategy: ((settings as any).carryStrategy ?? DEFAULT_STRATEGY) as CarryStrategy,
-    isFirstTimeSetupCompleted: settings.isFirstTimeSetupCompleted ?? false,
-  };
+  return mapUserSettingsRecord(settings);
 }
 
 export interface UpsertVariableIncomePayload {
@@ -108,15 +126,16 @@ export interface UpsertVariableIncomePayload {
   note?: string | null;
 }
 
-function mapVariableIncome(row: any): VariableIncome {
+
+function mapVariableIncome(row: VariableIncomeRecord): VariableIncome {
   return {
     id: row.id,
     description: row.description,
     amount: row.amount,
     currency: normalizeCurrency(row.currency),
-    source: sourceFromDb[(row.source as keyof typeof sourceFromDb) ?? "OTHER"] ?? "other",
+    source: sourceFromDb[row.source] ?? "other",
     date: row.date.toISOString().slice(0, 10),
-    schedule: scheduleFromDb[(row.schedule as keyof typeof scheduleFromDb) ?? "ONE_TIME"] ?? "oneTime",
+    schedule: scheduleFromDb[row.schedule] ?? "oneTime",
     totalMonths: row.totalMonths ?? undefined,
     note: row.note ?? undefined,
   };
@@ -125,7 +144,7 @@ function mapVariableIncome(row: any): VariableIncome {
 export async function listVariableIncomes(userId: string): Promise<VariableIncome[]> {
   const rows = await prisma.variableIncome.findMany({
     where: { userId },
-    orderBy: { date: "desc" } as any,
+    orderBy: { date: "desc" },
   });
 
   return rows.map(mapVariableIncome);
@@ -169,13 +188,13 @@ export interface UpsertDonationPayload {
   note?: string | null;
 }
 
-function mapDonation(row: any): DonationEntry {
+function mapDonation(row: DonationRecord): DonationEntry {
   return {
     id: row.id,
     organization: row.organizationName,
     amount: row.amount,
     currency: normalizeCurrency(row.currency),
-    type: donationTypeFromDb[(row.donationType as keyof typeof donationTypeFromDb) ?? "RECURRING"] ?? "recurring",
+    type: donationTypeFromDb[row.donationType] ?? "recurring",
     startDate: row.startDate.toISOString().slice(0, 10),
     installmentsTotal: row.installmentsTotal ?? undefined,
     installmentsPaid: row.installmentsPaid ?? undefined,
@@ -187,7 +206,7 @@ function mapDonation(row: any): DonationEntry {
 export async function listDonations(userId: string): Promise<DonationEntry[]> {
   const rows = await prisma.donation.findMany({
     where: { userId },
-    orderBy: { startDate: "desc" } as any,
+    orderBy: { startDate: "desc" },
   });
 
   return rows.map(mapDonation);
@@ -255,28 +274,19 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
-  const [settings, fixedIncomeRows, variableIncomeRows, donationRows] = await Promise.all([
+  const [settings, fixedIncomeRows, variableIncomeRows, donationRows] = (await Promise.all([
     prisma.userSettings.findUnique({ where: { userId } }),
     prisma.income.findMany({ where: { userId } }),
     prisma.variableIncome.findMany({ where: { userId } }),
     prisma.donation.findMany({ where: { userId } }),
-  ]);
+  ])) as [
+    UserSettingsRecord | null,
+    IncomeRecord[],
+    VariableIncomeRecord[],
+    DonationRecord[],
+  ];
 
-  const userSettings = settings
-    ? {
-        language: (settings.language ?? DEFAULT_LANGUAGE).toLowerCase(),
-        currency: normalizeCurrency(settings.currency),
-        tithePercent: (settings as any).tithePercent ?? 10,
-        fixedIncome: {
-          personal: (settings as any).fixedPersonalIncome ?? 0,
-          spouse: (settings as any).fixedSpouseIncome ?? 0,
-          includeSpouse: (settings as any).includeSpouseIncome ?? false,
-        },
-        startingBalance: (settings as any).startingBalance ?? 0,
-        carryStrategy: ((settings as any).carryStrategy ?? DEFAULT_STRATEGY) as CarryStrategy,
-        isFirstTimeSetupCompleted: settings.isFirstTimeSetupCompleted ?? false,
-      }
-    : buildDefaultSettings();
+  const userSettings = mapUserSettingsRecord(settings);
 
   const baseCurrency = userSettings.currency;
 
@@ -300,9 +310,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     const years = new Set<number>();
     const currentYear = new Date().getFullYear();
     years.add(currentYear);
-    donationRows.forEach((row: any) => years.add(row.year));
-    variableIncomeRows.forEach((row: any) => years.add(new Date(row.date).getFullYear()));
-    fixedIncomeRows.forEach((row: any) => years.add(row.year));
+    donationRows.forEach((row) => years.add(row.year));
+    variableIncomeRows.forEach((row) => years.add(row.date.getFullYear()));
+    fixedIncomeRows.forEach((row) => years.add(row.year));
 
     years.forEach((year) => {
       for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
@@ -311,31 +321,33 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     });
   }
 
-  variableIncomeRows.forEach((row: any) => {
-    const date = row.date instanceof Date ? row.date : new Date(row.date);
+  variableIncomeRows.forEach((row) => {
+    const date = row.date;
     const year = date.getFullYear();
     const monthIndex = date.getMonth();
     const monthMap = getMonthMap(aggregated, year);
     const agg = getMonthAgg(monthMap, monthIndex);
 
-    const converted = convertCurrency(row.amount, row.currency as CurrencyCode, baseCurrency);
+    const entryCurrency = normalizeCurrency(row.currency);
+    const converted = convertCurrency(row.amount, entryCurrency, baseCurrency);
     agg.incomes += converted;
-    if (row.currency !== baseCurrency) {
+    if (entryCurrency !== baseCurrency) {
       agg.convertedEntries += 1;
       agg.convertedTotal += converted;
     }
   });
 
-  donationRows.forEach((row: any) => {
-    const date = row.startDate instanceof Date ? row.startDate : new Date(row.startDate);
+  donationRows.forEach((row) => {
+    const date = row.startDate;
     const year = date.getFullYear();
     const monthIndex = date.getMonth();
     const monthMap = getMonthMap(aggregated, year);
     const agg = getMonthAgg(monthMap, monthIndex);
 
-    const converted = convertCurrency(row.amount, row.currency as CurrencyCode, baseCurrency);
+    const entryCurrency = normalizeCurrency(row.currency);
+    const converted = convertCurrency(row.amount, entryCurrency, baseCurrency);
     agg.donations += converted;
-    if (row.currency !== baseCurrency) {
+    if (entryCurrency !== baseCurrency) {
       agg.convertedEntries += 1;
       agg.convertedTotal += converted;
     }

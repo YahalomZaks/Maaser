@@ -190,6 +190,7 @@ export function OnboardingWizard() {
 
         const response = await fetch("/api/onboarding", {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },

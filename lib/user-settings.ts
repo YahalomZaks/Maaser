@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 import { prismaClient } from "@/lib/prisma";
 
 export const SUPPORTED_LANGUAGES = ["HE", "EN"] as const;
@@ -54,24 +56,55 @@ export async function upsertUserSettings(
   data: Partial<UserSettingsData>
 ) {
   try {
+    const updateData: Prisma.UserSettingsUncheckedUpdateInput = {
+      updatedAt: new Date(),
+    };
+
+    if (data.language !== undefined) {
+      updateData.language = data.language;
+    }
+    if (data.currency !== undefined) {
+      updateData.currency = data.currency;
+    }
+    if (data.tithePercent !== undefined) {
+      updateData.tithePercent = data.tithePercent;
+    }
+    if (data.fixedPersonalIncome !== undefined) {
+      updateData.fixedPersonalIncome = data.fixedPersonalIncome;
+    }
+    if (data.fixedSpouseIncome !== undefined) {
+      updateData.fixedSpouseIncome = data.fixedSpouseIncome;
+    }
+    if (data.includeSpouseIncome !== undefined) {
+      updateData.includeSpouseIncome = data.includeSpouseIncome;
+    }
+    if (data.startingBalance !== undefined) {
+      updateData.startingBalance = data.startingBalance;
+    }
+    if (data.carryStrategy !== undefined) {
+      updateData.carryStrategy = data.carryStrategy;
+    }
+    if (data.isFirstTimeSetupCompleted !== undefined) {
+      updateData.isFirstTimeSetupCompleted = data.isFirstTimeSetupCompleted;
+    }
+
+    const createData: Prisma.UserSettingsUncheckedCreateInput = {
+      userId,
+      language: data.language ?? DEFAULT_LANGUAGE,
+      currency: data.currency ?? DEFAULT_CURRENCY,
+      tithePercent: data.tithePercent ?? 10,
+      fixedPersonalIncome: data.fixedPersonalIncome ?? 0,
+      fixedSpouseIncome: data.fixedSpouseIncome ?? 0,
+      includeSpouseIncome: data.includeSpouseIncome ?? false,
+      startingBalance: data.startingBalance ?? 0,
+      carryStrategy: data.carryStrategy ?? DEFAULT_CARRY_STRATEGY,
+      isFirstTimeSetupCompleted: data.isFirstTimeSetupCompleted ?? false,
+    };
+
     const settings = await prismaClient.userSettings.upsert({
       where: { userId },
-      update: {
-        ...data,
-        updatedAt: new Date(),
-      } as any,
-      create: {
-        userId,
-        language: data.language || DEFAULT_LANGUAGE,
-        currency: data.currency || DEFAULT_CURRENCY,
-        tithePercent: data.tithePercent ?? 10,
-        fixedPersonalIncome: data.fixedPersonalIncome ?? 0,
-        fixedSpouseIncome: data.fixedSpouseIncome ?? 0,
-        includeSpouseIncome: data.includeSpouseIncome ?? false,
-        startingBalance: data.startingBalance ?? 0,
-        carryStrategy: data.carryStrategy || DEFAULT_CARRY_STRATEGY,
-        isFirstTimeSetupCompleted: data.isFirstTimeSetupCompleted || false,
-      } as any,
+      update: updateData,
+      create: createData,
     });
 
     return settings;

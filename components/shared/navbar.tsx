@@ -9,7 +9,6 @@ import {
 	LogOut,
 	Menu,
 	Settings,
-	User,
 	UserCircle,
 	Wallet,
 	X,
@@ -183,7 +182,8 @@ const Navbar = () => {
 		);
 	}, [isPending, locale, t, tCommon]);
 
-	const userName = session?.user?.name || session?.user?.email?.split("@")[0] || t("profile");
+	const fallbackAccountLabel = useMemo(() => (locale === "he" ? "חשבון" : "Account"), [locale]);
+	const userName = session?.user?.name || session?.user?.email?.split("@")[0] || fallbackAccountLabel;
 	const userEmail = session?.user?.email;
 
 	const renderAuthenticatedNav = () => (
@@ -218,7 +218,7 @@ const Navbar = () => {
 					</div>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="dashboard-user-trigger" aria-label={t("profile")}>
+							<Button variant="ghost" className="dashboard-user-trigger" aria-label={userName}>
 								<UserCircle className="h-6 w-6" />
 								<div className="dashboard-user-meta">
 									<span className="dashboard-user-name">{userName}</span>
@@ -228,14 +228,8 @@ const Navbar = () => {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-60">
-							<DropdownMenuLabel>{t("profile")}</DropdownMenuLabel>
+							<DropdownMenuLabel>{userName}</DropdownMenuLabel>
 							<DropdownMenuSeparator />
-							<DropdownMenuItem asChild>
-								<Link href={`${localePrefix}/dashboard/profile`} className="flex items-center gap-2">
-									<User className="h-4 w-4" />
-									<span>{t("profile")}</span>
-								</Link>
-							</DropdownMenuItem>
 							<DropdownMenuItem asChild>
 								<Link href={`${localePrefix}/dashboard/settings`} className="flex items-center gap-2">
 									<Settings className="h-4 w-4" />

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { auth } from "@/lib/auth";
 import { logIncomeActivity } from "@/lib/activity-logger";
+import { auth } from "@/lib/auth";
 import { createVariableIncomeEntry, getUserFinancialSettings, listVariableIncomes } from "@/lib/financial-data";
 import type { CurrencyCode, IncomeSchedule, IncomeSource } from "@/types/finance";
 

@@ -626,7 +626,8 @@ input[data-slot="input"]:disabled {
 
 .dashboard-shell {
   min-height: calc(100vh - var(--navbar-height));
-  padding-block: clamp(2.5rem, 6vw, 4rem);
+  padding-block-start: 0;
+  padding-block-end: clamp(2.5rem, 6vw, 4rem);
   padding-inline: clamp(1.25rem, 6vw, 4rem);
   background: radial-gradient(circle at 10% 5%, rgba(37, 99, 235, 0.08) 0%, transparent 55%),
     radial-gradient(circle at 85% 15%, rgba(8, 145, 178, 0.05) 0%, transparent 50%),

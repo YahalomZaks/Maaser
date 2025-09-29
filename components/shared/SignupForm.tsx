@@ -4,14 +4,14 @@ import { AlertCircle, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { signUpAction } from "@/actions/auth.action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signUp } from "@/lib/auth-client";
 
 interface PasswordValidity {
   checks: {
@@ -53,7 +53,7 @@ export function SignupForm() {
   const locale = useLocale();
   const router = useRouter();
   const localePrefix = `/${locale}`;
-  const [state, action, pending] = useActionState(signUpAction, undefined);
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -62,24 +62,11 @@ export function SignupForm() {
   });
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidity>(() => validatePassword(""));
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
-
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(t("success"));
-      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
-      const destination = state.redirectTo ?? "/dashboard";
-      router.push(`${localePrefix}${destination}`);
-    }
-
-    if (state?.error) {
-      toast.error(state.error, {
-        icon: <AlertCircle className="h-4 w-4" />,
-      });
-    }
-  }, [state, router, localePrefix, t]);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleInputChange = useCallback(
     (field: "name" | "email" | "password" | "confirmPassword", value: string) => {
+      setFormError(null);
       setFormData((prev) => ({ ...prev, [field]: value }));
 
       if (field === "password") {
@@ -90,10 +77,54 @@ export function SignupForm() {
   );
 
   const handleSubmit = useCallback(
-    (payload: FormData) => {
-      action(payload);
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      if (formData.password !== formData.confirmPassword) {
+        const message = t("passwordRequirements.mismatch");
+        toast.error(message, { icon: <AlertCircle className="h-4 w-4" /> });
+        setFormError(message);
+        return;
+      }
+
+      if (!passwordValidation.isValid) {
+        const message = t("passwordRequirements.invalid");
+        toast.error(message, { icon: <AlertCircle className="h-4 w-4" /> });
+        setFormError(message);
+        return;
+      }
+
+      const form = new FormData(event.currentTarget);
+      const name = form.get("name") as string;
+      const email = form.get("email") as string;
+      const password = form.get("password") as string;
+
+      startTransition(() => {
+        setFormError(null);
+        signUp.email(
+          { name, email, password },
+          {
+            onStart: () => {
+              toast.dismiss();
+              toast.loading(t("pending"));
+            },
+            onSuccess: () => {
+              toast.dismiss();
+              toast.success(t("success"));
+              setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+              router.push(`${localePrefix}/onboarding`);
+            },
+            onError: (error) => {
+              toast.dismiss();
+              const message = error?.error?.message || t("error");
+              toast.error(message, { icon: <AlertCircle className="h-4 w-4" /> });
+              setFormError(message);
+            },
+          },
+        );
+      });
     },
-    [action],
+    [formData.confirmPassword, formData.password, localePrefix, passwordValidation.isValid, router, startTransition, t],
   );
 
   const requirements = useMemo(
@@ -114,19 +145,22 @@ export function SignupForm() {
     <div className="flex flex-col gap-6">
       <Card className="overflow-hidden">
         <CardContent className="mx-auto w-full max-w-lg">
-          <form action={handleSubmit} className="flex flex-col gap-6 md:p-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6 md:p-8">
             <div className="flex flex-col items-center gap-2 text-center">
               <h1 className="text-2xl font-bold">{t("title")}</h1>
               <p className="text-balance text-muted-foreground">{t("subtitle")}</p>
             </div>
 
-            {state?.error ? (
+            {formError ? (
               <div
                 className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 role="alert"
                 aria-live="assertive"
               >
-                {state.error}
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{formError}</span>
+                </div>
               </div>
             ) : null}
 
@@ -138,7 +172,7 @@ export function SignupForm() {
                 name="name"
                 value={formData.name}
                 onChange={(event) => handleInputChange("name", event.target.value)}
-                disabled={pending}
+                disabled={isPending}
                 placeholder={t("namePlaceholder")}
                 required
               />
@@ -152,7 +186,7 @@ export function SignupForm() {
                 name="email"
                 value={formData.email}
                 onChange={(event) => handleInputChange("email", event.target.value)}
-                disabled={pending}
+                disabled={isPending}
                 placeholder={t("emailPlaceholder")}
                 required
               />
@@ -167,7 +201,7 @@ export function SignupForm() {
                 value={formData.password}
                 onChange={(event) => handleInputChange("password", event.target.value)}
                 onFocus={() => setShowPasswordHelp(true)}
-                disabled={pending}
+                disabled={isPending}
                 required
               />
               {showPasswordHelp && (
@@ -226,12 +260,12 @@ export function SignupForm() {
               type="submit"
               className="w-full"
               disabled={
-                pending ||
+                isPending ||
                 !passwordValidation.isValid ||
                 formData.password !== formData.confirmPassword
               }
             >
-              {pending ? t("pending") : t("submit")}
+              {isPending ? t("pending") : t("submit")}
             </Button>
 
             <div className="text-center text-sm">

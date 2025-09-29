@@ -1,24 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { auth } from "@/lib/auth";
 import { logIncomeActivity } from "@/lib/activity-logger";
+import { auth } from "@/lib/auth";
 import { deleteVariableIncomeEntry } from "@/lib/financial-data";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: request.headers });
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const id = params.id;
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });

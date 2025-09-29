@@ -103,36 +103,19 @@ export function IncomeManager() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [tCommon]);
+	}, []);
 
 	useEffect(() => {
 		loadData();
 	}, [loadData]);
 
-	if (isLoading) {
-		return (
-			<div className="flex min-h-[320px] items-center justify-center">
-				<p className="text-muted-foreground">{tCommon("loading")}</p>
-			</div>
-		);
-	}
+		useEffect(() => {
+			setFormState((prev) => ({ ...prev, currency: baseCurrency }));
+		}, [baseCurrency]);
 
-	if (fetchError) {
-		return (
-			<div className="flex min-h-[320px] flex-col items-center justify-center gap-4">
-				<p className="max-w-md text-center text-muted-foreground">{fetchError}</p>
-				<Button onClick={loadData}>{tCommon("retry")}</Button>
-			</div>
-		);
-	}
-
-	useEffect(() => {
-		setFormState((prev) => ({ ...prev, currency: baseCurrency }));
-	}, [baseCurrency]);
-
-	useEffect(() => {
-		setFixedIncome((prev) => ({ ...prev, currency: baseCurrency }));
-	}, [baseCurrency]);
+		useEffect(() => {
+			setFixedIncome((prev) => ({ ...prev, currency: baseCurrency }));
+		}, [baseCurrency]);
 
 	const titheDecimal = tithePercent / 100;
 
@@ -342,6 +325,23 @@ export function IncomeManager() {
 			setIsSaving(false);
 		}
 	};
+
+	if (isLoading) {
+		return (
+			<div className="flex min-h-[320px] items-center justify-center">
+				<p className="text-muted-foreground">{tCommon("loading")}</p>
+			</div>
+		);
+	}
+
+	if (fetchError) {
+		return (
+			<div className="flex min-h-[320px] flex-col items-center justify-center gap-4">
+				<p className="max-w-md text-center text-muted-foreground">{fetchError}</p>
+				<Button onClick={loadData}>{tCommon("retry")}</Button>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-8">

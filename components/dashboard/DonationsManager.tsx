@@ -88,7 +88,7 @@ export function DonationsManager() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [tCommon]);
+	}, []);
 
 	useEffect(() => {
 		loadData();

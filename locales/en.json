@@ -106,9 +106,8 @@
     "dashboard": "Dashboard",
     "income": "Income",
     "donations": "Donations",
-    "settings": "Settings",
-    "admin": "Admin",
-    "profile": "Profile",
+  "settings": "Settings",
+  "admin": "Admin",
     "logout": "Sign Out",
     "login": "Sign In",
     "signup": "Sign Up",
@@ -200,7 +199,8 @@
         "number": "Number",
         "special": "Special character",
         "match": "Passwords match",
-        "mismatch": "Passwords do not match"
+        "mismatch": "Passwords do not match",
+        "invalid": "Please meet at least three password requirements."
       }
     },
     "resetPassword": {

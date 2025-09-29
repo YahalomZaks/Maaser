@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { auth } from "@/lib/auth";
 import { logSettingsUpdate } from "@/lib/activity-logger";
+import { auth } from "@/lib/auth";
 import { getUserFinancialSettings } from "@/lib/financial-data";
-import { SUPPORTED_CARRY_STRATEGIES, SUPPORTED_CURRENCIES, SUPPORTED_LANGUAGES, upsertUserSettings } from "@/lib/user-settings";
+import {
+  SUPPORTED_CARRY_STRATEGIES,
+  SUPPORTED_CURRENCIES,
+  SUPPORTED_LANGUAGES,
+  upsertUserSettings,
+} from "@/lib/user-settings";
+import type { UserSettingsData } from "@/lib/user-settings";
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -31,7 +37,9 @@ interface UpdatePayload {
 }
 
 function normalizeCurrency(value?: string) {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   const upper = value.toUpperCase();
   return SUPPORTED_CURRENCIES.includes(upper as (typeof SUPPORTED_CURRENCIES)[number])
     ? (upper as (typeof SUPPORTED_CURRENCIES)[number])
@@ -39,7 +47,9 @@ function normalizeCurrency(value?: string) {
 }
 
 function normalizeLanguage(value?: string) {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   const upper = value.toUpperCase();
   return SUPPORTED_LANGUAGES.includes(upper as (typeof SUPPORTED_LANGUAGES)[number])
     ? (upper as (typeof SUPPORTED_LANGUAGES)[number])
@@ -47,7 +57,9 @@ function normalizeLanguage(value?: string) {
 }
 
 function normalizeCarryStrategy(value?: string) {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   const upper = value.toUpperCase();
   return SUPPORTED_CARRY_STRATEGIES.includes(upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
     ? (upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
@@ -64,7 +76,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = (await request.json()) as UpdatePayload;
 
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<UserSettingsData> = {};
 
     const currency = normalizeCurrency(body.currency);
     if (currency) {
@@ -101,7 +113,7 @@ export async function PATCH(request: NextRequest) {
       updates.carryStrategy = carryStrategy;
     }
 
-    const updated = await upsertUserSettings(session.user.id, updates as any);
+    const updated = await upsertUserSettings(session.user.id, updates);
 
     if (!updated) {
       return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
