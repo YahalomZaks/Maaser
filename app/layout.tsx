@@ -82,10 +82,7 @@ export default async function RootLayout({
 				<NextIntlClientProvider locale={locale} messages={messages}>
 						<ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
 						<Navbar />
-							<main
-								className="relative min-h-screen bg-gradient-to-b from-white via-[#f5f8ff] to-[#eef2f8]"
-								// style={{ paddingTop: "var(--navbar-height, 80px)" }}
-							>
+							<main className="app-main relative">
 							{children}
 						</main>
 						<Toaster richColors />

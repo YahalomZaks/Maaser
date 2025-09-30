@@ -14,7 +14,7 @@ import {
 	X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -26,8 +26,10 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuLabel,
 	DropdownMenuSeparator,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
@@ -41,13 +43,18 @@ type NavItem = {
 	basePath: string;
 };
 
+type SupportedLanguage = "he" | "en";
+
 const Navbar = () => {
 	const { data: session, isPending } = useSession();
 	const t = useTranslations("navigation");
 	const tCommon = useTranslations("common");
+	const tLang = useTranslations("settings.language");
 	const locale = useLocale();
+	const isRTL = locale === "he";
 	const router = useRouter();
 	const pathname = usePathname();
+	const searchParams = useSearchParams();
 
 	const [isMounted, setIsMounted] = useState(false);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -95,13 +102,6 @@ const Navbar = () => {
 				icon: <HandCoins className="h-4 w-4" />,
 				href: `${localePrefix}/dashboard/donations`,
 				basePath: "/dashboard/donations",
-			},
-			{
-				key: "settings",
-				label: t("settings"),
-				icon: <Settings className="h-4 w-4" />,
-				href: `${localePrefix}/dashboard/settings`,
-				basePath: "/dashboard/settings",
 			},
 		];
 	}, [isAuthenticated, localePrefix, t]);
@@ -186,6 +186,50 @@ const Navbar = () => {
 	const userName = session?.user?.name || session?.user?.email?.split("@")[0] || fallbackAccountLabel;
 	const userEmail = session?.user?.email;
 
+	// Language options and helpers (mirrors LanguageSwitcher behavior)
+	const languages = useMemo(
+		() => [
+			{ code: "he" as SupportedLanguage, label: tLang("hebrew"), flag: "🇮🇱" },
+			{ code: "en" as SupportedLanguage, label: tLang("english"), flag: "🇺🇸" },
+		],
+		[tLang],
+	);
+
+	const buildLocalizedPath = useCallback(
+		(nextLocale: SupportedLanguage) => {
+			const segments = pathname.split("/").filter(Boolean);
+			if (segments.length === 0) {
+				segments.push(nextLocale);
+			} else if (languages.some((language) => language.code === (segments[0] as SupportedLanguage))) {
+				segments[0] = nextLocale;
+			} else {
+				segments.unshift(nextLocale);
+			}
+			const search = searchParams?.toString() ?? "";
+			return `/${segments.join("/")}${search ? `?${search}` : ""}`;
+		},
+		[languages, pathname, searchParams],
+	);
+
+	const handleDesktopLanguageChange = useCallback(
+		(nextLocale: SupportedLanguage) => {
+			if (locale === nextLocale) {
+				return;
+			}
+			const targetPath = buildLocalizedPath(nextLocale);
+			router.push(targetPath);
+			router.refresh();
+			if (session?.user) {
+				fetch("/api/settings/language", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ language: nextLocale.toUpperCase() }),
+				}).catch((error) => console.error("Failed to persist language preference", error));
+			}
+		},
+		[buildLocalizedPath, locale, router, session?.user],
+	);
+
 	const renderAuthenticatedNav = () => (
 		<nav className={`dashboard-navbar${isMobileMenuOpen ? " menu-open" : ""}`}>
 			<div className="dashboard-nav-container">
@@ -213,34 +257,87 @@ const Navbar = () => {
 					))}
 				</div>
 				<div className="dashboard-actions">
-					<div className="dashboard-language">
-						<LanguageSwitcher />
-					</div>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="dashboard-user-trigger" aria-label={userName}>
-								<UserCircle className="h-6 w-6" />
-								<div className="dashboard-user-meta">
-									<span className="dashboard-user-name">{userName}</span>
-									{userEmail ? <span className="dashboard-user-email">{userEmail}</span> : null}
-								</div>
+							<Button
+								variant="ghost"
+								className="dashboard-user-trigger welcome-btn welcome-btn-secondary"
+								aria-label={userName}
+							>
+								<UserCircle className="h-5 w-5" />
+								<span className="dashboard-user-name">{userName}</span>
 								<ChevronDown className="h-4 w-4" />
 							</Button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-60">
-							<DropdownMenuLabel>{userName}</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem asChild>
-								<Link href={`${localePrefix}/dashboard/settings`} className="flex items-center gap-2">
-									<Settings className="h-4 w-4" />
-									<span>{t("settings")}</span>
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-								<LogOut className="h-4 w-4" />
-								<span>{t("logout")}</span>
-							</DropdownMenuItem>
+						<DropdownMenuContent 
+							align="end" 
+							side="bottom"
+							sideOffset={8}
+							alignOffset={-16}
+							style={{ direction: isRTL ? "rtl" : "ltr" }} 
+							className="w-72 sm:w-80 p-0"
+						>
+							{/* Profile Header */}
+							<div className="dropdown-profile-header">
+								<div className="dropdown-profile-avatar">
+									<span className="dropdown-profile-initial">
+										{userName.charAt(0).toUpperCase()}
+									</span>
+								</div>
+								<div className="dropdown-profile-info">
+									<div className="dropdown-profile-name">{userName}</div>
+									{userEmail ? (
+										<div className="dropdown-profile-email">{userEmail}</div>
+									) : null}
+								</div>
+							</div>
+							<DropdownMenuSeparator className="mx-0" />
+							{/* Language submenu */}
+							<div className="dropdown-menu-items">
+								<DropdownMenuSub>
+									<DropdownMenuSubTrigger className="dropdown-menu-link">
+										<span className="inline-flex items-center gap-2">
+											<span aria-hidden className="text-base" style={{ fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif' }}>
+												{locale === "he" ? "🇮🇱" : "🇺🇸"}
+											</span>
+											<span>{locale === "he" ? "שפה" : "Language"}</span>
+										</span>
+									</DropdownMenuSubTrigger>
+									<DropdownMenuSubContent className="w-48" style={{ direction: isRTL ? "rtl" : "ltr" }}>
+										{languages.map((lng) => (
+											<DropdownMenuItem
+												key={lng.code}
+												onClick={() => handleDesktopLanguageChange(lng.code)}
+												className={`dropdown-menu-link justify-between ${locale === lng.code ? "bg-blue-50 text-blue-700" : ""}`}
+											>
+												<span className="inline-flex items-center gap-2">
+													<span aria-hidden className="text-base" style={{ fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif' }}>
+														{lng.flag}
+													</span>
+													<span>{lng.label}</span>
+												</span>
+												{locale === lng.code ? (
+													<span className="text-blue-600 text-sm font-semibold">✓</span>
+												) : null}
+											</DropdownMenuItem>
+										))}
+									</DropdownMenuSubContent>
+								</DropdownMenuSub>
+							</div>
+							<DropdownMenuSeparator className="mx-0" />
+							<div className="dropdown-menu-items">
+								<DropdownMenuItem asChild>
+									<Link href={`${localePrefix}/dashboard/settings`} className="dropdown-menu-link">
+										<Settings className="h-4 w-4" />
+										<span>{t("settings")}</span>
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuSeparator className="mx-0" />
+								<DropdownMenuItem onClick={handleLogout} className="dropdown-menu-link text-destructive focus:text-destructive">
+									<LogOut className="h-4 w-4" />
+									<span>{t("logout")}</span>
+								</DropdownMenuItem>
+							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>
 					<button
