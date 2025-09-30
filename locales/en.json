@@ -6,9 +6,12 @@
       "highlight": "tithes",
       "suffix": "every month?"
     },
+    "empty": {
+      "noData": "No Data"
+    },
     "subtitle": {
       "problem": "Can't remember how many places you donate to? How much to each? And whether it even covers the tithes you need to give?",
-      "solution": "No more struggling!",
+      "solution": "Maaser simplifies tracking your income and donations, ensuring you always know your tithing status.",
       "description": "All your donations are organized in one place in a friendly and convenient way."
     },
     "buttons": {

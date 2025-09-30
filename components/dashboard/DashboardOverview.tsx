@@ -177,6 +177,20 @@ export function DashboardOverview() {
 	const totals = computedYear?.totals;
 	const year = computedYear?.year;
 
+	const allYearMonths = useMemo(() => {
+		if (!year) return [];
+		const existingMonths = new Map(months.map((m) => [m.monthIndex, m]));
+		return Array.from({ length: 12 }, (_, i) => {
+			const monthData = existingMonths.get(i);
+			const hasData = !!monthData && (monthData.incomesBase > 0 || monthData.donationsBase > 0);
+			return {
+				monthIndex: i,
+				id: monthData?.id ?? `month-${i}`,
+				hasData: hasData,
+			};
+		});
+	}, [year, months]);
+
 	const hasData = Boolean(computedYear && year && months.length > 0);
 
 	const selectedMonth = useMemo(() => {
@@ -382,24 +396,23 @@ export function DashboardOverview() {
 				{/* Mobile Monthly Navigator */}
 				{viewMode === "monthly" && (
 					<div className="mb-4">
-						<h3 className="text-sm font-semibold mb-3">{t("table.title")}</h3>
-						<div className="flex gap-1.5 overflow-x-auto rounded-lg border border-border/60 bg-muted/30 p-1 scrollbar-hide">
-							{months.map((month) => (
-								<button
-									key={month.id}
-									type="button"
-									onClick={() => setSelectedMonthId(month.id)}
-									className={cn(
-										"flex-shrink-0 rounded-md px-3 py-2 text-xs font-medium transition-all whitespace-nowrap",
-										month.id === selectedMonth?.id 
-											? "bg-background shadow-sm text-foreground border border-border/60" 
-											: "text-muted-foreground hover:text-foreground hover:bg-background/50",
-									)}
+						<h3 className="text-sm font-semibold mb-2">{t("table.title")}</h3>
+						<select
+							value={selectedMonth?.id ?? ""}
+							onChange={(e) => setSelectedMonthId(e.target.value)}
+							className="w-full rounded-md border border-border/60 bg-muted/30 p-2 text-sm font-medium transition-all"
+						>
+							{allYearMonths.map((monthOption) => (
+								<option
+									key={monthOption.monthIndex}
+									value={monthOption.id}
+									disabled={!monthOption.hasData}
 								>
-									{tMonths(MONTH_KEYS[month.monthIndex])}
-								</button>
+									{tMonths(MONTH_KEYS[monthOption.monthIndex])}{" "}
+									{!monthOption.hasData ? `(${t("empty.noData")})` : ""}
+								</option>
 							))}
-						</div>
+						</select>
 					</div>
 				)}
 

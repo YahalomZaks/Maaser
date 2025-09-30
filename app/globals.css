@@ -314,6 +314,7 @@ button:not([disabled]) {
 /* Native <select> shows pointer when enabled */
 select:not([disabled]) {
   cursor: pointer;
+  background: white;
 }
 
 /* Disabled native select */
