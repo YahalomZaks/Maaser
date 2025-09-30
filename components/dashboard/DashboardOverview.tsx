@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { MobileYearlyMonthsList } from "@/components/dashboard/MobileYearlyMonthsList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/finance";
@@ -178,7 +179,9 @@ export function DashboardOverview() {
 	const year = computedYear?.year;
 
 	const allYearMonths = useMemo(() => {
-		if (!year) return [];
+		if (!year) {
+			return [];
+		}
 		const existingMonths = new Map(months.map((m) => [m.monthIndex, m]));
 		return Array.from({ length: 12 }, (_, i) => {
 			const monthData = existingMonths.get(i);
@@ -462,38 +465,7 @@ export function DashboardOverview() {
 
 				{/* Mobile Yearly Summary */}
 				{viewMode === "yearly" && (
-					<div className="space-y-3">
-						<h3 className="text-sm font-semibold">{t("table.title")}</h3>
-						{months.map((month) => (
-							<div key={month.id} className="rounded-lg bg-white border border-border p-3">
-								<div className="flex items-center justify-between mb-2">
-									<span className="font-medium text-sm">{tMonths(MONTH_KEYS[month.monthIndex])}</span>
-									<span className={cn(
-										"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-										month.runningBalance >= 0 
-											? "bg-emerald-500/10 text-emerald-600" 
-											: "bg-destructive/10 text-destructive"
-									)}>
-										{formatCurrency(month.runningBalance, year.baseCurrency, locale)}
-									</span>
-								</div>
-								<div className="grid grid-cols-3 gap-2 text-xs">
-									<div>
-										<span className="text-muted-foreground block">{t("table.columns.income")}</span>
-										<span className="font-medium">{formatCurrency(month.incomesBase, year.baseCurrency, locale)}</span>
-									</div>
-									<div>
-										<span className="text-muted-foreground block">{t("table.columns.obligation")}</span>
-										<span className="font-medium">{formatCurrency(month.obligation, year.baseCurrency, locale)}</span>
-									</div>
-									<div>
-										<span className="text-muted-foreground block">{t("table.columns.donations")}</span>
-										<span className="font-medium">{formatCurrency(month.donationsBase, year.baseCurrency, locale)}</span>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
+					<MobileYearlyMonthsList months={months} currency={year.baseCurrency} locale={locale} />
 				)}
 			</div>
 

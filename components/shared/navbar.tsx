@@ -233,7 +233,7 @@ const Navbar = () => {
 	const renderAuthenticatedNav = () => (
 		<nav className={`dashboard-navbar${isMobileMenuOpen ? " menu-open" : ""}`}>
 			<div className="dashboard-nav-container">
-				<div className="dashboard-logo">
+				<div className="dashboard-logo hidden md:flex">
 					<div className="dashboard-logo-icon">
 						<GaugeCircle className="h-5 w-5" />
 					</div>
@@ -257,7 +257,9 @@ const Navbar = () => {
 					))}
 				</div>
 				<div className="dashboard-actions">
-					<DropdownMenu>
+					{/* Desktop-only user dropdown */}
+					<div className="hidden md:block">
+						<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button
 								variant="ghost"
@@ -339,7 +341,8 @@ const Navbar = () => {
 								</DropdownMenuItem>
 							</div>
 						</DropdownMenuContent>
-					</DropdownMenu>
+						</DropdownMenu>
+					</div>
 					<button
 						type="button"
 						className="dashboard-mobile-toggle"
@@ -367,15 +370,26 @@ const Navbar = () => {
 								</span>
 							</Link>
 						))}
+						{/* Settings link in mobile menu */}
+						<Link
+							href={`${localePrefix}/dashboard/settings`}
+							onClick={() => setIsMobileMenuOpen(false)}
+							className={`dashboard-mobile-link${isActive("/dashboard/settings") ? " is-active" : ""}`}
+						>
+							<span className="inline-flex items-center gap-2">
+								<Settings className="h-4 w-4" />
+								{t("settings")}
+							</span>
+						</Link>
 					</nav>
 					<div className="dashboard-mobile-profile">
 						<p className="dashboard-mobile-name">{userName}</p>
 						{userEmail ? <p className="dashboard-mobile-email">{userEmail}</p> : null}
 					</div>
+					<LanguageSwitcher variant="mobile" onLocaleChange={() => setIsMobileMenuOpen(false)} />
 					<button type="button" className="dashboard-mobile-logout" onClick={handleLogout}>
 						{t("logout")}
 					</button>
-					<LanguageSwitcher variant="mobile" onLocaleChange={() => setIsMobileMenuOpen(false)} />
 				</div>
 			) : null}
 		</nav>
