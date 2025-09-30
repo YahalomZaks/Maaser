@@ -524,7 +524,8 @@ export function DonationsManager() {
 					<CardDescription>{t("table.description")}</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<div className="overflow-x-auto rounded-lg border border-border/60">
+					{/* Desktop/tablet table */}
+					<div className="hidden md:block overflow-x-auto rounded-lg border border-border/60">
 						<table className="min-w-full divide-y divide-border/60 text-sm">
 							<thead className="bg-muted/50">
 								<tr>
@@ -622,6 +623,60 @@ export function DonationsManager() {
 								)}
 							</tbody>
 						</table>
+					</div>
+					{/* Mobile card list */}
+					<div className="md:hidden space-y-3">
+						{donations.length === 0 ? (
+							<div className="rounded-lg border border-border/60 p-4 text-center text-sm text-muted-foreground">
+								{t("table.empty")}
+							</div>
+						) : (
+							donations.map((donation) => {
+								const convertedAmount = convertCurrency(donation.amount, donation.currency, baseCurrency);
+								const progressPercentage = computeDonationProgress(donation);
+								return (
+									<div key={donation.id} className="rounded-lg border border-border/60 bg-background p-4">
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<p className="font-semibold">{donation.organization}</p>
+												{donation.note ? <p className="mt-1 text-xs text-muted-foreground">{donation.note}</p> : null}
+											</div>
+											<div className="text-right">
+												<p className="text-sm font-medium">{formatCurrency(donation.amount, donation.currency, locale)}</p>
+												<p className="text-xs text-muted-foreground">{formatCurrency(convertedAmount, baseCurrency, locale)}</p>
+												{donation.currency !== baseCurrency ? (
+													<p className="text-[10px] text-amber-600">{t("table.convertedFlag")}</p>
+												) : null}
+											</div>
+										</div>
+										<div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+											<span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+												donation.isActive ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
+											}`}>{donation.isActive ? t("table.status.active") : t("table.status.inactive")}</span>
+											<span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-xs font-medium">
+												{t(`form.typeOptions.${donation.type}`)}
+											</span>
+											<div className="flex items-center gap-2">
+												<div className="h-2 w-24 rounded-full bg-muted">
+													<div className="h-2 rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }} />
+												</div>
+												<span className="text-xs font-medium">{progressPercentage}%</span>
+											</div>
+											<div className="flex justify-end gap-2 w-full">
+												<Button variant="ghost" size="sm" onClick={() => toggleActive(donation.id)} className="text-emerald-600">
+													{donation.isActive ? <PauseCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+													<span className="sr-only">{donation.isActive ? t("table.actions.pause") : t("table.actions.resume")}</span>
+												</Button>
+												<Button variant="ghost" size="sm" onClick={() => handleRemove(donation.id)} className="text-destructive" disabled={isSaving}>
+													<Trash2 className="h-4 w-4" />
+													<span className="sr-only">{tCommon("delete")}</span>
+												</Button>
+											</div>
+										</div>
+									</div>
+								);
+							})
+						)}
 					</div>
 					<div className="rounded-lg border border-dashed border-border/60 p-4 text-xs text-muted-foreground">
 						{t("table.helper")}

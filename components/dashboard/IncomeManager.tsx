@@ -564,7 +564,8 @@ export function IncomeManager() {
 							<CardDescription>{t("table.description")}</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							<div className="overflow-x-auto rounded-lg border border-border/60">
+							{/* Desktop/tablet table */}
+							<div className="hidden md:block overflow-x-auto rounded-lg border border-border/60">
 								<table className="min-w-full divide-y divide-border/60 text-sm">
 									<thead className="bg-muted/50">
 										<tr>
@@ -628,6 +629,51 @@ export function IncomeManager() {
 										)}
 									</tbody>
 								</table>
+							</div>
+
+							{/* Mobile card list */}
+							<div className="md:hidden space-y-3">
+								{variableIncomes.length === 0 ? (
+									<div className="rounded-lg border border-border/60 p-4 text-center text-sm text-muted-foreground">
+										{t("table.empty")}
+									</div>
+								) : (
+									variableIncomes.map((income) => {
+										const converted = convertCurrency(income.amount, income.currency, baseCurrency);
+										return (
+											<div key={income.id} className="rounded-lg border border-border/60 bg-background p-4">
+												<div className="flex items-start justify-between gap-3">
+													<div>
+														<p className="font-semibold">{income.description}</p>
+														{income.note ? <p className="mt-1 text-xs text-muted-foreground">{income.note}</p> : null}
+													</div>
+													<div className="text-right">
+														<p className="text-sm font-medium">{formatCurrency(income.amount, income.currency, locale)}</p>
+														<p className="text-xs text-muted-foreground">{formatCurrency(converted, baseCurrency, locale)}</p>
+														{income.currency !== baseCurrency ? (
+															<p className="text-[10px] text-amber-600">{t("table.convertedFlag")}</p>
+														) : null}
+													</div>
+												</div>
+												<div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+													<span className="capitalize text-xs text-muted-foreground">{t(`sources.${income.source}`)}</span>
+													<span className="text-xs">{t(`form.scheduleOptions.${income.schedule}`)}</span>
+													<div className="flex-1" />
+													<Button
+														variant="ghost"
+														size="sm"
+														className="text-destructive"
+														onClick={() => handleRemoveIncome(income.id)}
+														disabled={isSaving}
+													>
+														<MinusCircle className="h-4 w-4" />
+														<span className="sr-only">{tCommon("delete")}</span>
+													</Button>
+												</div>
+											</div>
+										);
+									})
+								)}
 							</div>
 
 							<div className="grid gap-4 lg:grid-cols-3">

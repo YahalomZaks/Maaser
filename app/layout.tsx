@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Heebo, Inter, Lato } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { Suspense } from "react";
 
 import Navbar from "@/components/shared/navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -59,6 +60,10 @@ export const metadata: Metadata = {
 	},
 };
 
+// Mark the root layout as dynamic to allow request-scoped locale/messages
+// and avoid static optimization errors during production builds.
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
 	children,
 }: Readonly<{
@@ -81,7 +86,9 @@ export default async function RootLayout({
 			>
 				<NextIntlClientProvider locale={locale} messages={messages}>
 						<ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
-						<Navbar />
+						<Suspense fallback={null}>
+							<Navbar />
+						</Suspense>
 							<main className="app-main relative">
 							{children}
 						</main>
