@@ -275,36 +275,21 @@ export function DashboardOverview() {
 		});
 
 	return (
-		<div className="space-y-4 sm:space-y-6 md:space-y-8">
-			{/* Header Section - Mobile-First Responsive */}
-			<div className="flex flex-col gap-3 sm:gap-4 md:gap-6 lg:flex-row lg:items-start lg:justify-between">
-				<div className="space-y-1.5 sm:space-y-2 md:space-y-3">
-					<span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary sm:gap-2 sm:px-3 md:text-sm">
-						<CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
-						{t("overview.badge", { year: selectedYear })}
-					</span>
-					<h1 className="text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl lg:text-4xl leading-tight">
-						{t("overview.heading", { year: selectedYear })}
-					</h1>
-					<p className="text-xs text-muted-foreground sm:text-sm md:text-base md:max-w-2xl leading-relaxed">
-						{t("overview.subheading", { currency: currencyLabel })}
-					</p>
-					<div className="flex flex-col gap-1.5 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 md:text-sm">
-						<div className="flex items-center gap-1.5 sm:gap-2">
-							<Coins className="h-3 w-3 text-primary sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
-							<span>{t("overview.tithePercent", { percent: Math.round(year.tithePercent * 100) })}</span>
+		<>
+			{/* Mobile-First Design - Completely Different Layout */}
+			<div className="block md:hidden space-y-4">
+				{/* Simple Mobile Header with Year Dropdown */}
+				<div className="mb-4 flex flex-col gap-2">
+					<div className="flex items-center justify-between">
+						<div>
+							<span className="text-xs text-muted-foreground">{t("overview.yearPickerLabel")}</span>
+							<div className="flex items-center gap-1">
+								<CalendarDays className="h-4 w-4 text-primary" />
+								<h1 className="text-xl font-bold">{selectedYear}</h1>
+							</div>
 						</div>
-						<div className="flex items-center gap-1.5 sm:gap-2">
-							<HandCoins className="h-3 w-3 text-primary sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
-							<span>{t(`overview.carryStrategy.${year.carryStrategy}`)}</span>
-						</div>
-					</div>
-				</div>
-				<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 lg:flex-col lg:items-end xl:flex-row xl:items-center">
-					<label className="flex flex-col gap-1 text-xs font-medium sm:flex-row sm:items-center sm:gap-2 md:text-sm">
-						<span className="whitespace-nowrap">{t("overview.yearPickerLabel")}</span>
 						<select
-							className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-[90px] sm:px-3 sm:py-2"
+							className="rounded-md border border-border bg-background px-2 py-1 text-sm"
 							value={selectedYear}
 							onChange={(event) => setSelectedYear(Number(event.target.value))}
 						>
@@ -314,228 +299,410 @@ export function DashboardOverview() {
 								</option>
 							))}
 						</select>
-					</label>
-					<div className="flex rounded-lg border border-border bg-muted/40 p-1">
-						{VIEW_MODES.map((mode) => (
-							<button
-								type="button"
-								key={mode}
-								onClick={() => setViewMode(mode)}
-								className={cn(
-									"flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition sm:gap-2 sm:px-3 md:text-sm",
-									mode === viewMode ? "bg-background text-foreground shadow" : "text-muted-foreground",
-								)}
-							>
-								<TrendingUp className="h-3 w-3 md:h-4 md:w-4" />
-								<span className="whitespace-nowrap">{t(`viewModes.${mode}`)}</span>
-							</button>
-						))}
 					</div>
 				</div>
-			</div>
 
-			{/* Metrics Cards - Mobile-First Responsive Grid */}
-			<div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				<Card className="hover:shadow-sm transition-shadow p-3 sm:p-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-						<CardTitle className="text-xs font-medium sm:text-sm">{t("cards.income.title")}</CardTitle>
-						<Wallet className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-					</CardHeader>
-					<CardContent className="pb-0 pt-1 p-0 sm:p-6 sm:pt-0 sm:pb-3">
-						<div className="text-base font-bold sm:text-lg lg:text-xl">
-							{formatCurrency(metrics.income, year.baseCurrency, locale)}
-						</div>
-						<p className="text-[10px] text-muted-foreground sm:text-xs line-clamp-2">{helperContext}</p>
-					</CardContent>
-				</Card>
-				<Card className="hover:shadow-sm transition-shadow p-3 sm:p-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-						<CardTitle className="text-xs font-medium sm:text-sm">{t("cards.obligation.title")}</CardTitle>
-						<Gauge className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-					</CardHeader>
-					<CardContent className="pb-0 pt-1 p-0 sm:p-6 sm:pt-0 sm:pb-3">
-						<div className="text-base font-bold sm:text-lg lg:text-xl">
-							{formatCurrency(metrics.obligation, year.baseCurrency, locale)}
-						</div>
-						<p className="text-[10px] text-muted-foreground sm:text-xs line-clamp-2">{t("cards.obligation.helper", { percent: Math.round(year.tithePercent * 100) })}</p>
-					</CardContent>
-				</Card>
-				<Card className="hover:shadow-sm transition-shadow p-3 sm:p-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-						<CardTitle className="text-xs font-medium sm:text-sm">{t("cards.donations.title")}</CardTitle>
-						<HandCoins className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-					</CardHeader>
-					<CardContent className="pb-0 pt-1 p-0 sm:p-6 sm:pt-0 sm:pb-3">
-						<div className="text-base font-bold sm:text-lg lg:text-xl">
-							{formatCurrency(metrics.donations, year.baseCurrency, locale)}
-						</div>
-						<p className="text-[10px] text-muted-foreground sm:text-xs line-clamp-2">{t("cards.donations.helper")}</p>
-					</CardContent>
-				</Card>
-				<Card className="hover:shadow-sm transition-shadow p-3 sm:p-0">
-					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-						<CardTitle className="text-xs font-medium sm:text-sm">{t("cards.balance.title")}</CardTitle>
-						<Coins className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-					</CardHeader>
-					<CardContent className="pb-0 pt-1 p-0 sm:p-6 sm:pt-0 sm:pb-3">
-						<div className="text-base font-bold sm:text-lg lg:text-xl">
-							{formatCurrency(metrics.balance, year.baseCurrency, locale)}
-						</div>
-						<p className="text-[10px] text-muted-foreground sm:text-xs line-clamp-2">
-							{t(metrics.balance >= 0 ? "cards.balance.surplus" : "cards.balance.debt")}
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-
-			{/* Progress Section - Mobile-Optimized */}
-			<Card className="p-3 sm:p-0">
-				<CardHeader className="pb-2 p-0 sm:p-6 sm:pb-3">
-					<CardTitle className="text-sm sm:text-base">{t("progress.title")}</CardTitle>
-					<CardDescription className="text-xs sm:text-sm">{t("progress.description", { scope: t(`viewModes.${viewMode}`) })}</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-2 p-0 pt-0 sm:space-y-3 sm:p-6 sm:pt-0">
-					<div>
-						<div className="flex items-center justify-between text-xs font-medium sm:text-sm">
-							<span>{t("progress.label")}</span>
-							<span className="text-primary font-semibold">{progressPercent}%</span>
-						</div>
-						<div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
-							<div
-								className="h-2 rounded-full bg-primary transition-all duration-500 ease-out"
-								style={{ width: `${progressPercent}%` }}
-							/>
-						</div>
-					</div>
-					<div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-						<div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
-							<p className="text-xs text-muted-foreground sm:text-sm">{t("progress.actual")}</p>
-							<p className="text-base font-semibold sm:text-lg">
-								{formatCurrency(progressActual, year.baseCurrency, locale)}
-							</p>
-						</div>
-						<div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
-							<p className="text-xs text-muted-foreground sm:text-sm">{t("progress.target")}</p>
-							<p className="text-base font-semibold sm:text-lg">
-								{formatCurrency(progressTarget, year.baseCurrency, locale)}
-							</p>
-						</div>
-					</div>
-					<p className="text-[10px] text-muted-foreground sm:text-xs">{t("progress.note")}</p>
-				</CardContent>
-			</Card>
-
-			{/* Monthly Data Table Section - Enhanced Mobile View */}
-			<div className="space-y-3 sm:space-y-4">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-					<h2 className="text-base font-semibold tracking-tight sm:text-lg">{t("table.title")}</h2>
-					<div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted/40 p-1 sm:gap-2">
-						{months.map((month) => (
-							<button
-								key={month.id}
-								type="button"
-								onClick={() => setSelectedMonthId(month.id)}
-								className={cn(
-									"flex-shrink-0 rounded-md px-2 py-1.5 text-[10px] font-medium transition whitespace-nowrap sm:px-3 sm:py-2 sm:text-xs md:text-sm",
-									month.id === selectedMonth?.id ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground",
-								)}
-							>
-								{tMonths(MONTH_KEYS[month.monthIndex])}
-							</button>
-						))}
-					</div>
-				</div>
-				
-				{/* Mobile-First Table Design */}
-				<div className="block sm:hidden space-y-2">
-					{months.map((month) => (
-						<Card key={month.id} className={cn(
-							"p-3 transition-colors", 
-							month.id === selectedMonth?.id && "ring-2 ring-primary/20 bg-primary/5"
-						)}>
-							<div className="flex items-center justify-between mb-2">
-								<h3 className="font-medium text-sm">{tMonths(MONTH_KEYS[month.monthIndex])}</h3>
-								<span className={cn(
-									"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", 
-									month.runningBalance >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"
-								)}>
-									{formatCurrency(month.runningBalance, year.baseCurrency, locale)}
-								</span>
-							</div>
-							<div className="grid grid-cols-2 gap-2 text-xs">
-								<div>
-									<span className="text-muted-foreground">{t("table.columns.income")}: </span>
-									<span className="font-medium">{formatCurrency(month.incomesBase, year.baseCurrency, locale)}</span>
-								</div>
-								<div>
-									<span className="text-muted-foreground">{t("table.columns.obligation")}: </span>
-									<span className="font-medium">{formatCurrency(month.obligation, year.baseCurrency, locale)}</span>
-								</div>
-								<div>
-									<span className="text-muted-foreground">{t("table.columns.donations")}: </span>
-									<span className="font-medium">{formatCurrency(month.donationsBase, year.baseCurrency, locale)}</span>
-								</div>
-								<div>
-									{month.convertedEntries > 0 ? (
-										<span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-											{t("table.conversionFlag", { count: month.convertedEntries })}
-										</span>
-									) : (
-										<span className="text-[10px] text-muted-foreground">{t("table.noConversions")}</span>
-									)}
-								</div>
-							</div>
-						</Card>
+				{/* Mobile Simple Mode Toggle */}
+				<div className="mb-3 flex">
+					{VIEW_MODES.map((mode) => (
+						<button
+							type="button"
+							key={mode}
+							onClick={() => setViewMode(mode)}
+							className={cn(
+								"flex-1 py-2 text-sm font-medium border-b-2 transition-all",
+								mode === viewMode 
+									? "border-primary text-primary" 
+									: "border-transparent text-muted-foreground",
+							)}
+						>
+							{t(`viewModes.${mode}`)}
+						</button>
 					))}
 				</div>
 
-				{/* Desktop Table */}
-				<div className="hidden sm:block overflow-x-auto rounded-lg border border-border/60">
-					<table className="min-w-full divide-y divide-border/60 text-sm">
-						<thead className="bg-muted/50">
-							<tr>
-								<th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs sm:px-4 sm:py-3 sm:text-sm">{t("table.columns.month")}</th>
-								<th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs sm:px-4 sm:py-3 sm:text-sm">{t("table.columns.income")}</th>
-								<th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs sm:px-4 sm:py-3 sm:text-sm">{t("table.columns.obligation")}</th>
-								<th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs sm:px-4 sm:py-3 sm:text-sm">{t("table.columns.donations")}</th>
-								<th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs sm:px-4 sm:py-3 sm:text-sm">{t("table.columns.balance")}</th>
-								<th className="px-3 py-2 text-left font-medium text-muted-foreground text-xs sm:px-4 sm:py-3 sm:text-sm">{t("table.columns.conversions")}</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-border/40">
+				{/* Mobile Balance Summary - Main indicator */}
+				<div className="mb-3 bg-muted/20 p-3 rounded-md border border-border">
+					<div className="flex justify-between items-center">
+						<div className="flex flex-col">
+							<span className="text-xs text-muted-foreground">{t("cards.balance.title")}</span>
+							<span className="text-xl font-semibold">{formatCurrency(metrics.balance, year.baseCurrency, locale)}</span>
+						</div>
+						<div className={cn(
+							"px-3 py-1 rounded-full text-sm",
+							metrics.balance >= 0 
+								? "bg-emerald-500/10 text-emerald-600" 
+								: "bg-red-500/10 text-red-600"
+						)}>
+							{metrics.balance < 0 ? <span>-{formatCurrency(Math.abs(metrics.balance), year.baseCurrency, locale)}</span> : <span>+{formatCurrency(metrics.balance, year.baseCurrency, locale)}</span>}
+						</div>
+					</div>
+				</div>
+
+				{/* Main Financial Summary */}
+				<div className="mb-5">
+					{/* Obligations & Progress Section */}
+					<div className="mb-3 bg-white rounded-md border border-border p-3">
+						<div className="flex justify-between items-center mb-1.5">
+							<div>
+								<div className="text-xs text-muted-foreground">{t("progress.title")}</div>
+								<div className="text-sm font-medium">{t("cards.obligation.title")}</div>
+							</div>
+							<div className="text-primary font-semibold">{formatCurrency(metrics.obligation, year.baseCurrency, locale)}</div>
+						</div>
+						
+						{/* Progress Bar */}
+						<div className="mt-2">
+							<div className="flex justify-between items-center text-xs mb-1.5">
+								<span className="font-medium">{progressPercent}%</span>
+								<span>{formatCurrency(progressActual, year.baseCurrency, locale)} / {formatCurrency(progressTarget, year.baseCurrency, locale)}</span>
+							</div>
+							<div className="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
+								<div
+									className="h-2 bg-primary rounded-full"
+									style={{ width: `${progressPercent}%` }}
+								/>
+							</div>
+						</div>
+					</div>
+
+					{/* Income & Donation Summary */}
+					<div className="grid grid-cols-2 gap-3">
+						<div className="bg-white rounded-md border border-border p-3">
+							<div className="text-xs text-muted-foreground mb-1">{t("cards.income.title")}</div>
+							<div className="font-semibold">{formatCurrency(metrics.income, year.baseCurrency, locale)}</div>
+						</div>
+						<div className="bg-white rounded-md border border-border p-3">
+							<div className="text-xs text-muted-foreground mb-1">{t("cards.donations.title")}</div>
+							<div className="font-semibold">{formatCurrency(metrics.donations, year.baseCurrency, locale)}</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Mobile Monthly Navigator */}
+				{viewMode === "monthly" && (
+					<div className="mb-4">
+						<h3 className="text-sm font-semibold mb-3">{t("table.title")}</h3>
+						<div className="flex gap-1.5 overflow-x-auto rounded-lg border border-border/60 bg-muted/30 p-1 scrollbar-hide">
 							{months.map((month) => (
-								<tr key={month.id} className={cn(
-									"hover:bg-muted/30 transition-colors", 
-									month.id === selectedMonth?.id && "bg-muted/30"
-								)}> 
-									<td className="px-3 py-2 font-medium text-xs sm:px-4 sm:py-3 sm:text-sm">{tMonths(MONTH_KEYS[month.monthIndex])}</td>
-									<td className="px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm">{formatCurrency(month.incomesBase, year.baseCurrency, locale)}</td>
-									<td className="px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm">{formatCurrency(month.obligation, year.baseCurrency, locale)}</td>
-									<td className="px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm">{formatCurrency(month.donationsBase, year.baseCurrency, locale)}</td>
-									<td className="px-3 py-2 sm:px-4 sm:py-3">
-										<span className={cn(
-											"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", 
-											month.runningBalance >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"
-										)}> 
-											{formatCurrency(month.runningBalance, year.baseCurrency, locale)}
-										</span>
-									</td>
-									<td className="px-3 py-2 sm:px-4 sm:py-3">
-										{month.convertedEntries > 0 ? (
-											<span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700">
-												{t("table.conversionFlag", { count: month.convertedEntries })}
-											</span>
-										) : (
-											<span className="text-xs text-muted-foreground">{t("table.noConversions")}</span>
-										)}
-									</td>
-								</tr>
+								<button
+									key={month.id}
+									type="button"
+									onClick={() => setSelectedMonthId(month.id)}
+									className={cn(
+										"flex-shrink-0 rounded-md px-3 py-2 text-xs font-medium transition-all whitespace-nowrap",
+										month.id === selectedMonth?.id 
+											? "bg-background shadow-sm text-foreground border border-border/60" 
+											: "text-muted-foreground hover:text-foreground hover:bg-background/50",
+									)}
+								>
+									{tMonths(MONTH_KEYS[month.monthIndex])}
+								</button>
 							))}
-						</tbody>
-					</table>
+						</div>
+					</div>
+				)}
+
+				{/* Mobile Monthly Details */}
+				{viewMode === "monthly" && selectedMonth && (
+					<div className="space-y-3">
+						<div className="rounded-xl bg-gradient-to-br from-muted/80 to-background/90 border border-border/60 p-4">
+							<div className="flex items-center justify-between mb-3">
+								<h4 className="font-semibold">{tMonths(MONTH_KEYS[selectedMonth.monthIndex])}</h4>
+								<span className={cn(
+									"inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
+									selectedMonth.runningBalance >= 0 
+										? "bg-emerald-500/20 text-emerald-700" 
+										: "bg-destructive/20 text-destructive"
+								)}>
+									{selectedMonth.runningBalance >= 0 ? "+" : ""}
+									{formatCurrency(selectedMonth.runningBalance, year.baseCurrency, locale)}
+								</span>
+							</div>
+							<div className="grid grid-cols-2 gap-4 text-sm">
+								<div>
+									<span className="text-muted-foreground block mb-1">{t("table.columns.income")}</span>
+									<span className="font-semibold">{formatCurrency(selectedMonth.incomesBase, year.baseCurrency, locale)}</span>
+								</div>
+								<div>
+									<span className="text-muted-foreground block mb-1">{t("table.columns.obligation")}</span>
+									<span className="font-semibold">{formatCurrency(selectedMonth.obligation, year.baseCurrency, locale)}</span>
+								</div>
+								<div>
+									<span className="text-muted-foreground block mb-1">{t("table.columns.donations")}</span>
+									<span className="font-semibold">{formatCurrency(selectedMonth.donationsBase, year.baseCurrency, locale)}</span>
+								</div>
+								<div>
+									<span className="text-muted-foreground block mb-1">{t("table.columns.conversions")}</span>
+									{selectedMonth.convertedEntries > 0 ? (
+										<span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-700">
+											{selectedMonth.convertedEntries}
+										</span>
+									) : (
+										<span className="text-xs text-muted-foreground">{t("table.noConversions")}</span>
+									)}
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* Mobile Yearly Summary */}
+				{viewMode === "yearly" && (
+					<div className="space-y-3">
+						<h3 className="text-sm font-semibold">{t("table.title")}</h3>
+						{months.map((month) => (
+							<div key={month.id} className="rounded-lg bg-white border border-border p-3">
+								<div className="flex items-center justify-between mb-2">
+									<span className="font-medium text-sm">{tMonths(MONTH_KEYS[month.monthIndex])}</span>
+									<span className={cn(
+										"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+										month.runningBalance >= 0 
+											? "bg-emerald-500/10 text-emerald-600" 
+											: "bg-destructive/10 text-destructive"
+									)}>
+										{formatCurrency(month.runningBalance, year.baseCurrency, locale)}
+									</span>
+								</div>
+								<div className="grid grid-cols-3 gap-2 text-xs">
+									<div>
+										<span className="text-muted-foreground block">{t("table.columns.income")}</span>
+										<span className="font-medium">{formatCurrency(month.incomesBase, year.baseCurrency, locale)}</span>
+									</div>
+									<div>
+										<span className="text-muted-foreground block">{t("table.columns.obligation")}</span>
+										<span className="font-medium">{formatCurrency(month.obligation, year.baseCurrency, locale)}</span>
+									</div>
+									<div>
+										<span className="text-muted-foreground block">{t("table.columns.donations")}</span>
+										<span className="font-medium">{formatCurrency(month.donationsBase, year.baseCurrency, locale)}</span>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+
+			{/* Desktop Design - Original Layout */}
+			<div className="hidden md:block space-y-6 lg:space-y-8">
+				{/* Header Section */}
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+					<div className="space-y-2 lg:space-y-3">
+						<span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+							<CalendarDays className="h-4 w-4" />
+							{t("overview.badge", { year: selectedYear })}
+						</span>
+						<h1 className="text-3xl font-semibold tracking-tight lg:text-4xl leading-tight">
+							{t("overview.heading", { year: selectedYear })}
+						</h1>
+						<p className="text-muted-foreground max-w-2xl leading-relaxed">
+							{t("overview.subheading", { currency: currencyLabel })}
+						</p>
+						<div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+							<div className="flex items-center gap-2">
+								<Coins className="h-4 w-4 text-primary" />
+								<span>{t("overview.tithePercent", { percent: Math.round(year.tithePercent * 100) })}</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<HandCoins className="h-4 w-4 text-primary" />
+								<span>{t(`overview.carryStrategy.${year.carryStrategy}`)}</span>
+							</div>
+						</div>
+					</div>
+					<div className="flex flex-col gap-3 lg:flex-row lg:items-center xl:flex-row xl:items-center">
+						<label className="flex items-center gap-2 text-sm font-medium">
+							<span className="whitespace-nowrap">{t("overview.yearPickerLabel")}</span>
+							<select
+								className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+								value={selectedYear}
+								onChange={(event) => setSelectedYear(Number(event.target.value))}
+							>
+								{yearOptions.map((yearOption) => (
+									<option key={yearOption} value={yearOption}>
+										{yearOption}
+									</option>
+								))}
+							</select>
+						</label>
+						<div className="flex rounded-lg border border-border bg-muted/40 p-1">
+							{VIEW_MODES.map((mode) => (
+								<button
+									type="button"
+									key={mode}
+									onClick={() => setViewMode(mode)}
+									className={cn(
+										"flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition",
+										mode === viewMode ? "bg-background text-foreground shadow" : "text-muted-foreground",
+									)}
+								>
+									<TrendingUp className="h-4 w-4" />
+									<span className="whitespace-nowrap">{t(`viewModes.${mode}`)}</span>
+								</button>
+							))}
+						</div>
+					</div>
+				</div>
+
+				{/* Metrics Cards */}
+				<div className="grid gap-4 lg:grid-cols-4">
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-medium">{t("cards.income.title")}</CardTitle>
+							<Wallet className="h-4 w-4 text-primary" />
+						</CardHeader>
+						<CardContent>
+							<div className="text-2xl font-bold">
+								{formatCurrency(metrics.income, year.baseCurrency, locale)}
+							</div>
+							<p className="text-xs text-muted-foreground">{helperContext}</p>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-medium">{t("cards.obligation.title")}</CardTitle>
+							<Gauge className="h-4 w-4 text-primary" />
+						</CardHeader>
+						<CardContent>
+							<div className="text-2xl font-bold">
+								{formatCurrency(metrics.obligation, year.baseCurrency, locale)}
+							</div>
+							<p className="text-xs text-muted-foreground">{t("cards.obligation.helper", { percent: Math.round(year.tithePercent * 100) })}</p>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-medium">{t("cards.donations.title")}</CardTitle>
+							<HandCoins className="h-4 w-4 text-primary" />
+						</CardHeader>
+						<CardContent>
+							<div className="text-2xl font-bold">
+								{formatCurrency(metrics.donations, year.baseCurrency, locale)}
+							</div>
+							<p className="text-xs text-muted-foreground">{t("cards.donations.helper")}</p>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardTitle className="text-sm font-medium">{t("cards.balance.title")}</CardTitle>
+							<Coins className="h-4 w-4 text-primary" />
+						</CardHeader>
+						<CardContent>
+							<div className="text-2xl font-bold">
+								{formatCurrency(metrics.balance, year.baseCurrency, locale)}
+							</div>
+							<p className="text-xs text-muted-foreground">
+								{t(metrics.balance >= 0 ? "cards.balance.surplus" : "cards.balance.debt")}
+							</p>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Progress Section */}
+				<Card>
+					<CardHeader>
+						<CardTitle>{t("progress.title")}</CardTitle>
+						<CardDescription>{t("progress.description", { scope: t(`viewModes.${viewMode}`) })}</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-3">
+						<div>
+							<div className="flex items-center justify-between text-sm font-medium">
+								<span>{t("progress.label")}</span>
+								<span className="text-primary font-semibold">{progressPercent}%</span>
+							</div>
+							<div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+								<div
+									className="h-2 rounded-full bg-primary transition-all duration-500 ease-out"
+									style={{ width: `${progressPercent}%` }}
+								/>
+							</div>
+						</div>
+						<div className="grid gap-4 sm:grid-cols-2">
+							<div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
+								<p className="text-sm text-muted-foreground">{t("progress.actual")}</p>
+								<p className="text-lg font-semibold">
+									{formatCurrency(progressActual, year.baseCurrency, locale)}
+								</p>
+							</div>
+							<div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
+								<p className="text-sm text-muted-foreground">{t("progress.target")}</p>
+								<p className="text-lg font-semibold">
+									{formatCurrency(progressTarget, year.baseCurrency, locale)}
+								</p>
+							</div>
+						</div>
+						<p className="text-xs text-muted-foreground">{t("progress.note")}</p>
+					</CardContent>
+				</Card>
+
+				{/* Desktop Table */}
+				<div className="space-y-4">
+					<div className="flex items-center justify-between">
+						<h2 className="text-lg font-semibold tracking-tight">{t("table.title")}</h2>
+						<div className="flex gap-2 rounded-lg border border-border bg-muted/40 p-1">
+							{months.map((month) => (
+								<button
+									key={month.id}
+									type="button"
+									onClick={() => setSelectedMonthId(month.id)}
+									className={cn(
+										"rounded-md px-3 py-2 text-sm font-medium transition whitespace-nowrap",
+										month.id === selectedMonth?.id ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground",
+									)}
+								>
+									{tMonths(MONTH_KEYS[month.monthIndex])}
+								</button>
+							))}
+						</div>
+					</div>
+					
+					<div className="overflow-x-auto rounded-lg border border-border/60">
+						<table className="min-w-full divide-y divide-border/60 text-sm">
+							<thead className="bg-muted/50">
+								<tr>
+									<th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.columns.month")}</th>
+									<th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.columns.income")}</th>
+									<th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.columns.obligation")}</th>
+									<th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.columns.donations")}</th>
+									<th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.columns.balance")}</th>
+									<th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.columns.conversions")}</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-border/40">
+								{months.map((month) => (
+									<tr key={month.id} className={cn(
+										"hover:bg-muted/30 transition-colors", 
+										month.id === selectedMonth?.id && "bg-muted/30"
+									)}> 
+										<td className="px-4 py-3 font-medium">{tMonths(MONTH_KEYS[month.monthIndex])}</td>
+										<td className="px-4 py-3">{formatCurrency(month.incomesBase, year.baseCurrency, locale)}</td>
+										<td className="px-4 py-3">{formatCurrency(month.obligation, year.baseCurrency, locale)}</td>
+										<td className="px-4 py-3">{formatCurrency(month.donationsBase, year.baseCurrency, locale)}</td>
+										<td className="px-4 py-3">
+											<span className={cn(
+												"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", 
+												month.runningBalance >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"
+											)}> 
+												{formatCurrency(month.runningBalance, year.baseCurrency, locale)}
+											</span>
+										</td>
+										<td className="px-4 py-3">
+											{month.convertedEntries > 0 ? (
+												<span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700">
+													{t("table.conversionFlag", { count: month.convertedEntries })}
+												</span>
+											) : (
+												<span className="text-xs text-muted-foreground">{t("table.noConversions")}</span>
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }
 
