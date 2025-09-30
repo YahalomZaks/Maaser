@@ -84,7 +84,7 @@ export default async function RootLayout({
 						<Navbar />
 							<main
 								className="relative min-h-screen bg-gradient-to-b from-white via-[#f5f8ff] to-[#eef2f8]"
-								style={{ paddingTop: "var(--navbar-height, 80px)" }}
+								// style={{ paddingTop: "var(--navbar-height, 80px)" }}
 							>
 							{children}
 						</main>

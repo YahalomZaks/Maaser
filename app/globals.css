@@ -238,6 +238,89 @@ input[data-slot="input"]:disabled {
   cursor: not-allowed !important;
 }
 
+/* Global pointer cursor for shared Button component (works for asChild links too) */
+button[data-slot="button"],
+a[data-slot="button"],
+[data-slot="button"] {
+  cursor: pointer;
+}
+
+/* Respect disabled & aria-disabled states for Button rendered as link */
+[data-slot="button"][disabled],
+[data-slot="button"][aria-disabled="true"] {
+  cursor: not-allowed !important;
+}
+
+/* System-wide default: show pointer for any clickable buttons */
+button:not([disabled]) {
+  cursor: pointer;
+}
+
+/* Elements behaving as buttons via ARIA */
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+/* Disabled semantics for ARIA buttons */
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed !important;
+}
+
+/* ==== DropdownMenu: force pointer cursor on interactive items/triggers ==== */
+[data-slot="dropdown-menu-trigger"],
+[data-slot="dropdown-menu-item"],
+[data-slot="dropdown-menu-sub-trigger"],
+[data-slot="dropdown-menu-checkbox-item"],
+[data-slot="dropdown-menu-radio-item"] {
+  cursor: pointer !important;
+}
+
+/* Respect disabled state for dropdown items */
+[data-slot="dropdown-menu-item"][data-disabled],
+[data-slot="dropdown-menu-checkbox-item"][data-disabled],
+[data-slot="dropdown-menu-radio-item"][data-disabled],
+[data-slot="dropdown-menu-sub-trigger"][data-disabled] {
+  cursor: not-allowed !important;
+}
+
+/* ==== Selects: native and ARIA-based (Radix/Headless) ==== */
+/* Native <select> shows pointer when enabled */
+select:not([disabled]) {
+  cursor: pointer;
+}
+
+/* Disabled native select */
+select[disabled],
+select:disabled {
+  cursor: not-allowed !important;
+}
+
+/* ARIA combobox trigger (commonly used by headless/radix selects) */
+[role="combobox"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+[role="combobox"][aria-disabled="true"] {
+  cursor: not-allowed !important;
+}
+
+/* Options inside custom Select popovers */
+[role="option"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+[role="option"][aria-disabled="true"] {
+  cursor: not-allowed !important;
+}
+
+/* Future-proof for shadcn-style Select components if added later */
+[data-slot="select-trigger"],
+[data-slot="select-item"] {
+  cursor: pointer;
+}
+[data-slot="select-trigger"][data-disabled],
+[data-slot="select-item"][data-disabled] {
+  cursor: not-allowed !important;
+}
+
 /* ==== WELCOME PAGE CUSTOM STYLES ==== */
 
 /* Welcome Page CSS Variables */
