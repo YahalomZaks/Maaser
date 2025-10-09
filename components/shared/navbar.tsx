@@ -1,9 +1,7 @@
 "use client";
 
 import {
-	ChartLine,
 	ChevronDown,
-	GaugeCircle,
 	HandCoins,
 	LayoutDashboard,
 	LogOut,
@@ -13,6 +11,8 @@ import {
 	Wallet,
 	X,
 } from "lucide-react";
+import Image from "next/image";
+import logo from "@/public/logo.png";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -69,6 +69,8 @@ const Navbar = () => {
 
 	const localePrefix = `/${locale}`;
 	const isAuthenticated = Boolean(session);
+	const appName = t("appName");
+	const logoAlt = locale === "he" ? "לוגו מעשרותי" : "Maasroti logo";
 
 	const normalizedPath = useMemo(() => {
 		if (!pathname) {
@@ -235,10 +237,10 @@ const Navbar = () => {
 			<div className="dashboard-nav-container">
 				<div className="dashboard-logo hidden md:flex">
 					<div className="dashboard-logo-icon">
-						<GaugeCircle className="h-5 w-5" />
+						<Image src={logo} alt={logoAlt} priority className="h-full w-full object-contain" />
 					</div>
 					<Link href={`${localePrefix}/dashboard`} className="dashboard-logo-link">
-						{t("appName")}
+						{appName}
 					</Link>
 				</div>
 				<div className="dashboard-nav-links">
@@ -400,23 +402,15 @@ const Navbar = () => {
 			<div className="welcome-nav-container">
 				<div className="welcome-logo">
 					<div className="welcome-logo-icon">
-						<ChartLine className="h-6 w-6" />
+						<Image src={logo} alt={logoAlt} priority className="h-full w-full object-contain" />
 					</div>
 					<Link href={`/${locale}`} className="welcome-logo-link">
-						<span>{t("appName")}</span>
+						<span>{appName}</span>
 					</Link>
 				</div>
 				<div className="welcome-nav-actions">
 					<div className="welcome-nav-links">
-						<button type="button" onClick={() => scrollToElement("features")} className="welcome-nav-link">
-							{t("features")}
-						</button>
-						<button type="button" onClick={() => scrollToElement("tech")} className="welcome-nav-link">
-							{t("technology")}
-						</button>
-						<button type="button" onClick={scrollToFooter} className="welcome-nav-link">
-							{t("contact", { default: "" }) || "יצירת קשר"}
-						</button>
+						
 						<LanguageSwitcher onLocaleChange={() => setIsMobileMenuOpen(false)} />
 						{publicAuthControls}
 					</div>
@@ -457,9 +451,9 @@ const Navbar = () => {
 				<div className="welcome-nav-container">
 					<div className="welcome-logo">
 						<div className="welcome-logo-icon">
-							<ChartLine className="h-6 w-6" />
+							<Image src={logo} alt={logoAlt} priority className="h-full w-full object-contain" />
 						</div>
-						<span>מעשרות</span>
+						<span>{appName}</span>
 					</div>
 				</div>
 			</nav>

@@ -31,34 +31,106 @@ const latoFont = Lato({
 	display: "swap",
 });
 
-export const metadata: Metadata = {
-	title: "Ma'aser Management System",
-	description: "מערכת ניהול מעשרות - ניהול ומעקב אחר מעשרות בצורה פשוטה ומסודרת",
-	keywords: ["מעשר", "צדקה", "ma'aser", "tithe", "charity", "donation management"],
-	authors: [
-		{
-			name: "Ma'aser System",
-		},
-	],
-	creator: "Ma'aser Management System",
-	publisher: "Ma'aser Management System",
-	robots: {
-		index: true,
-		follow: true,
+const META_BY_LOCALE: Record<"he" | "en", {
+	title: string;
+	description: string;
+	keywords: string[];
+	siteName: string;
+	twitterTitle: string;
+	twitterDescription: string;
+	openGraphLocale: string;
+}> = {
+	he: {
+		title: "מעשרותי",
+		description:
+			"מעשרותי מאפשרת לנהל הכנסות, תרומות וחישובי מעשר בצורה יעילה ומדויקת – כולל מעקב חודשי, דוחות, תזכורות וכלי חישוב הלכתיים.",
+		keywords: [
+			"מעשרותי",
+			"מעשר",
+			"חישוב מעשרות",
+			"מעשרות הכנסה",
+			"הפרשת מעשר",
+			"ניהול מעשרות",
+			"ניהול תרומות",
+			"ניהול צדקה",
+			"חישוב צדקה",
+			"רישום תרומות",
+			"מעקב תרומות",
+			"תכנון תרומות",
+			"דוחות מעשרות",
+			"סכום מעשר",
+			"מחשבון מעשר",
+		],
+		siteName: "מעשרותי",
+		twitterTitle: "מעשרותי – מערכת דיגיטלית לניהול וחישוב מעשרות",
+		twitterDescription:
+			"כלים חכמים לניהול הכנסות ותרומות, מעקב אחרי הפרשת מעשר ודוחות מפורטים בעברית.",
+		openGraphLocale: "he_IL",
 	},
-	openGraph: {
-		type: "website",
-		locale: "he_IL",
-		title: "מערכת ניהול מעשרות",
-		description: "מערכת ניהול מעשרות - ניהול ומעקב אחר מעשרות בצורה פשוטה ומסודרת",
-		siteName: "Ma'aser Management System",
-	},
-	twitter: {
-		card: "summary_large_image",
-		title: "מערכת ניהול מעשרות",
-		description: "מערכת ניהול מעשרות - ניהול ומעקב אחר מעשרות בצורה פשוטה ומסודרת",
+	en: {
+		title: "Maasroti",
+		description:
+			"Maasroti helps you track income, donations, and maaser obligations with automated calculations, clear dashboards, and reminders.",
+		keywords: [
+			"Maasroti",
+			"maaser calculator",
+			"tithe calculator",
+			"tithe management",
+			"donation tracker",
+			"charity management",
+			"maaser tracking",
+			"maaser planning",
+			"automatic maaser",
+			"income tithe",
+			"charity reports",
+			"donation budgeting",
+			"tzedakah calculator",
+			"tzedakah management",
+			"generosity planning",
+		],
+		siteName: "Maasroti",
+		twitterTitle: "Maasroti – Manage Your Maaser & Donations Smarter",
+		twitterDescription:
+			"Track income, donations, and maaser obligations with automated calculations, reminders, and multilingual dashboards.",
+		openGraphLocale: "en_US",
 	},
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+	const locale = await getLocale();
+	const key = locale === "he" ? "he" : "en";
+	const meta = META_BY_LOCALE[key];
+
+	return {
+		title: meta.title,
+		description: meta.description,
+		keywords: meta.keywords,
+		authors: [{ name: meta.siteName }],
+		creator: meta.siteName,
+		publisher: meta.siteName,
+		robots: {
+			index: true,
+			follow: true,
+		},
+		icons: {
+			icon: "/logo.png",
+			apple: "/logo.png",
+			shortcut: "/logo.png",
+		},
+		openGraph: {
+			type: "website",
+			locale: meta.openGraphLocale,
+			title: meta.title,
+			description: meta.description,
+			siteName: meta.siteName,
+		},
+		twitter: {
+			card: "summary_large_image",
+			title: meta.twitterTitle,
+			description: meta.twitterDescription,
+		},
+	};
+}
 
 // Mark the root layout as dynamic to allow request-scoped locale/messages
 // and avoid static optimization errors during production builds.

@@ -116,29 +116,32 @@
 
   /* App main background + paddings (for consistent, non-white top spacing) */
   --app-bg-start: #f5f8ff; /* top color of app background */
-  --app-bg-mid: #f5f8ff;   /* mid stop, keeps smooth look without white */
-  --app-bg-end: #eef2f8;   /* bottom color of app background */
-  --app-top-padding: 0.5rem;      /* ~8px */
-  --app-top-padding-sm: 1rem;     /* ~16px */
-  --app-top-padding-md: 1.5rem;   /* ~24px */
+  --app-bg-mid: #f5f8ff; /* mid stop, keeps smooth look without white */
+  --app-bg-end: #eef2f8; /* bottom color of app background */
+  --app-top-padding: 0.5rem; /* ~8px */
+  --app-top-padding-sm: 1rem; /* ~16px */
+  --app-top-padding-md: 1.5rem; /* ~24px */
 }
 
 /* App-wide main wrapper: background + responsive top padding (no white band) */
 .app-main {
   min-height: 100vh;
-  background: radial-gradient(circle at 10% 5%, #2563eb12 0%, transparent 55%), radial-gradient(circle at 85% 15%, #0891b20d 0%, transparent 50%), linear-gradient(180deg, var(--app-bg-start) 0%, var(--app-bg-end) 100%);
-  padding-top: var(--app-top-padding);
+  background: var(--neutral-100);
+  padding: calc(var(--navbar-height) + var(--app-top-padding))
+    var(--app-top-padding) var(--app-top-padding);
 }
 
 @media (min-width: 640px) {
   .app-main {
-    padding-top: var(--app-top-padding-sm);
+    padding: calc(var(--navbar-height) + var(--app-top-padding-sm))
+      var(--app-top-padding-sm) var(--app-top-padding-sm);
   }
 }
 
 @media (min-width: 768px) {
   .app-main {
-    padding-top: var(--app-top-padding-md);
+    padding: calc(var(--navbar-height) + var(--app-top-padding-md))
+      var(--app-top-padding-md) var(--app-top-padding-md);
   }
 }
 
@@ -382,7 +385,8 @@ select:disabled {
   --blur-md: blur(8px);
 
   /* Font and Layout */
-  font-family: var(--font-inter), var(--font-heebo), var(--font-lato), sans-serif;
+  font-family: var(--font-inter), var(--font-heebo), var(--font-lato),
+    sans-serif;
   line-height: 1.6;
   color: var(--neutral-800);
   background: var(--neutral-50);
@@ -490,12 +494,17 @@ select:disabled {
   width: 40px;
   height: 40px;
   border-radius: 14px;
-  background: var(--gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: var(--shadow-md);
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+.dashboard-logo-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .dashboard-nav-links {
@@ -599,7 +608,9 @@ select:disabled {
   color: currentColor;
 }
 
-.dashboard-user-meta { display: none; }
+.dashboard-user-meta {
+  display: none;
+}
 
 /* ==== Enhanced Dropdown Profile Styles ==== */
 .dropdown-profile-header {
@@ -614,7 +625,11 @@ select:disabled {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--welcome-primary) 0%, var(--welcome-secondary) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--welcome-primary) 0%,
+    var(--welcome-secondary) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -677,24 +692,24 @@ select:disabled {
     padding: 0.875rem;
     gap: 0.625rem;
   }
-  
+
   .dropdown-profile-avatar {
     width: 2.5rem;
     height: 2.5rem;
   }
-  
+
   .dropdown-profile-initial {
     font-size: 1rem;
   }
-  
+
   .dropdown-profile-name {
     font-size: 0.9rem;
   }
-  
+
   .dropdown-profile-email {
     font-size: 0.75rem;
   }
-  
+
   .dropdown-menu-link {
     padding: 0.625rem 0.875rem;
     font-size: 0.85rem;
@@ -834,14 +849,21 @@ select:disabled {
 }
 
 .dashboard-shell {
-    min-height: calc(100vh - var(--navbar-height));
-    padding-block-start: 0;
-    padding-block-end: clamp(1.5rem, 4vw, 2.5rem);
-    padding-inline: clamp(1rem, 4vw, 2rem); /* Increased horizontal padding */
-    background:
-      radial-gradient(circle at 10% 5%, rgba(37, 99, 235, 0.07) 0%, transparent 55%),
-      radial-gradient(circle at 85% 15%, rgba(8, 145, 178, 0.05) 0%, transparent 50%),
-      linear-gradient(180deg, var(--app-bg-start) 0%, var(--app-bg-end) 100%);
+  min-height: calc(100vh - var(--navbar-height));
+  padding-block-start: 0;
+  padding-block-end: clamp(1.5rem, 4vw, 2.5rem);
+  padding-inline: clamp(1rem, 4vw, 2rem); /* Increased horizontal padding */
+  background: radial-gradient(
+      circle at 10% 5%,
+      rgba(37, 99, 235, 0.07) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(8, 145, 178, 0.05) 0%,
+      transparent 50%
+    ),
+    linear-gradient(180deg, var(--app-bg-start) 0%, var(--app-bg-end) 100%);
 }
 
 .dashboard-shell__inner {
@@ -882,13 +904,19 @@ select:disabled {
 .welcome-logo-icon {
   width: 40px;
   height: 40px;
-  background: var(--gradient-primary);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  background: transparent;
+  color: inherit;
   font-size: 1.2rem;
+  overflow: hidden;
+}
+.welcome-logo-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .welcome-nav-links {
