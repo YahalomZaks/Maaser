@@ -12,7 +12,6 @@ import {
 	X,
 } from "lucide-react";
 import Image from "next/image";
-import logo from "@/public/logo.png";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -20,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { toast } from "sonner";
 
 import { signOut, useSession } from "@/lib/auth-client";
+import logo from "@/public/logo.png";
 
 import { Button } from "../ui/button";
 import {
