@@ -189,6 +189,7 @@
       "submit": "הירשם",
       "hasAccount": "יש לך כבר חשבון?",
       "signinLink": "התחבר כאן",
+      "orContinueWith": "או המשך עם",
       "error": "שגיאה בהרשמה",
       "passwordMismatch": "הסיסמאות אינן תואמות",
       "weakPassword": "הסיסמה חלשה מדי",
@@ -204,6 +205,14 @@
         "match": "הסיסמאות תואמות",
         "mismatch": "הסיסמאות אינן תואמות",
         "invalid": "נא לעמוד בלפחות שלוש מדרישות הסיסמה."
+      }
+    },
+    "social": {
+      "buttons": {
+        "google": "התחברות עם Google"
+      },
+      "sr": {
+        "google": "התחבר עם Google"
       }
     },
     "resetPassword": {

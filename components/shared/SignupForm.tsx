@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { SocialLogin, isGoogleLoginEnabled } from "@/components/shared/SocialLogin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -267,6 +268,23 @@ export function SignupForm() {
             >
               {isPending ? t("pending") : t("submit")}
             </Button>
+
+            {isGoogleLoginEnabled ? (
+              <>
+                <div className="relative my-2 text-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-3 py-1 text-muted-foreground hover:text-primary transition-colors duration-200 cursor-pointer rounded-md hover:bg-accent">
+                      {t("orContinueWith")}
+                    </span>
+                  </div>
+                </div>
+
+                <SocialLogin />
+              </>
+            ) : null}
 
             <div className="text-center text-sm">
               {t("hasAccount")} {" "}

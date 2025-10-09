@@ -24,22 +24,30 @@ export const auth = betterAuth({
     },
   },
   // Add social providers only if we have the credentials
-  ...(process.env.GITHUB_CLIENT_ID &&
-    process.env.GITHUB_CLIENT_SECRET && {
-      socialProviders: {
-        github: {
-          clientId: process.env.GITHUB_CLIENT_ID,
-          clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  ...((process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) ||
+  (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET)
+    ? {
+        socialProviders: {
+          ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+            ? {
+                github: {
+                  clientId: process.env.GITHUB_CLIENT_ID,
+                  clientSecret: process.env.GITHUB_CLIENT_SECRET,
+                },
+              }
+            : {}),
+          ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+            ? {
+                google: {
+                  clientId: process.env.GOOGLE_CLIENT_ID,
+                  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                  scope: ["openid", "profile", "email"],
+                },
+              }
+            : {}),
         },
-        ...(process.env.GOOGLE_CLIENT_ID &&
-          process.env.GOOGLE_CLIENT_SECRET && {
-            google: {
-              clientId: process.env.GOOGLE_CLIENT_ID,
-              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            },
-          }),
-      },
-    }),
+      }
+    : {}),
   trustedOrigins: [
     "http://localhost:3000", // Fixed to match our dev server
     "https://authify.dev:3000",

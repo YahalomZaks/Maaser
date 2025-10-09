@@ -189,6 +189,7 @@
       "submit": "Sign Up",
       "hasAccount": "Already have an account?",
       "signinLink": "Sign in here",
+      "orContinueWith": "Or continue with",
       "error": "Sign up error",
       "passwordMismatch": "Passwords don't match",
       "weakPassword": "Password is too weak",
@@ -204,6 +205,14 @@
         "match": "Passwords match",
         "mismatch": "Passwords do not match",
         "invalid": "Please meet at least three password requirements."
+      }
+    },
+    "social": {
+      "buttons": {
+        "google": "Continue with Google"
+      },
+      "sr": {
+        "google": "Sign in with Google"
       }
     },
     "resetPassword": {
