@@ -1,0 +1,9 @@
+# Allow all search engines to crawl
+User-agent: *
+Allow: /
+
+# Disallow crawling of API routes and private paths
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://maasroti.com/sitemap.xml
