@@ -26,7 +26,7 @@ export async function logPageViewMiddleware(request: NextRequest) {
     const skipPaths = [
       "/api",
       "/_next",
-      "/favicon.ico",
+      "/favicon.png",
       "/robots.txt",
       "/sitemap.xml",
     ];

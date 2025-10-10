@@ -113,12 +113,8 @@ export async function generateMetadata(): Promise<Metadata> {
 			follow: true,
 		},
 		icons: {
-			icon: [
-				{ rel: "icon", url: "/favicon.png?v=1", type: "image/png", sizes: "any" },
-				{ rel: "shortcut icon", url: "/favicon.png?v=1", type: "image/png" },
-			],
-			apple: [{ url: "/favicon.png?v=1" }],
-			shortcut: ["/favicon.png?v=1"],
+			icon: "/favicon.png",
+			apple: "/favicon.png",
 		},
 		openGraph: {
 			type: "website",
