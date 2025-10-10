@@ -8,7 +8,7 @@ import { prismaClient } from "@/lib/prisma";
 const prisma = prismaClient;
 
 export const auth = betterAuth({
-  appName: "SecureStart",
+  appName: "Maasroti",
   secret: process.env.BETTER_AUTH_SECRET || "fallback_secret_for_development",
   database: prismaAdapter(prisma, {
     provider: "postgresql", // or "mysql", "postgresql", ...etc mongodb with your database
@@ -49,9 +49,9 @@ export const auth = betterAuth({
       }
     : {}),
   trustedOrigins: [
-    "http://localhost:3000", // Fixed to match our dev server
-    "https://authify.dev:3000",
-    "https://securestart.netlify.app/",
+    "http://localhost:3000", // Development server
+    "https://maasroti.com", // Production domain
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []), // Vercel preview deployments
   ],
   session: {
     cookieCache: {
@@ -60,7 +60,7 @@ export const auth = betterAuth({
     },
   },
   advanced: {
-    cookiePrefix: "SecureStart",
+    cookiePrefix: "Maasroti",
   },
 
   // emailVerification temporarily disabled - removing duplicate config
