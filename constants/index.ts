@@ -3,7 +3,7 @@ import { Fingerprint, KeyRound, Link2 } from "lucide-react";
 
 // Code snippets for different authentication strategies
 export const authCodeSnippets = {
-	oauth: `// OAuth authentication with multiple providers
+  oauth: `// OAuth authentication with multiple providers
 import { signIn } from "@/lib/auth-client";
 
 export function OAuthButtons() {
@@ -29,7 +29,7 @@ export function OAuthButtons() {
     </div>
   );
 }`,
-	emailPassword: `// Email & Password authentication
+  emailPassword: `// Email & Password authentication
 import { useState } from 'react';
 import { signIn } from '@/lib/auth-client';
 
@@ -83,7 +83,7 @@ export function EmailPasswordForm() {
     </form>
   );
 }`,
-	magicLink: `// Magic Link authentication
+  magicLink: `// Magic Link authentication
 import { useState } from 'react';
 import { sendMagicLink } from '@/lib/auth-client';
 
