@@ -1,6 +1,6 @@
 {
-  "name": "better-auth-kit",
-  "version": "0.1.0",
+  "name": "maasroti",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

@@ -1,4 +1,3 @@
-// filepath: c:\Users\Abdullah\Documents\coding\better-auth-kit\app\signup\page.tsx
 import { SignupForm } from "@/components/shared/SignupForm";
 
 export default function SignupPage() {
