@@ -18,7 +18,6 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
  
 import welcomeAnimation from "@/animation/welcomeAnimation.json";
-import FeedbackButton from "@/components/shared/FeedbackButton";
 import Footer from "@/components/shared/Footer";
 
 const HomePage = () => {
@@ -150,8 +149,7 @@ const HomePage = () => {
       
       <Footer />
       
-      {/* Feedback Button */}
-      <FeedbackButton />
+      {/* Feedback FAB removed per request; feedback now available from authenticated user menu */}
     </div>
   );
 };

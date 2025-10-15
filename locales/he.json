@@ -160,6 +160,31 @@
     "rights": "כל הזכויות שמורות",
     "developedBy": "פותח בעם ישראל"
   },
+  "feedback": {
+    "feedbackMenu": "שלח משוב",
+    "title": "דיווח ומשוב",
+    "subtitle": "נשמח לשמוע מכם על תקלות או הצעות לשיפור",
+    "selectPrompt": "במה נוכל לעזור?",
+    "bugTitle": "דיווח על תקלה",
+    "bugSubtitle": "משהו לא עובד כמו שצריך?",
+    "featureTitle": "הצעת שיפור",
+    "featureSubtitle": "יש לכם רעיון לשיפור?",
+    "nameLabel": "שם מלא *",
+    "namePlaceholder": "השם שלכם",
+    "emailLabel": "כתובת אימייל *",
+    "emailPlaceholder": "email@example.com",
+    "messageLabel": "תוכן ההודעה *",
+    "bugPlaceholder": "תארו את התקלה, מתי קרתה ואיך לשחזר",
+    "featurePlaceholder": "תארו את ההצעה לשיפור בפירוט",
+    "submit": "שלח",
+    "back": "חזור",
+    "cancel": "ביטול",
+    "backToDashboard": "חזרה ללוח הראשי",
+    "successTitle": "המשוב נשלח בהצלחה",
+    "successSubtitle": "תודה על הזמן והעזרה בשיפור המערכת!",
+    "backHome": "חזור למסך הבית",
+    "sendAnother": "שלח משוב נוסף"
+  },
   "auth": {
     "signin": {
       "title": "ברוך שובך",

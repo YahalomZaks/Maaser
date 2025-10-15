@@ -10,6 +10,7 @@ import {
 	UserCircle,
 	Wallet,
 	X,
+	MessageCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,6 +49,7 @@ type SupportedLanguage = "he" | "en";
 const Navbar = () => {
 	const { data: session, isPending } = useSession();
 	const t = useTranslations("navigation");
+	const tFeedback = useTranslations("feedback");
 	const tCommon = useTranslations("common");
 	const tLang = useTranslations("settings.language");
 	const locale = useLocale();
@@ -322,6 +324,12 @@ const Navbar = () => {
 									<Link href={`${localePrefix}/dashboard/settings`} className="dropdown-menu-link">
 										<Settings className="h-4 w-4" />
 										<span>{t("settings")}</span>
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild>
+									<Link href={`${localePrefix}/feedback`} className="dropdown-menu-link">
+										<MessageCircle className="h-4 w-4" />
+										<span>{tFeedback("feedbackMenu")}</span>
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="mx-0" />
