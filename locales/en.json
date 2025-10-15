@@ -3,28 +3,28 @@
     "badge": "Built for the benefit of many - completely free",
     "title": {
       "main": "Are you also struggling with",
-      "highlight": "tithes",
+      "highlight": "Maasrot",
       "suffix": "every month?"
     },
     "empty": {
       "noData": "No Data"
     },
     "subtitle": {
-      "problem": "Can't remember how many places you donate to? How much to each? And whether it even covers the tithes you need to give?",
-      "solution": "Maaser simplifies tracking your income and donations, ensuring you always know your tithing status.",
+      "problem": "Can't remember how many places you donate to? How much to each? And whether it even covers the maaser you need to give?",
+      "solution": "Maasroti simplifies tracking your income and donations, ensuring you always know your maasrot status.",
       "description": "All your donations are organized in one place in a friendly and convenient way."
     },
     "buttons": {
       "start": "Let's get started!",
       "howItWorks": "How does it work?"
     },
-    "note": "The system was developed for the benefit of many. No costs, no profit motives - just a tool to help you manage tithes easily.",
+    "note": "The system was developed for the benefit of many. No costs, no profit motives - just a tool to help you manage maaser easily.",
     "dashboard": {
       "title": "Tithe Tracking",
       "status": "Active",
       "income": {
         "label": "Net Monthly Income",
-        "required": "Required Tithes"
+        "required": "Required maaser"
       },
       "steps": {
         "step1": "Income",
@@ -49,7 +49,7 @@
     "features": {
       "badge": "How the system helps",
       "title": "Solution to all tithe management problems",
-      "subtitle": "All the tools you need to manage your tithes easily and with complete confidence",
+      "subtitle": "All the tools you need to manage your maaser easily and with complete confidence",
       "items": {
         "calculator": {
           "title": "Always know how much to give",
@@ -61,7 +61,7 @@
         },
         "balance": {
           "title": "See if it covers everything",
-          "description": "The system clearly shows you if your donations cover the required tithes, or if you need to add more."
+          "description": "The system clearly shows you if your donations cover the required maaser, or if you need to add more."
         },
         "notifications": {
           "title": "Smart reminders",
@@ -69,7 +69,7 @@
         },
         "tracking": {
           "title": "Long-term tracking",
-          "description": "View the complete history of your tithes, track trends, and understand where the money goes month after month."
+          "description": "View the complete history of your maaser, track trends, and understand where the money goes month after month."
         },
         "mobile": {
           "title": "Convenient to use anywhere",
@@ -79,7 +79,7 @@
     },
     "cta": {
       "title": "Ready to get started?",
-      "subtitle": "Join hundreds of users who are already saving time and managing tithes easily",
+      "subtitle": "Join hundreds of users who are already saving time and managing maaser easily",
       "buttons": {
         "start": "Let's start now!",
         "questions": "I have questions"
@@ -92,15 +92,15 @@
       "highlight": "Management System", 
       "suffix": "& Donations"
     },
-    "description": "A comprehensive system for managing tithes and donations, tracking income, automatic reminders, and detailed reports. Everything in one place with maximum simplicity.",
+    "description": "A comprehensive system for managing maaser and donations, tracking income, automatic reminders, and detailed reports. Everything in one place with maximum simplicity.",
     "getStarted": "Get Started",
     "features": {
       "title": "Everything You Need for Tithe Management",
-      "description": "A comprehensive suite of tools to manage donations and track tithes simply and efficiently."
+      "description": "A comprehensive suite of tools to manage donations and track maaser simply and efficiently."
     },
     "getStartedSection": {
       "title": "Ready to Get Started?",
-      "description": "Start managing your tithes and donations in an organized and professional way within minutes.",
+      "description": "Start managing your maaser and donations in an organized and professional way within minutes.",
       "downloadButton": "Get Started"
     }
   },
@@ -180,7 +180,7 @@
       "pleaseVerifyEmail": "Please verify your email address before signing in."
     },
     "signup": {
-      "title": "Sign up to Ma'aser Management System",
+      "title": "Sign up to maasroti",
       "subtitle": "Sign up to get started",
       "name": "Full name",
       "namePlaceholder": "John Doe",
@@ -403,26 +403,25 @@
       "other": "Other"
     },
     "table": {
-      "title": "Variable income entries",
-      "description": "Every entry is converted to the base currency and included in the monthly calculation.",
+      "title": "Income details",
+      "description": "Income entries for the selected month.",
       "columns": {
         "description": "Description",
-        "amount": "Original amount",
+        "amount": "Amount",
         "source": "Source",
         "date": "Date",
-        "schedule": "Schedule",
-        "baseAmount": "In base currency"
+        "schedule": "Type"
       },
-      "convertedFlag": "Converted to base currency",
+      "convertedFlag": "",
       "monthCount": "{count} months",
-      "empty": "No variable income recorded yet.",
+      "empty": "No income recorded yet.",
       "removed": "Income removed."
     },
     "summary": {
-      "monthlyIncome": "Total monthly income (converted)",
+      "monthlyIncome": "Total income for this month",
       "estimatedMaaser": "Estimated ma'aser obligation",
-      "conversionTotal": "Converted amount this month",
-      "noConversions": "No conversions yet",
+      "conversionTotal": "",
+      "noConversions": "",
       "helper": "The estimation combines fixed and variable income for the month."
     }
   },
@@ -656,7 +655,7 @@
   "firstTimeSetup": {
     "welcome": {
       "badge": "Quick onboarding",
-      "title": "Welcome to Ma'aser Management System!",
+      "title": "Welcome to maasroti!",
       "subtitle": "Let's capture the essentials so your dashboard feels personal from the very first visit.",
       "description": "This system will help you manage and track your ma'aser (tithing) in a simple and organized way.",
       "features": {

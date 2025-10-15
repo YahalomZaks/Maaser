@@ -1,4 +1,4 @@
-# Ma'aser Management System
+# maasroti
 
 A multilingual Next.js application for tracking income and donations in accordance with the Ma'aser (tithing) practice. The platform combines onboarding flows, dashboards, activity logging, and Better Auth powered authentication.
 

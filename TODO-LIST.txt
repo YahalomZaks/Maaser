@@ -1,4 +1,4 @@
-# TODO List - מערכת ניהול מעשרות (Ma'aser Management System)
+# TODO List - מערכת ניהול מעשרות (maasroti)
 
 ##### 1.6 עיצוב רספונסיבי ונגישות - 🆕 משופר!
 - [ ] Mobile First Design - עיצוב מותאם תחילה למובייל

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Globe2, HandCoins, PiggyBank, Save, ShieldCheck, TrendingUp } from "lucide-react";
+import { AlertTriangle, Globe2, HandCoins, Save, ShieldCheck, TrendingUp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";

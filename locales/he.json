@@ -403,26 +403,25 @@
       "other": "אחר"
     },
     "table": {
-      "title": "רשומת הכנסות משתנות",
-      "description": "כל רשומה מומרת למטבע הבסיס ונכללת בחישוב החודשי.",
+      "title": "פרטי הכנסות",
+      "description": "רשימת ההכנסות לחודש הנבחר.",
       "columns": {
         "description": "תיאור",
-        "amount": "סכום מקורי",
+        "amount": "סכום",
         "source": "מקור",
         "date": "תאריך",
-        "schedule": "תזמון",
-        "baseAmount": "במטבע הבסיס"
+        "schedule": "סוג"
       },
-      "convertedFlag": "הומר למטבע הבסיס",
+      "convertedFlag": "",
       "monthCount": "{count} חודשים",
-      "empty": "אין עדיין הכנסות משתנות.",
+      "empty": "אין עדיין הכנסות.",
       "removed": "ההכנסה הוסרה."
     },
     "summary": {
-      "monthlyIncome": "סה\"כ הכנסה חודשית (לאחר המרה)",
+      "monthlyIncome": "סה\"כ הכנסות לחודש זה",
       "estimatedMaaser": "הערכת חובת המעשר",
-      "conversionTotal": "סכום שהומר החודש",
-      "noConversions": "אין המרות בשלב זה",
+      "conversionTotal": "",
+      "noConversions": "",
       "helper": "ההערכה משלבת הכנסות קבועות ומשתנות לחודש."
     }
   },

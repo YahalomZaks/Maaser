@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X, Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -44,6 +44,7 @@ export function DonationsManager() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("create");
+  const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState>({ organization: "", amount: "", currency: "ILS", type: "recurring", startDate: todayISO(), installmentsTotal: undefined, installmentsPaid: "0", note: "" });
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() + 1 }; });
@@ -131,6 +132,7 @@ export function DonationsManager() {
       note: form.note?.trim() || null,
     };
     try {
+      setIsSaving(true);
       const res = await fetch(modalMode === "create" ? "/api/financial/donations" : `/api/financial/donations/${form.id}`,{ method: modalMode === "create" ? "POST" : "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) {
         throw new Error((await res.json())?.error || tCommon("error"));
@@ -142,6 +144,7 @@ export function DonationsManager() {
       setModalOpen(false);
       toast.success(t("form.success"));
     } catch (e) { toast.error(e instanceof Error ? e.message : tCommon("error")); }
+    finally { setIsSaving(false); }
   };
 
   const removeRow = async (id: string) => { try { const res = await fetch(`/api/financial/donations/${id}`, { method: "DELETE", credentials: "include" }); if (!res.ok) { throw new Error((await res.json())?.error || tCommon("error")); } setItems((prev) => prev.filter((x) => x.id !== id)); toast.success(t("table.removed")); } catch (e) { toast.error(e instanceof Error ? e.message : tCommon("error")); } };
@@ -186,7 +189,6 @@ export function DonationsManager() {
               {gridMonths.map(({ label, idx }) => (
                 <button
                   key={idx}
-                  aria-selected={idx + 1 === cursor.month}
                   onClick={() => selectMonth(idx)}
                   className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                     idx + 1 === cursor.month
@@ -224,13 +226,15 @@ export function DonationsManager() {
                         <td className="px-4 py-3 text-center">{t(`form.typeOptions.${row.type}`)}</td>
                         <td className="px-4 py-3 text-center">{formatCurrency(row.amount, row.currency, locale)}<div className="text-xs text-muted-foreground">{formatCurrency(converted, baseCurrency, locale)}</div></td>
                         <td className="px-4 py-3 text-center">
-                          {row.type === "installments" && row.installmentsTotal ? (
-                            <span className="inline-block min-w-[2ch]">{remaining}</span>
-                          ) : row.type === "recurring" ? (
-                            <span className="inline-block text-muted-foreground">{locale === "he" ? "ללא הגבלה" : "Unlimited"}</span>
-                          ) : (
-                            <span className="inline-block">-</span>
-                          )}
+                          {(() => {
+                            if (row.type === "installments" && row.installmentsTotal) {
+                              return <span className="inline-block min-w-[2ch]">{remaining}</span>;
+                            }
+                            if (row.type === "recurring") {
+                              return <span className="inline-block text-muted-foreground">{locale === "he" ? "ללא הגבלה" : "Unlimited"}</span>;
+                            }
+                            return <span className="inline-block">-</span>;
+                          })()}
                         </td>
                         <td className="px-4 py-3 text-center"><div className="inline-flex gap-1"><Button size="icon" variant="ghost" onClick={() => openEdit(row)}><Edit2 className="h-4 w-4" /></Button><Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeRow(row.id)}><Trash2 className="h-4 w-4" /></Button></div></td>
                       </tr>
@@ -252,7 +256,17 @@ export function DonationsManager() {
                         {row.note ? <p className="mt-1 text-xs text-muted-foreground text-center">{row.note}</p> : null}
                         <div className="mt-2 grid grid-cols-3 text-xs text-muted-foreground text-center">
                           <div>{t("table.columns.type")}: {t(`form.typeOptions.${row.type}`)}</div>
-                          <div>{t("form.installmentsRemainingLabel")}: {row.type === "installments" && row.installmentsTotal ? (Math.max(0, (row.installmentsTotal ?? 0) - (row.installmentsPaid ?? 0))) : row.type === "recurring" ? (locale === "he" ? "ללא הגבלה" : "Unlimited") : "-"}</div>
+                          <div>
+                            {t("form.installmentsRemainingLabel")}: {(() => {
+                              if (row.type === "installments" && row.installmentsTotal) {
+                                return Math.max(0, (row.installmentsTotal ?? 0) - (row.installmentsPaid ?? 0));
+                              }
+                              if (row.type === "recurring") {
+                                return locale === "he" ? "ללא הגבלה" : "Unlimited";
+                              }
+                              return "-";
+                            })()}
+                          </div>
                           <div>{t("table.columns.amount")}: {formatCurrency(converted, baseCurrency, locale)}</div>
                         </div>
                       </div>
@@ -287,7 +301,12 @@ export function DonationsManager() {
               ) : null}
               <div className="space-y-1"><Label htmlFor="d-note">{t("form.noteLabel")}</Label><textarea id="d-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} /></div>
             </div>
-            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">{modalMode === "edit" ? (<Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)}><Trash2 className="h-4 w-4" /> {tCommon("delete")}</Button>) : null}<Button onClick={submit} className="gap-2"><Plus className="h-4 w-4" /> {modalMode === "create" ? t("form.submit") : tCommon("save")}</Button></div>
+            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">{modalMode === "edit" ? (<Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)}><Trash2 className="h-4 w-4" /> {tCommon("delete")}</Button>) : null}
+              <Button onClick={submit} disabled={isSaving} className="gap-2">
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {tCommon("save")}
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}
