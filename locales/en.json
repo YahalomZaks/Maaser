@@ -15,10 +15,10 @@
       "description": "All your donations are organized in one place in a friendly and convenient way."
     },
     "buttons": {
-      "start": "Let's get started!",
-      "howItWorks": "How does it work?"
+      "start": "Let's sign in",
+      "howItWorks": "Register now"
     },
-  "note": "The system is completely free and non-profit. All user data is secure and protected. A simple tool to help you manage maaser with ease.",
+  "note": "The system is free to use.\nAll data is secure and protected.",
     "dashboard": {
       "title": "Maaser Tracking",
       "status": "Active",
@@ -82,7 +82,7 @@
       "subtitle": "Join hundreds of users who are already saving time and managing maaser easily",
       "buttons": {
         "start": "Let's start now!",
-        "questions": "I have questions"
+        "questions": "FAQ"
       }
     }
   },
@@ -135,7 +135,10 @@
   },
   "footer": {
     "rights": "All rights reserved",
-    "developedBy": "Developed with the people of Israel"
+    "developedBy": "Developed with the people of Israel",
+    "terms": "Terms & Conditions",
+    "faq": "FAQ",
+    "appName": "Maasroti"
   },
   "feedback": {
     "feedbackMenu": "Send feedback",
@@ -164,6 +167,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "pageLoading": "Please wait...",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -740,5 +744,106 @@
     "minLength": "Must contain at least {min} characters",
     "positiveNumber": "Must be a positive number",
     "passwordMismatch": "Passwords don't match"
+  }
+  ,
+  "terms": {
+    "title": "Terms and Conditions",
+    "updated": "Last updated: {date}",
+    "intro": "Welcome to 'Maasroti'. Your use of the site is subject to the terms outlined in this document. Please read carefully.",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "text": "By using the site, you confirm you have read and agree to these terms. If you do not agree, please refrain from using the site."
+      },
+      "service": {
+        "title": "Service Description",
+        "text": "The site provides tools for managing maaser and donations, including tracking, calculation, and display. The service is provided as-is, on a best-effort basis, without warranties of any kind."
+      },
+      "privacy": {
+        "title": "Privacy and Security",
+        "text": "We take steps to protect your privacy and data security. Your use is also subject to our privacy policy. Personal data is not shared with third parties unless required by law or with your consent."
+      },
+      "accounts": {
+        "title": "User Accounts",
+        "text": "You are responsible for maintaining the confidentiality of your login details and for activities under your account. Please inform us of any unauthorized use."
+      },
+      "acceptableUse": {
+        "title": "Acceptable Use",
+        "text": "You agree not to use the site in any harmful, unlawful, or abusive manner that may harm other users or the system."
+      },
+      "intellectualProperty": {
+        "title": "Intellectual Property",
+        "text": "All rights in the site's content, design, and trademarks are owned by the site owners or authorized third parties. Do not copy or use without permission."
+      },
+      "disclaimer": {
+        "title": "Disclaimer",
+        "text": "The site and its services are provided as-is without warranties. We do not guarantee uninterrupted availability or error-free operation."
+      },
+      "limitation": {
+        "title": "Limitation of Liability",
+        "text": "To the maximum extent permitted by law, we are not liable for indirect, consequential, or special damages arising from your use of the site."
+      },
+      "changes": {
+        "title": "Changes to Terms",
+        "text": "We may update these terms from time to time. Your continued use after changes constitutes acceptance of the updated terms."
+      },
+      "contact": {
+        "title": "Contact",
+        "text": "For questions about these terms, please contact us via the contact page."
+      }
+    },
+    "back": "Back",
+    "cta": "Back to home"
+  }
+  ,
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "intro": "Quick answers to popular questions to help you get the most out of the system.",
+    "items": {
+      "pricing": {
+        "q": "Is it free?",
+        "a": "Yes. Maasroti is completely free and non-profit. In the future we may add optional advanced features without affecting the free core."
+      },
+      "privacy": {
+        "q": "How do you protect privacy and data?",
+        "a": "We use industry-standard security practices, store only what’s needed, and never share personal data with third parties unless required by law or with your consent."
+      },
+      "howItWorks": {
+        "q": "How does it work in short?",
+        "a": "You record income and donations. The system calculates the required maaser, tracks coverage, and shows a clear monthly/yearly snapshot."
+      },
+      "maaserCalc": {
+        "q": "How is the maaser amount calculated?",
+        "a": "By default it’s 10% of net income. You can change the percentage in Settings. The system computes automatically and shows surplus or debt."
+      },
+      "donationsTypes": {
+        "q": "What donation types are supported?",
+        "a": "One-time, recurring (monthly), installments (fixed count), and limited/unlimited length. Each shows status and progress."
+      },
+      "installments": {
+        "q": "How do installments work?",
+        "a": "Set the total number of payments and how many were completed. The system tracks progress and knows when the commitment ends."
+      },
+      "multiCurrency": {
+        "q": "Do you support multiple currencies?",
+        "a": "A single base currency (ILS or USD) is used for calculations. Entries in a different currency are marked as converted using the fixed rate from Settings."
+      },
+      "carryOver": {
+        "q": "What happens at year end?",
+        "a": "Choose in Settings whether to reset the balance at the start of the new civil year or carry surplus/debt into the next year."
+      },
+      "notifications": {
+        "q": "Are there reminders and notifications?",
+        "a": "Yes. You can receive reminders about ending donations, accumulated debt, and a monthly summary. No spam and you can disable anytime."
+      },
+      "account": {
+        "q": "Do I need an account to use it?",
+        "a": "Yes. An account securely stores your data and lets you access it from any device."
+      },
+      "feedback": {
+        "q": "How can I suggest an improvement or report a bug?",
+        "a": "Use the 'Send feedback' link in the main menu. We appreciate ideas and reports to make the system better."
+      }
+    }
   }
 }

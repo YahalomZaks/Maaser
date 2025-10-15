@@ -51,6 +51,7 @@ export function OnboardingWizard() {
   const tIncome = useTranslations("income.settings");
   const tDashboardCurrency = useTranslations("dashboard.baseCurrency.labels");
   const tDonationTypes = useTranslations("donations.types");
+  const tDonationsForm = useTranslations("donations.form");
 
   const defaultCurrency: CurrencyCode = locale === "en" ? "USD" : "ILS";
 
@@ -132,9 +133,15 @@ export function OnboardingWizard() {
 
   const handleAddDonation = useCallback(() => {
     if (!donationDraft.organization.trim()) {
+      toast.error(tDonationsForm("errors.organizationRequired"));
       return;
     }
     if (Number(donationDraft.amount) <= 0) {
+      toast.error(tDonationsForm("errors.amountPositive"));
+      return;
+    }
+    if (donationDraft.type === "installments" && Number(donationDraft.installmentsRemaining) <= 0) {
+      toast.error(tDonationsForm("errors.installmentsRequired"));
       return;
     }
     setDonations((prev) => [...prev, { ...donationDraft }]);
@@ -144,7 +151,8 @@ export function OnboardingWizard() {
       amount: "",
       installmentsRemaining: prev.installmentsRemaining || "6",
     }));
-  }, [donationDraft]);
+    toast.success(tDonationsForm("success"));
+  }, [donationDraft, tDonationsForm]);
 
   const handleRemoveDonation = useCallback((index: number) => {
     setDonations((prev) => prev.filter((_, idx) => idx !== index));
@@ -576,6 +584,8 @@ export function OnboardingWizard() {
             variant="ghost"
             disabled={isSubmitting}
             onClick={() => submitOnboarding(true)}
+            isLoading={isSubmitting}
+            loadingText={tCommon("loading")}
           >
             {t("navigation.skip")}
           </Button>
@@ -592,6 +602,8 @@ export function OnboardingWizard() {
               className="min-w-[160px]"
               disabled={isSubmitting}
               onClick={() => submitOnboarding(false)}
+              isLoading={isSubmitting}
+              loadingText={tCommon("loading")}
             >
               {nextLabel}
             </Button>

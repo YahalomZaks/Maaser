@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MobileYearlyMonthsList } from "@/components/dashboard/MobileYearlyMonthsList";
+import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/finance";
@@ -211,17 +212,7 @@ export function DashboardOverview() {
 	}, [computedYear, months, selectedMonthId]);
 
 	if (isLoading) {
-		return (
-			<Card className="border-dashed border-border/60 bg-muted/20">
-				<CardHeader className="space-y-2 text-center">
-					<CardTitle>{t("overview.heading", { year: selectedYear })}</CardTitle>
-					<CardDescription>{tCommon("loading")}</CardDescription>
-				</CardHeader>
-				<CardContent className="flex items-center justify-center py-6 text-sm text-muted-foreground">
-					{tCommon("loading")}
-				</CardContent>
-			</Card>
-		);
+			return <LoadingScreen />;
 	}
 
 	if (fetchError) {

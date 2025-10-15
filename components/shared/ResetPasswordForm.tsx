@@ -142,8 +142,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 							</div>
 							{/* Submit Button */}
 							<div className={isPending ? "cursor-not-allowed" : ""}>
-								<Button type="submit" disabled={isPending} className="w-full">
-									{isPending ? "Resetting password..." : "Reset Password"}
+								<Button type="submit" disabled={isPending} className="w-full" isLoading={isPending} loadingText="Resetting password...">
+									Reset Password
 								</Button>
 							</div>
 						</div>

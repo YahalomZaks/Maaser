@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -188,7 +189,7 @@ export function IncomeManagerRevised() {
   };
 
   if (isLoading) {
-    return <div className="flex min-h-[240px] items-center justify-center text-muted-foreground">{tCommon("loading")}</div>;
+    return <LoadingScreen />;
   }
   if (error) {
     return (

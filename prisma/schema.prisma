@@ -8,45 +8,46 @@ datasource db {
 }
 
 model User {
-  id            String            @id @default(uuid())
-  name          String
-  email         String            @unique
-  emailVerified Boolean           @default(false)
-  password      String?
-  role          Role              @default(USER)
-  image         String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  accounts      Account[]
-  donations     Donation[]
-  incomes       Income[]
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  emailVerified   Boolean           @default(false)
+  password        String?
+  role            Role              @default(USER)
+  image           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  accounts        Account[]
+  donations       Donation[]
+  incomes         Income[]
   variableIncomes VariableIncome[]
-  loginHistory  LoginHistory[]
-  notifications Notification[]
-  sessions      Session[]
-  activityLogs  UserActivityLog[]
-  settings      UserSettings?
+  loginHistory    LoginHistory[]
+  notifications   Notification[]
+  sessions        Session[]
+  activityLogs    UserActivityLog[]
+  settings        UserSettings?
+  feedbacks       Feedback[]
 
   @@map("user")
 }
 
 model Donation {
-  id               String       @id @default(uuid())
-  userId           String
-  organizationName String
-  amount           Float
-  currency         Currency     @default(ILS)
-  donationType     DonationType
-  startDate        DateTime
-  month            Int
-  year             Int
+  id                String       @id @default(uuid())
+  userId            String
+  organizationName  String
+  amount            Float
+  currency          Currency     @default(ILS)
+  donationType      DonationType
+  startDate         DateTime
+  month             Int
+  year              Int
   installmentsTotal Int?
-  installmentsPaid Int?
-  isActive         Boolean      @default(true)
-  note             String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installmentsPaid  Int?
+  isActive          Boolean      @default(true)
+  note              String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, year, month])
   @@map("donation")
@@ -86,17 +87,17 @@ model UserSettings {
 }
 
 model Income {
-  id             String         @id @default(uuid())
+  id             String   @id @default(uuid())
   userId         String
   personalIncome Float
   spouseIncome   Float?
   month          Int
   year           Int
-  isOneTime      Boolean        @default(false)
+  isOneTime      Boolean  @default(false)
   oneTimeAmount  Float?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, month, year])
   @@map("income")
@@ -238,4 +239,25 @@ enum IncomeSource {
 enum CarryStrategy {
   CARRY
   RESET
+}
+
+// Feedback
+enum FeedbackType {
+  BUG
+  FEATURE
+}
+
+model Feedback {
+  id        String       @id @default(uuid())
+  userId    String
+  type      FeedbackType
+  name      String
+  email     String
+  message   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("feedback")
 }

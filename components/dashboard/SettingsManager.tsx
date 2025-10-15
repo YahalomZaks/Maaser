@@ -29,8 +29,18 @@ export function SettingsManager() {
 	const [enableEndOfYearPrompt, setEnableEndOfYearPrompt] = useState(true);
 	const [enableConversionAlerts, setEnableConversionAlerts] = useState(true);
 
-	const handleSave = () => {
-		toast.success(t("form.success"));
+	const [isSaving, setIsSaving] = useState(false);
+
+	const handleSave = async () => {
+		try {
+			setIsSaving(true);
+			// TODO: Wire real API here; currently only UI feedback
+			toast.success(t("form.success"));
+		} catch {
+			toast.error(tCommon("error"));
+		} finally {
+			setIsSaving(false);
+		}
 	};
 
 	return (
@@ -300,7 +310,7 @@ export function SettingsManager() {
 					</Card>
 
 					<div className="flex justify-end">
-						<Button onClick={handleSave} className="gap-2">
+						<Button onClick={handleSave} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string} disabled={isSaving}>
 							<Save className="h-4 w-4" />
 							{tCommon("save")}
 						</Button>

@@ -126,23 +126,9 @@
 /* App-wide main wrapper: background + responsive top padding (no white band) */
 .app-main {
   min-height: 100vh;
-  background: var(--neutral-100);
-  padding: calc(var(--navbar-height) + var(--app-top-padding))
-    var(--app-top-padding) var(--app-top-padding);
-}
-
-@media (min-width: 640px) {
-  .app-main {
-    padding: calc(var(--navbar-height) + var(--app-top-padding-sm))
-      var(--app-top-padding-sm) var(--app-top-padding-sm);
-  }
-}
-
-@media (min-width: 768px) {
-  .app-main {
-    padding: calc(var(--navbar-height) + var(--app-top-padding-md))
-      var(--app-top-padding-md) var(--app-top-padding-md);
-  }
+  background: linear-gradient(45deg, #e8effe, #edf5fd);
+  /* Small global top offset so generic pages aren't tight under the fixed navbar */
+  padding-top: clamp(0.5rem, 2.5vw, 1rem);
 }
 
 .dark {
@@ -179,10 +165,12 @@
   --sidebar-ring: oklch(0.645 0.246 16.439);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
+/* Base element defaults (avoid Tailwind @apply in this setup) */
+*,
+*::before,
+*::after {
+  border-color: var(--border);
+  outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
 }
 
 /* Animation CSS */
@@ -356,6 +344,15 @@ select:disabled {
 
 /* ==== WELCOME PAGE CUSTOM STYLES ==== */
 
+/* Generic content pages (Terms, FAQ, etc.) should sit below fixed navbar
+   and keep consistent side gutters across viewports */
+.content-page {
+  padding-block-start: calc(var(--navbar-height) + clamp(1rem, 3vw, 2rem));
+  padding-block-end: clamp(2rem, 4vw, 3rem);
+  padding-inline: clamp(1rem, 4vw, 2rem);
+  background: var(--neutral-50);
+}
+
 /* Welcome Page CSS Variables */
 .welcome-page {
   --primary: #2563eb;
@@ -393,6 +390,12 @@ select:disabled {
   overflow-x: hidden;
   font-weight: 400;
   scroll-behavior: smooth;
+}
+
+/* Make Welcome page full-bleed by canceling the global main side paddings */
+/* Revert to regular side gutters (no negative margins) */
+.welcome-page {
+  margin-inline: 0;
 }
 
 /* Background Grids and Gradients */
@@ -1267,7 +1270,8 @@ select:disabled {
   display: flex;
   align-items: center;
   padding: 2rem;
-  padding-top: 120px;
+  /* Ensure content stays below the fixed navbar and is not clipped */
+  padding-top: calc(var(--navbar-height) + clamp(1rem, 3vw, 2rem));
 }
 
 .welcome-hero-container {
@@ -1749,6 +1753,17 @@ select:disabled {
   .welcome-animation-container {
     width: 400px;
     height: 320px;
+  }
+}
+
+/* Maintain consistent side padding on desktop too (no edge-to-edge) */
+@media (min-width: 1024px) {
+  .welcome-hero {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+  .welcome-hero-container {
+    padding-inline: 0; /* container stays centered with gap; outer hero handles gutters */
   }
 }
 

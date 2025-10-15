@@ -12,7 +12,8 @@ export default function FeedbackSuccessPage() {
 
   return (
     <RequireAuth>
-      <div className="container mx-auto max-w-xl px-4 py-16 text-center">
+      <section className="content-page">
+      <div className="container mx-auto max-w-xl px-4 py-12 text-center">
         <CheckCircle className="h-14 w-14 text-green-600 mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">{t("successTitle")}</h1>
         <p className="text-muted-foreground mb-8">{t("successSubtitle")}</p>
@@ -25,6 +26,7 @@ export default function FeedbackSuccessPage() {
           </Link>
         </div>
       </div>
+      </section>
     </RequireAuth>
   );
 }

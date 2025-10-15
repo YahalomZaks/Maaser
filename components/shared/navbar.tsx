@@ -112,12 +112,17 @@ const Navbar = () => {
 
 	const isActive = useCallback(
 		(basePath: string) => {
-			if (!normalizedPath) {
+			// Default root highlighting when path is unknown or exactly locale root
+			if (!normalizedPath || normalizedPath === "") {
 				return basePath === "/dashboard";
 			}
-			if (normalizedPath === "") {
-				return basePath === "/dashboard";
+
+			// Do not mark Dashboard as active on sub-pages like /dashboard/income or /dashboard/donations
+			if (basePath === "/dashboard") {
+				return normalizedPath === "/dashboard";
 			}
+
+			// For other sections, consider exact match or nested routes under that section
 			return normalizedPath === basePath || normalizedPath.startsWith(`${basePath}/`);
 		},
 		[normalizedPath],
@@ -377,6 +382,17 @@ const Navbar = () => {
 							<span className="inline-flex items-center gap-2">
 								<Settings className="h-4 w-4" />
 								{t("settings")}
+							</span>
+						</Link>
+						{/* Feedback link in mobile menu */}
+						<Link
+							href={`${localePrefix}/feedback`}
+							onClick={() => setIsMobileMenuOpen(false)}
+							className={`dashboard-mobile-link${isActive("/feedback") ? " is-active" : ""}`}
+						>
+							<span className="inline-flex items-center gap-2">
+								<MessageCircle className="h-4 w-4" />
+								{tFeedback("feedbackMenu")}
 							</span>
 						</Link>
 					</nav>

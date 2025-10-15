@@ -1,10 +1,11 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X, Loader2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -246,7 +247,7 @@ export function IncomeManager() {
   };
 
   if (isLoading) {
-    return <div className="flex min-h-[240px] items-center justify-center text-muted-foreground">{tCommon("loading")}</div>;
+    return <LoadingScreen />;
   }
   if (error) {
     return (
@@ -503,8 +504,7 @@ export function IncomeManager() {
               {modalMode === "edit" ? (
                 <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)}><Trash2 className="h-4 w-4" /> {tCommon("delete")}</Button>
               ) : null}
-              <Button onClick={submit} disabled={isSaving} className="gap-2">
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
                 {tCommon("save")}
               </Button>
             </div>

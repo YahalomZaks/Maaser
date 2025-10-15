@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { RequireAuth } from "@/components/shared/RequireAuth";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default function FeedbackPage() {
     email: session?.user?.email || "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleTypeSelect = (type: FeedbackType) => {
     setFeedbackType(type);
@@ -52,9 +54,40 @@ export default function FeedbackPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder: hook up to API in the future
-    console.warn("Feedback submitted:", { type: feedbackType, ...formData });
-    router.push(`/${locale}/feedback/success`);
+    if (!feedbackType) {
+      toast.error("בחרו סוג משוב (באג או פיצ׳ר)");
+      return;
+    }
+    if (!formData.message.trim()) {
+      toast.error("יש להזין תוכן הודעה");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: feedbackType,
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(err.error || "Failed to send feedback");
+      }
+
+      router.push(`/${locale}/feedback/success`);
+    } catch (error) {
+      console.error("Failed to send feedback", error);
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const reset = () => {
@@ -65,7 +98,8 @@ export default function FeedbackPage() {
 
   return (
     <RequireAuth>
-      <div className="container mx-auto max-w-2xl px-4 py-10">
+      <section className="content-page">
+      <div className="container mx-auto max-w-2xl px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
@@ -105,6 +139,7 @@ export default function FeedbackPage() {
               <Label htmlFor="name">{t("nameLabel")}</Label>
               <Input
                 id="name"
+                disabled={isSubmitting}
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                 required
@@ -117,6 +152,7 @@ export default function FeedbackPage() {
               <Input
                 id="email"
                 type="email"
+                disabled={isSubmitting}
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 required
@@ -128,6 +164,7 @@ export default function FeedbackPage() {
               <Label htmlFor="message">{t("messageLabel")}</Label>
               <textarea
                 id="message"
+                disabled={isSubmitting}
                 value={formData.message}
                 onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
                 required
@@ -139,7 +176,7 @@ export default function FeedbackPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" className="flex-1">
+              <Button type="submit" className="flex-1" isLoading={isSubmitting} loadingText={t("submit") as string}>
                 <Send className="h-4 w-4 mr-2" />
                 {t("submit")}
               </Button>
@@ -153,6 +190,7 @@ export default function FeedbackPage() {
           </form>
         )}
       </div>
+      </section>
     </RequireAuth>
   );
 }

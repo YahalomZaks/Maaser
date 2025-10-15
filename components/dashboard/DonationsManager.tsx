@@ -1,10 +1,11 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X, Loader2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -150,7 +151,7 @@ export function DonationsManager() {
   const removeRow = async (id: string) => { try { const res = await fetch(`/api/financial/donations/${id}`, { method: "DELETE", credentials: "include" }); if (!res.ok) { throw new Error((await res.json())?.error || tCommon("error")); } setItems((prev) => prev.filter((x) => x.id !== id)); toast.success(t("table.removed")); } catch (e) { toast.error(e instanceof Error ? e.message : tCommon("error")); } };
 
   if (isLoading) {
-    return <div className="flex min-h-[240px] items-center justify-center text-muted-foreground">{tCommon("loading")}</div>;
+    return <LoadingScreen />;
   }
   if (error) {
     return (
@@ -302,8 +303,7 @@ export function DonationsManager() {
               <div className="space-y-1"><Label htmlFor="d-note">{t("form.noteLabel")}</Label><textarea id="d-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} /></div>
             </div>
             <div className="flex items-center justify-end gap-2 border-t px-4 py-3">{modalMode === "edit" ? (<Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)}><Trash2 className="h-4 w-4" /> {tCommon("delete")}</Button>) : null}
-              <Button onClick={submit} disabled={isSaving} className="gap-2">
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
                 {tCommon("save")}
               </Button>
             </div>

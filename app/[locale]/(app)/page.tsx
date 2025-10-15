@@ -1,19 +1,6 @@
 "use client";
 import Lottie from "lottie-react";
-import {
-  Calculator,
-  ListChecks,
-  Scale,
-  Bell,
-  TrendingUp,
-  Smartphone,
-  Heart,
-  Rocket,
-  InfoIcon,
-  Shield,
-  Sparkles,
-  MessageCircle,
-} from "lucide-react";
+import { Calculator, ListChecks, Scale, Bell, TrendingUp, Smartphone, Rocket, Shield, Sparkles, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
  
@@ -35,11 +22,6 @@ const HomePage = () => {
         <div className="welcome-hero-container">
           {/* Hero Content */}
           <div className="welcome-hero-content">
-            <div className="welcome-hero-badge">
-              <Heart className="h-4 w-4" style={{ color: '#ef4444' }} />
-              <span>{t('badge')}</span>
-            </div>
-            
             <h1 className="welcome-hero-title">
               {t('title.main')} {" "}
               <span className="welcome-gradient-text">
@@ -59,17 +41,15 @@ const HomePage = () => {
             
             <div className="welcome-hero-buttons">
               <Link href={`/${locale}/signin`} className="welcome-btn welcome-btn-primary welcome-btn-large">
-                <Rocket className="h-5 w-5" style={{ marginRight: '0.5rem' }} />
                 {t('buttons.start')}
               </Link>
-              <a href="#features" className="welcome-btn welcome-btn-secondary welcome-btn-large">
-                <InfoIcon className="h-5 w-5" style={{ marginRight: '0.5rem' }} />
+              <Link href={`/${locale}/signup`} className="welcome-btn welcome-btn-secondary welcome-btn-large">
                 {t('buttons.howItWorks')}
-              </a>
+              </Link>
             </div>
             
             <div className="welcome-hero-note">
-              <p style={{ color: 'var(--neutral-600)', margin: 0 }}>
+              <p style={{ color: 'var(--neutral-600)', margin: 0, whiteSpace: 'pre-line' }}>
                 <Shield className="h-5 w-5" style={{ color: '#059669', marginLeft: '0.5rem', display: 'inline' }} />
                 {t('note')}
               </p>
@@ -139,10 +119,10 @@ const HomePage = () => {
               <Rocket className="h-5 w-5" style={{ marginRight: '0.5rem' }} />
               {t('cta.buttons.start')}
             </Link>
-            <a href="#contact" className="welcome-btn welcome-btn-secondary welcome-btn-large" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}>
+            <Link href={`/${locale}/faq`} className="welcome-btn welcome-btn-secondary welcome-btn-large" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}>
               <MessageCircle className="h-5 w-5" style={{ marginRight: '0.5rem' }} />
               {t('cta.buttons.questions')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>
