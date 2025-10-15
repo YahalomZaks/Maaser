@@ -1,9 +1,9 @@
 {
   "welcome": {
-    "badge": "Built for the benefit of many - completely free",
+    "badge": "Completely free and non-profit",
     "title": {
       "main": "Are you also struggling with",
-      "highlight": "Maasrot",
+      "highlight": "maaser",
       "suffix": "every month?"
     },
     "empty": {
@@ -11,16 +11,16 @@
     },
     "subtitle": {
       "problem": "Can't remember how many places you donate to? How much to each? And whether it even covers the maaser you need to give?",
-      "solution": "Maasroti simplifies tracking your income and donations, ensuring you always know your maasrot status.",
+  "solution": "Maasroti helps you calculate and track your income and donations easily, so you always know your maaser status.",
       "description": "All your donations are organized in one place in a friendly and convenient way."
     },
     "buttons": {
       "start": "Let's get started!",
       "howItWorks": "How does it work?"
     },
-    "note": "The system was developed for the benefit of many. No costs, no profit motives - just a tool to help you manage maaser easily.",
+  "note": "The system is completely free and non-profit. All user data is secure and protected. A simple tool to help you manage maaser with ease.",
     "dashboard": {
-      "title": "Tithe Tracking",
+      "title": "Maaser Tracking",
       "status": "Active",
       "income": {
         "label": "Net Monthly Income",
@@ -49,7 +49,7 @@
     "features": {
       "badge": "How the system helps",
       "title": "Solution to all tithe management problems",
-      "subtitle": "All the tools you need to manage your maaser easily and with complete confidence",
+      "subtitle": "All the tools you need to manage your maaser easily — and your data is secure and protected",
       "items": {
         "calculator": {
           "title": "Always know how much to give",
@@ -106,7 +106,7 @@
   },
   "navigation": {
     "appName": "Maasroti",
-    "dashboard": "Dashboard",
+    "dashboard": "Main",
     "income": "Income",
     "donations": "Donations",
   "settings": "Settings",
@@ -226,11 +226,11 @@
     }
   },
   "dashboard": {
-    "title": "Dashboard - Ma'aser Tracking",
+    "title": "Dashboard - maaser Tracking",
     "currentMonth": "Current Month",
     "totalIncome": "Total Income",
-    "maaserToPay": "Ma'aser to Pay",
-    "maaserPaid": "Ma'aser Paid",
+    "maaserToPay": "maaser to Pay",
+    "maaserPaid": "Maaser Paid",
     "balance": "Balance",
     "debt": "Debt",
     "cumulativeBalance": "Cumulative Balance",
@@ -266,7 +266,7 @@
         "title": "Income in base currency"
       },
       "obligation": {
-        "title": "Ma'aser obligation",
+        "title": "maaser obligation",
         "helper": "Calculated at {percent}% of income"
       },
       "donations": {
@@ -340,7 +340,7 @@
     "yourIncome": "Your Income",
     "spouseIncome": "Spouse Income",
     "totalIncome": "Total Income",
-    "maaserAmount": "Ma'aser Amount (10%)",
+    "maaserAmount": "maaser Amount (10%)",
     "oneTimeIncome": "One-time Income",
     "addOneTime": "Add One-time Income",
     "amount": "Amount",
@@ -349,7 +349,7 @@
     "noOneTimeIncomes": "No one-time incomes",
     "deleteConfirm": "Are you sure you want to delete this income?",
     "headline": "Income planning workspace",
-    "subheadline": "Track fixed salaries, variable earnings, and conversion notices for the ma'aser calculation.",
+    "subheadline": "Track fixed salaries, variable earnings, and conversion notices for the maaser calculation.",
     "settings": {
       "title": "Financial preferences",
       "description": "Set the base currency and tithe percentage used for calculations.",
@@ -419,7 +419,7 @@
     },
     "summary": {
       "monthlyIncome": "Total income for this month",
-      "estimatedMaaser": "Estimated ma'aser obligation",
+      "estimatedMaaser": "Estimated maaser obligation",
       "conversionTotal": "",
       "noConversions": "",
       "helper": "The estimation combines fixed and variable income for the month."
@@ -561,7 +561,7 @@
     "saveSuccess": "Settings saved successfully",
     "saveError": "Error saving settings",
     "headline": "System preferences",
-    "subheadline": "Configure how the ma'aser engine handles currencies, percentages, and reminders.",
+    "subheadline": "Configure how the maaser engine handles currencies, percentages, and reminders.",
     "profileSummary": {
       "title": "Current configuration",
       "description": "A quick view of your active preferences.",
@@ -657,10 +657,10 @@
       "badge": "Quick onboarding",
       "title": "Welcome to maasroti!",
       "subtitle": "Let's capture the essentials so your dashboard feels personal from the very first visit.",
-      "description": "This system will help you manage and track your ma'aser (tithing) in a simple and organized way.",
+      "description": "This system will help you manage and track your maaser (tithing) in a simple and organized way.",
       "features": {
         "track": "Track income and donations",
-        "calculate": "Automatic ma'aser calculation",
+        "calculate": "Automatic maaser calculation",
         "organize": "Organize donations by types",
         "notifications": "Payment notifications"
       },
@@ -693,7 +693,7 @@
       "title": "Summary & Confirmation",
       "description": "Review the details, add any donations you already track, and you're ready to explore the dashboard.",
       "monthlyIncome": "Monthly income",
-      "maaserAmount": "Monthly ma'aser",
+      "maaserAmount": "Monthly maaser",
       "existingDonations": "Existing donations",
       "ready": "All set! You can start using the system.",
       "note": "Need to tweak something? You can revisit all of these preferences from the income and donations pages at any time."

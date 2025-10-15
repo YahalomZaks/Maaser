@@ -1280,8 +1280,8 @@ select:disabled {
 }
 
 .welcome-hero-content {
-  opacity: 0;
-  transform: translateY(30px);
+  opacity: 1;
+  transform: none;
   transition: all 0.8s ease;
 }
 
@@ -1344,8 +1344,8 @@ select:disabled {
   width: 500px;
   height: 400px;
   margin: 0 auto;
-  opacity: 0;
-  transform: translateY(30px);
+  opacity: 1;
+  transform: none;
   transition: all 0.8s ease;
 }
 
@@ -1579,8 +1579,8 @@ select:disabled {
   border-radius: 16px;
   border: 1px solid var(--neutral-200);
   transition: all 0.3s ease;
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: none;
 }
 
 .welcome-feature-card:hover {

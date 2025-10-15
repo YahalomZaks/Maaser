@@ -70,7 +70,7 @@ const Navbar = () => {
 	const localePrefix = `/${locale}`;
 	const isAuthenticated = Boolean(session);
 	const appName = t("appName");
-	const logoAlt = locale === "he" ? "לוגו מעשרותי" : "Maasroti logo";
+	const logoAlt = locale === "he" ? "לוגו מעשרותִי" : "Maasroti logo";
 
 	const normalizedPath = useMemo(() => {
 		if (!pathname) {
@@ -136,19 +136,7 @@ const Navbar = () => {
 		setIsMobileMenuOpen(false);
 	}, [localePrefix, router, t]);
 
-	const scrollToElement = useCallback((id: string) => {
-		const element = document.getElementById(id);
-		if (element) {
-			element.scrollIntoView({ behavior: "smooth", block: "start" });
-		}
-	}, []);
-
-	const scrollToFooter = useCallback(() => {
-		const footerElement = document.querySelector("footer");
-		if (footerElement) {
-			footerElement.scrollIntoView({ behavior: "smooth", block: "start" });
-		}
-	}, []);
+	// Removed unused helpers (smooth scroll) to keep navbar lean
 
 	const publicAuthControls: ReactNode = useMemo(() => {
 		if (isPending) {
@@ -427,17 +415,7 @@ const Navbar = () => {
 			</div>
 			{isMobileMenuOpen && (
 				<div className="welcome-mobile-menu">
-					<div className="welcome-mobile-links">
-						<button type="button" onClick={() => scrollToElement("features")} className="welcome-mobile-link">
-							{t("features")}
-						</button>
-						<button type="button" onClick={() => scrollToElement("tech")} className="welcome-mobile-link">
-							{t("technology")}
-						</button>
-						<button type="button" onClick={scrollToFooter} className="welcome-mobile-link">
-							{t("contact", { default: "" }) || "יצירת קשר"}
-						</button>
-					</div>
+					<div className="welcome-mobile-links" />
 					<LanguageSwitcher variant="mobile" onLocaleChange={() => setIsMobileMenuOpen(false)} />
 					{publicMobileControls}
 				</div>

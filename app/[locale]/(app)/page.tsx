@@ -1,5 +1,5 @@
 "use client";
-
+import Lottie from "lottie-react";
 import {
   Calculator,
   ListChecks,
@@ -16,135 +16,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
-
+ 
+import welcomeAnimation from "@/animation/welcomeAnimation.json";
 import FeedbackButton from "@/components/shared/FeedbackButton";
 import Footer from "@/components/shared/Footer";
-import { useWelcomePageAnimations } from '@/hooks/useWelcomePageAnimations';
 
 const HomePage = () => {
   const t = useTranslations('welcome');
   const locale = useLocale();
-  
-  // Initialize animations
-  useWelcomePageAnimations();
-  
-  const heroContentRef = useRef<HTMLDivElement>(null);
-  const animationContainerRef = useRef<HTMLDivElement>(null);
-  const featureCardsRef = useRef<HTMLDivElement[]>([]);
-  const progressFillRef = useRef<HTMLDivElement>(null);
-  const transactionItemsRef = useRef<HTMLDivElement[]>([]);
-  const stepIconsRef = useRef<HTMLDivElement[]>([]);
-
-  useEffect(() => {
-    // Simple fade-in animations without GSAP
-    const animateOnLoad = () => {
-      // Hero content animation
-      if (heroContentRef.current) {
-        heroContentRef.current.style.opacity = '1';
-        heroContentRef.current.style.transform = 'translateY(0)';
-      }
-
-      // Animation container
-      setTimeout(() => {
-        if (animationContainerRef.current) {
-          animationContainerRef.current.style.opacity = '1';
-          animationContainerRef.current.style.transform = 'translateY(0)';
-        }
-      }, 400);
-
-      // Feature cards animation
-      featureCardsRef.current.forEach((card, index) => {
-        if (card) {
-          setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-          }, 600 + index * 100);
-        }
-      });
-
-      // Dashboard animation
-      setTimeout(startDashboardAnimation, 1000);
-    };
-
-    const startDashboardAnimation = () => {
-      const animateStep = () => {
-        // Reset states
-        if (progressFillRef.current) {
-          progressFillRef.current.style.width = '0%';
-        }
-        transactionItemsRef.current.forEach(item => {
-          if (item) {
-            item.style.opacity = '0';
-            item.style.transform = 'translateX(20px)';
-          }
-        });
-
-        // Step 1
-        setTimeout(() => {
-          if (stepIconsRef.current[0]) {
-            stepIconsRef.current[0].style.backgroundColor = '#2563eb';
-            stepIconsRef.current[0].style.transform = 'scale(1.1)';
-          }
-        }, 0);
-
-        setTimeout(() => {
-          if (stepIconsRef.current[0]) {
-            stepIconsRef.current[0].style.transform = 'scale(1)';
-          }
-        }, 500);
-
-        // Step 2
-        setTimeout(() => {
-          if (stepIconsRef.current[1]) {
-            stepIconsRef.current[1].style.backgroundColor = '#0891b2';
-            stepIconsRef.current[1].style.transform = 'scale(1.1)';
-          }
-          if (progressFillRef.current) {
-            progressFillRef.current.style.width = '50%';
-          }
-        }, 700);
-
-        setTimeout(() => {
-          if (stepIconsRef.current[1]) {
-            stepIconsRef.current[1].style.transform = 'scale(1)';
-          }
-        }, 1200);
-
-        // Step 3
-        setTimeout(() => {
-          if (stepIconsRef.current[2]) {
-            stepIconsRef.current[2].style.backgroundColor = '#059669';
-            stepIconsRef.current[2].style.transform = 'scale(1.1)';
-          }
-          if (progressFillRef.current) {
-            progressFillRef.current.style.width = '100%';
-          }
-          // Show transactions
-          transactionItemsRef.current.forEach((item, index) => {
-            if (item) {
-              setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateX(0)';
-              }, index * 100);
-            }
-          });
-        }, 1400);
-
-        setTimeout(() => {
-          if (stepIconsRef.current[2]) {
-            stepIconsRef.current[2].style.transform = 'scale(1)';
-          }
-        }, 1900);
-      };
-
-      // Run animation in loop
-      animateStep();
-      setInterval(animateStep, 6000);
-    };
-
-    animateOnLoad();
-  }, []);
 
   return (
     <div className="welcome-page min-h-screen" style={{ backgroundColor: 'var(--neutral-50)' }}>
@@ -156,10 +35,7 @@ const HomePage = () => {
       <section className="welcome-hero">
         <div className="welcome-hero-container">
           {/* Hero Content */}
-          <div 
-            ref={heroContentRef}
-            className="welcome-hero-content"
-          >
+          <div className="welcome-hero-content">
             <div className="welcome-hero-badge">
               <Heart className="h-4 w-4" style={{ color: '#ef4444' }} />
               <span>{t('badge')}</span>
@@ -202,91 +78,13 @@ const HomePage = () => {
           </div>
           
           {/* Animation Container */}
-          <div 
-            ref={animationContainerRef}
-            className="welcome-animation-container"
-          >
-            <div className="welcome-financial-dashboard">
-              {/* Dashboard Header */}
-              <div className="welcome-dashboard-header">
-                <h3 className="welcome-dashboard-title">{t('dashboard.title')}</h3>
-                <span className="welcome-dashboard-status">
-                  {t('dashboard.status')}
-                </span>
-              </div>
-              
-              {/* Income Display */}
-              <div className="welcome-income-display">
-                <div className="welcome-income-label">
-                  {t('dashboard.income.label')}
-                </div>
-                <div className="welcome-income-amount">₪12,000</div>
-                <div className="welcome-income-currency">
-                  {t('dashboard.income.required')}: ₪1,200
-                </div>
-              </div>
-              
-              {/* Steps */}
-              <div className="welcome-donation-flow">
-                {[1, 2, 3].map((step, index) => (
-                  <div key={step} className={`welcome-donation-step welcome-step-${step}`}>
-                    <div 
-                      ref={el => {
-                        if (el) {
-                          stepIconsRef.current[index] = el;
-                        }
-                      }}
-                      className="welcome-step-icon"
-                    >
-                      {step}
-                    </div>
-                    <span className="welcome-step-label">
-                      {t(`dashboard.steps.step${step}`)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Progress Bar */}
-              <div className="welcome-progress-bar">
-                <div 
-                  ref={progressFillRef}
-                  className="welcome-progress-fill"
-                />
-              </div>
-              
-              {/* Transactions */}
-              <div>
-                {[
-                  { icon: '🏥', name: t('dashboard.transactions.item1.name'), type: t('dashboard.transactions.item1.type'), amount: '₪500' },
-                  { icon: '📚', name: t('dashboard.transactions.item2.name'), type: t('dashboard.transactions.item2.type'), amount: '₪400' },
-                  { icon: '👥', name: t('dashboard.transactions.item3.name'), type: t('dashboard.transactions.item3.type'), amount: '₪300' }
-                ].map((transaction, index) => (
-                  <div 
-                    key={index}
-                    ref={el => {
-                      if (el) {
-                        transactionItemsRef.current[index] = el;
-                      }
-                    }}
-                    className="welcome-transaction-item"
-                  >
-                    <div className="welcome-transaction-info">
-                      <div className="welcome-transaction-icon">
-                        {transaction.icon}
-                      </div>
-                      <div className="welcome-transaction-details">
-                        <h4>{transaction.name}</h4>
-                        <p>{transaction.type}</p>
-                      </div>
-                    </div>
-                    <span className="welcome-transaction-amount">
-                      {transaction.amount}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="welcome-animation-container">
+            <Lottie
+              animationData={welcomeAnimation}
+              loop
+              autoplay
+              style={{ width: "100%", height: "100%" }}
+            />
           </div>
         </div>
       </section>
@@ -316,15 +114,7 @@ const HomePage = () => {
               { icon: TrendingUp, title: t('features.items.tracking.title'), description: t('features.items.tracking.description') },
               { icon: Smartphone, title: t('features.items.mobile.title'), description: t('features.items.mobile.description') }
             ].map((feature, index) => (
-              <div 
-                key={index}
-                ref={el => {
-                  if (el) {
-                    featureCardsRef.current[index] = el;
-                  }
-                }}
-                className="welcome-feature-card"
-              >
+              <div key={index} className="welcome-feature-card">
                 <div className="welcome-feature-icon">
                   <feature.icon className="h-7 w-7" />
                 </div>
