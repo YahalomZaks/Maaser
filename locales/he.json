@@ -123,7 +123,9 @@
     "error": "שגיאה",
     "success": "הצלחה",
     "warning": "אזהרה",
-    "info": "מידע"
+    "info": "מידע",
+    "actions": "פעולות",
+    "retry": "נסו שוב"
   },
   "navigation": {
     "appName": "מעשרותי",

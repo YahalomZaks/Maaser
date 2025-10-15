@@ -34,7 +34,7 @@ interface FormState {
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
-export function IncomeManager() {
+export function IncomeManagerRevised() {
   const t = useTranslations("income");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -293,13 +293,13 @@ export function IncomeManager() {
       </Card>
 
       {modalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 sm:px-6 pt-16 sm:pt-24 pb-6 overflow-y-auto">
-          <div className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] rounded-lg bg-background shadow-lg flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-lg bg-background shadow-lg">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <h3 className="text-base font-semibold">{modalMode === "create" ? t("form.title") : tCommon("edit")}</h3>
               <button onClick={() => setModalOpen(false)} className="rounded p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
             </div>
-            <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+            <div className="p-4 space-y-3">
               <div className="space-y-1">
                 <Label htmlFor="i-desc">{t("form.descriptionLabel")}</Label>
                 <Input id="i-desc" value={form.description} onChange={(e) => onChange("description", e.target.value)} />
@@ -359,4 +359,4 @@ export function IncomeManager() {
   );
 }
 
-export default IncomeManager;
+export default IncomeManagerRevised;

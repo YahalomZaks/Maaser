@@ -11,9 +11,19 @@ import type {
 
 import { convertCurrency } from "@/lib/finance";
 import { prismaClient } from "@/lib/prisma";
-import { DEFAULT_CARRY_STRATEGY, DEFAULT_CURRENCY, DEFAULT_LANGUAGE } from "@/lib/user-settings";
+import {
+  DEFAULT_CARRY_STRATEGY,
+  DEFAULT_CURRENCY,
+  DEFAULT_LANGUAGE,
+} from "@/lib/user-settings";
 import type { CarryStrategy, FixedIncomeSettings } from "@/lib/user-settings";
-import type { CurrencyCode, DonationEntry, MonthlySnapshot, VariableIncome, YearSnapshot } from "@/types/finance";
+import type {
+  CurrencyCode,
+  DonationEntry,
+  MonthlySnapshot,
+  VariableIncome,
+  YearSnapshot,
+} from "@/types/finance";
 
 const DEFAULT_STRATEGY = DEFAULT_CARRY_STRATEGY;
 const prisma = prismaClient;
@@ -54,7 +64,9 @@ const donationTypeFromDb: Record<DonationTypeDb, DonationEntry["type"]> = {
   INSTALLMENTS: "installments",
 };
 
-function normalizeCurrency(value: CurrencyCode | CurrencyDb | null | undefined): CurrencyCode {
+function normalizeCurrency(
+  value: CurrencyCode | CurrencyDb | null | undefined
+): CurrencyCode {
   if (value === "USD") {
     return "USD";
   }
@@ -87,7 +99,9 @@ function buildDefaultSettings(): UserFinancialSettings {
   };
 }
 
-function mapUserSettingsRecord(record: UserSettingsRecord | null): UserFinancialSettings {
+function mapUserSettingsRecord(
+  record: UserSettingsRecord | null
+): UserFinancialSettings {
   if (!record) {
     return buildDefaultSettings();
   }
@@ -107,7 +121,9 @@ function mapUserSettingsRecord(record: UserSettingsRecord | null): UserFinancial
   };
 }
 
-export async function getUserFinancialSettings(userId: string): Promise<UserFinancialSettings> {
+export async function getUserFinancialSettings(
+  userId: string
+): Promise<UserFinancialSettings> {
   const settings = await prisma.userSettings.findUnique({
     where: { userId },
   });
@@ -126,7 +142,6 @@ export interface UpsertVariableIncomePayload {
   note?: string | null;
 }
 
-
 function mapVariableIncome(row: VariableIncomeRecord): VariableIncome {
   return {
     id: row.id,
@@ -141,7 +156,9 @@ function mapVariableIncome(row: VariableIncomeRecord): VariableIncome {
   };
 }
 
-export async function listVariableIncomes(userId: string): Promise<VariableIncome[]> {
+export async function listVariableIncomes(
+  userId: string
+): Promise<VariableIncome[]> {
   const rows = await prisma.variableIncome.findMany({
     where: { userId },
     orderBy: { date: "desc" },
@@ -152,7 +169,7 @@ export async function listVariableIncomes(userId: string): Promise<VariableIncom
 
 export async function createVariableIncomeEntry(
   userId: string,
-  payload: UpsertVariableIncomePayload,
+  payload: UpsertVariableIncomePayload
 ) {
   const row = await prisma.variableIncome.create({
     data: {
@@ -175,6 +192,35 @@ export async function deleteVariableIncomeEntry(userId: string, id: string) {
   await prisma.variableIncome.deleteMany({
     where: { id, userId },
   });
+}
+
+export async function updateVariableIncomeEntry(
+  userId: string,
+  id: string,
+  payload: UpsertVariableIncomePayload
+) {
+  await prisma.variableIncome.updateMany({
+    where: { id, userId },
+    data: {
+      description: payload.description,
+      amount: payload.amount,
+      currency: payload.currency,
+      source: sourceToDb[payload.source],
+      date: new Date(payload.date),
+      schedule: scheduleToDb[payload.schedule],
+      totalMonths: payload.totalMonths ?? null,
+      note: payload.note ?? null,
+    },
+  });
+
+  // updateMany returns count; fetch updated row for mapping
+  const updated = await prisma.variableIncome.findFirst({
+    where: { id, userId },
+  });
+  if (!updated) {
+    throw new Error("Income not found after update");
+  }
+  return mapVariableIncome(updated);
 }
 
 export interface UpsertDonationPayload {
@@ -212,7 +258,10 @@ export async function listDonations(userId: string): Promise<DonationEntry[]> {
   return rows.map(mapDonation);
 }
 
-export async function createDonationEntry(userId: string, payload: UpsertDonationPayload) {
+export async function createDonationEntry(
+  userId: string,
+  payload: UpsertDonationPayload
+) {
   const date = new Date(payload.startDate);
   const row = await prisma.donation.create({
     data: {
@@ -224,8 +273,14 @@ export async function createDonationEntry(userId: string, payload: UpsertDonatio
       startDate: date,
       month: date.getMonth() + 1,
       year: date.getFullYear(),
-      installmentsTotal: payload.type === "installments" ? payload.installmentsTotal ?? null : null,
-      installmentsPaid: payload.type === "installments" ? payload.installmentsPaid ?? null : null,
+      installmentsTotal:
+        payload.type === "installments"
+          ? payload.installmentsTotal ?? null
+          : null,
+      installmentsPaid:
+        payload.type === "installments"
+          ? payload.installmentsPaid ?? null
+          : null,
       isActive: payload.type !== "oneTime" ? true : false,
       note: payload.note ?? null,
     },
@@ -238,6 +293,42 @@ export async function deleteDonationEntry(userId: string, id: string) {
   await prisma.donation.deleteMany({
     where: { id, userId },
   });
+}
+
+export async function updateDonationEntry(
+  userId: string,
+  id: string,
+  payload: UpsertDonationPayload
+) {
+  const date = new Date(payload.startDate);
+  await prisma.donation.updateMany({
+    where: { id, userId },
+    data: {
+      organizationName: payload.organization,
+      amount: payload.amount,
+      currency: payload.currency,
+      donationType: donationTypeToDb[payload.type],
+      startDate: date,
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+      installmentsTotal:
+        payload.type === "installments"
+          ? payload.installmentsTotal ?? null
+          : null,
+      installmentsPaid:
+        payload.type === "installments"
+          ? payload.installmentsPaid ?? null
+          : null,
+      isActive: payload.type !== "oneTime" ? true : false,
+      note: payload.note ?? null,
+    },
+  });
+
+  const updated = await prisma.donation.findFirst({ where: { id, userId } });
+  if (!updated) {
+    throw new Error("Donation not found after update");
+  }
+  return mapDonation(updated);
 }
 
 interface AggregatedMonth {
@@ -254,7 +345,10 @@ function ensureYearMonths(): Map<number, Map<number, AggregatedMonth>> {
   return map;
 }
 
-function getMonthMap(target: Map<number, Map<number, AggregatedMonth>>, year: number) {
+function getMonthMap(
+  target: Map<number, Map<number, AggregatedMonth>>,
+  year: number
+) {
   if (!target.has(year)) {
     target.set(year, new Map());
   }
@@ -263,7 +357,12 @@ function getMonthMap(target: Map<number, Map<number, AggregatedMonth>>, year: nu
 
 function getMonthAgg(target: Map<number, AggregatedMonth>, monthIndex: number) {
   if (!target.has(monthIndex)) {
-    target.set(monthIndex, { incomes: 0, donations: 0, convertedEntries: 0, convertedTotal: 0 });
+    target.set(monthIndex, {
+      incomes: 0,
+      donations: 0,
+      convertedEntries: 0,
+      convertedTotal: 0,
+    });
   }
   return target.get(monthIndex)!;
 }
@@ -274,17 +373,18 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
-  const [settings, fixedIncomeRows, variableIncomeRows, donationRows] = (await Promise.all([
-    prisma.userSettings.findUnique({ where: { userId } }),
-    prisma.income.findMany({ where: { userId } }),
-    prisma.variableIncome.findMany({ where: { userId } }),
-    prisma.donation.findMany({ where: { userId } }),
-  ])) as [
-    UserSettingsRecord | null,
-    IncomeRecord[],
-    VariableIncomeRecord[],
-    DonationRecord[],
-  ];
+  const [settings, fixedIncomeRows, variableIncomeRows, donationRows] =
+    (await Promise.all([
+      prisma.userSettings.findUnique({ where: { userId } }),
+      prisma.income.findMany({ where: { userId } }),
+      prisma.variableIncome.findMany({ where: { userId } }),
+      prisma.donation.findMany({ where: { userId } }),
+    ])) as [
+      UserSettingsRecord | null,
+      IncomeRecord[],
+      VariableIncomeRecord[],
+      DonationRecord[]
+    ];
 
   const userSettings = mapUserSettingsRecord(settings);
 
@@ -294,7 +394,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   const fixedMonthlyAmount =
     userSettings.fixedIncome.personal +
-    (userSettings.fixedIncome.includeSpouse ? userSettings.fixedIncome.spouse : 0);
+    (userSettings.fixedIncome.includeSpouse
+      ? userSettings.fixedIncome.spouse
+      : 0);
 
   const addFixedIncome = (year: number, monthIndex: number) => {
     if (fixedMonthlyAmount === 0) {
@@ -302,7 +404,11 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }
     const monthMap = getMonthMap(aggregated, year);
     const agg = getMonthAgg(monthMap, monthIndex);
-    agg.incomes += convertCurrency(fixedMonthlyAmount, baseCurrency, baseCurrency);
+    agg.incomes += convertCurrency(
+      fixedMonthlyAmount,
+      baseCurrency,
+      baseCurrency
+    );
   };
 
   // Seed all months for years present in fixed income records
@@ -356,30 +462,33 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const years = Array.from(aggregated.entries())
     .sort((a, b) => b[0] - a[0])
     .map<YearSnapshot>(([year, monthsMap]) => {
-      const monthly: MonthlySnapshot[] = Array.from({ length: 12 }).map((_, monthIndex) => {
-        const record = monthsMap.get(monthIndex) ?? {
-          incomes: 0,
-          donations: 0,
-          convertedEntries: 0,
-          convertedTotal: 0,
-        };
+      const monthly: MonthlySnapshot[] = Array.from({ length: 12 }).map(
+        (_, monthIndex) => {
+          const record = monthsMap.get(monthIndex) ?? {
+            incomes: 0,
+            donations: 0,
+            convertedEntries: 0,
+            convertedTotal: 0,
+          };
 
-        return {
-          id: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
-          monthIndex,
-          incomesBase: record.incomes,
-          donationsBase: record.donations,
-          convertedEntries: record.convertedEntries,
-          convertedTotal: record.convertedTotal,
-        };
-      });
+          return {
+            id: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
+            monthIndex,
+            incomesBase: record.incomes,
+            donationsBase: record.donations,
+            convertedEntries: record.convertedEntries,
+            convertedTotal: record.convertedTotal,
+          };
+        }
+      );
 
       return {
         year,
         baseCurrency,
         tithePercent: (userSettings.tithePercent ?? 10) / 100,
         startingBalance: userSettings.startingBalance ?? 0,
-        carryStrategy: userSettings.carryStrategy === "RESET" ? "reset" : "carry",
+        carryStrategy:
+          userSettings.carryStrategy === "RESET" ? "reset" : "carry",
         monthly,
       };
     });

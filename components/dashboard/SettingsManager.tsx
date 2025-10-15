@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Globe2, PiggyBank, Save, ShieldCheck, TrendingUp } from "lucide-react";
+import { AlertTriangle, Globe2, HandCoins, PiggyBank, Save, ShieldCheck, TrendingUp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -44,7 +44,7 @@ export function SettingsManager() {
 				<Card className="h-fit border-primary/40 bg-primary/5">
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
-							<PiggyBank className="h-4 w-4 text-primary" />
+							<HandCoins className="h-4 w-4 text-primary" />
 							{t("profileSummary.title")}
 						</CardTitle>
 						<CardDescription>{t("profileSummary.description")}</CardDescription>

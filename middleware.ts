@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 
 import { locales } from "./i18n/request";
@@ -11,6 +12,18 @@ const intlMiddleware = createIntlMiddleware({
 
 export async function middleware(req: NextRequest) {
   try {
+    // Rewrite localized favicon.ico (e.g., /he/favicon.ico) to the real favicon.png
+    const { pathname } = req.nextUrl;
+    if (pathname === "/favicon.ico") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/favicon.png";
+      return NextResponse.rewrite(url);
+    }
+    if (/^\/[a-zA-Z-]{2,}(?:\/[A-Z]{2})?\/favicon\.ico$/.test(pathname)) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/favicon.png";
+      return NextResponse.rewrite(url);
+    }
     return intlMiddleware(req);
   } catch (error) {
     console.error("Middleware error:", error);
