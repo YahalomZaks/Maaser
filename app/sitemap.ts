@@ -1,2 +1,10 @@
-// This file is intentionally left as a stub to avoid duplicate route issues.
-// If present erroneously by editor cache, it exports nothing.
+import type { MetadataRoute } from "next";
+
+import { buildSitemapEntries } from "@/lib/seo";
+
+// Static revalidate for the sitemap (24 hours)
+export const revalidate = 86400;
+
+export default function sitemap(): MetadataRoute.Sitemap {
+	return buildSitemapEntries();
+}
