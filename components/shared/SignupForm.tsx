@@ -60,6 +60,7 @@ export function SignupForm() {
     email: "",
     password: "",
     confirmPassword: "",
+    acceptedTerms: false,
   });
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidity>(() => validatePassword(""));
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
@@ -80,6 +81,13 @@ export function SignupForm() {
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+
+      if (!formData.acceptedTerms) {
+        const message = t("terms.mustAccept");
+        toast.error(message, { icon: <AlertCircle className="h-4 w-4" /> });
+        setFormError(message);
+        return;
+      }
 
       if (formData.password !== formData.confirmPassword) {
         const message = t("passwordRequirements.mismatch");
@@ -112,7 +120,7 @@ export function SignupForm() {
             onSuccess: () => {
               toast.dismiss();
               toast.success(t("success"));
-              setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+              setFormData({ name: "", email: "", password: "", confirmPassword: "", acceptedTerms: false });
               router.push(`${localePrefix}/onboarding`);
             },
             onError: (error) => {
@@ -125,7 +133,7 @@ export function SignupForm() {
         );
       });
     },
-    [formData.confirmPassword, formData.password, localePrefix, passwordValidation.isValid, router, startTransition, t],
+    [formData.acceptedTerms, formData.confirmPassword, formData.password, localePrefix, passwordValidation.isValid, router, startTransition, t],
   );
 
   const requirements = useMemo(
@@ -257,6 +265,24 @@ export function SignupForm() {
               )}
             </div>
 
+            <div className="flex items-start gap-3">
+              <input
+                id="acceptedTerms"
+                name="acceptedTerms"
+                type="checkbox"
+                className="mt-1 h-4 w-4 cursor-pointer"
+                checked={formData.acceptedTerms}
+                onChange={(e) => setFormData((prev) => ({ ...prev, acceptedTerms: e.target.checked }))}
+                required
+              />
+              <Label htmlFor="acceptedTerms" className="cursor-pointer text-sm text-muted-foreground">
+                {t("terms.label")} {" "}
+                <Link href={`${localePrefix}/terms`} className="underline underline-offset-4">
+                  {t("terms.link")}
+                </Link>
+              </Label>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
@@ -283,6 +309,13 @@ export function SignupForm() {
                 </div>
 
                 <SocialLogin />
+
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  {t("terms.socialImplicit")} {" "}
+                  <Link href={`${localePrefix}/terms`} className="underline underline-offset-4">
+                    {t("terms.link")}
+                  </Link>
+                </p>
               </>
             ) : null}
 

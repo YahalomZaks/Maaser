@@ -11,8 +11,9 @@
     },
     "subtitle": {
       "problem": "Can't remember how many places you donate to? How much to each? And whether it even covers the maaser you need to give?",
-  "solution": "Maasroti helps you calculate and track your income and donations easily, so you always know your maaser status.",
-      "description": "All your donations are organized in one place in a friendly and convenient way."
+      "solution": "Maasroti helps you easily calculate and track your income and donations,",
+      "description": "and make sure you always know your maaser status — all completely free, with no time limit.",
+      "single": "Maasroti helps you easily calculate and track your income and donations, so you always know your maaser status — all completely free, with no time limit."
     },
     "buttons": {
       "start": "Let's sign in",
@@ -48,12 +49,12 @@
     },
     "features": {
       "badge": "How the system helps",
-      "title": "Solution to all tithe management problems",
+      "title": "Solution to all maaser management problems",
       "subtitle": "All the tools you need to manage your maaser easily — and your data is secure and protected",
       "items": {
         "calculator": {
           "title": "Always know how much to give",
-          "description": "The system automatically calculates how much tithe you need to give each month according to your income. No more doubts or complicated calculations."
+          "description": "The system automatically calculates how much maaser you need to give each month according to your income. No more doubts or complicated calculations."
         },
         "management": {
           "title": "All donations in one place",
@@ -86,24 +87,7 @@
       }
     }
   },
-  "home": {
-    "title": {
-      "main": "Advanced Tithe",
-      "highlight": "Management System", 
-      "suffix": "& Donations"
-    },
-    "description": "A comprehensive system for managing maaser and donations, tracking income, automatic reminders, and detailed reports. Everything in one place with maximum simplicity.",
-    "getStarted": "Get Started",
-    "features": {
-      "title": "Everything You Need for Tithe Management",
-      "description": "A comprehensive suite of tools to manage donations and track maaser simply and efficiently."
-    },
-    "getStartedSection": {
-      "title": "Ready to Get Started?",
-      "description": "Start managing your maaser and donations in an organized and professional way within minutes.",
-      "downloadButton": "Get Started"
-    }
-  },
+  
   "navigation": {
     "appName": "Maasroti",
     "dashboard": "Main",
@@ -236,6 +220,12 @@
         "match": "Passwords match",
         "mismatch": "Passwords do not match",
         "invalid": "Please meet at least three password requirements."
+      },
+      "terms": {
+        "label": "I agree to the",
+        "link": "Terms & Conditions",
+        "mustAccept": "You must accept the Terms & Conditions to continue.",
+        "socialImplicit": "By continuing with Google you agree to the"
       }
     },
     "social": {
@@ -569,6 +559,7 @@
       "english": "English",
       "description": "Choose the interface language and direction.",
       "label": "Application language",
+      "changeLabel": "Change language",
       "options": {
         "he": "Hebrew (RTL)",
         "en": "English (LTR)"
@@ -762,6 +753,10 @@
       "privacy": {
         "title": "Privacy and Security",
         "text": "We take steps to protect your privacy and data security. Your use is also subject to our privacy policy. Personal data is not shared with third parties unless required by law or with your consent."
+      },
+      "cookies": {
+        "title": "Cookies",
+        "text": "We do not use cookies for tracking or marketing. Essential cookies may be set to operate the site and maintain session state. When you sign up or sign in with Google, Google may set third‑party cookies for authentication and session management. You can manage or block cookies via your browser settings. By using the site you consent to essential cookies required for the service; we do not set our own analytics or marketing cookies."
       },
       "accounts": {
         "title": "User Accounts",

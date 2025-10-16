@@ -1,7 +1,7 @@
 'use client';
 
 import Lottie from "lottie-react";
-import { Bell, Calculator, ListChecks, MessageCircle, Rocket, Scale, Shield, Smartphone, Sparkles, TrendingUp } from "lucide-react";
+import { Bell, Calculator, ListChecks, MessageCircle, Rocket, Scale, Smartphone, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -34,6 +34,7 @@ const HomePageContent = () => {
 							<br />
 							<p>
 								<strong style={{ color: "var(--neutral-900)" }}>{t("subtitle.solution")}</strong>{" "}
+                                <br />
 								{t("subtitle.description")}
 							</p>
 						</div>
@@ -45,13 +46,6 @@ const HomePageContent = () => {
 							<Link href={`/${locale}/signup`} className="welcome-btn welcome-btn-secondary welcome-btn-large">
 								{t("buttons.howItWorks")}
 							</Link>
-						</div>
-
-						<div className="welcome-hero-note">
-							<p style={{ color: "var(--neutral-600)", margin: 0, whiteSpace: "pre-line" }}>
-								<Shield className="h-5 w-5" style={{ color: "#059669", marginLeft: "0.5rem", display: "inline" }} />
-								{t("note")}
-							</p>
 						</div>
 					</div>
 
@@ -118,8 +112,6 @@ const HomePageContent = () => {
 			</section>
 
 			<Footer />
-
-			{/* Feedback FAB removed per request; feedback now available from authenticated user menu */}
 		</div>
 	);
 };

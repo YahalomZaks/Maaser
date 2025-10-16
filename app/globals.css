@@ -924,7 +924,7 @@ select:disabled {
 
 .welcome-nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   align-items: center;
 }
 
@@ -1151,8 +1151,8 @@ select:disabled {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.45rem 1rem;
-  background: var(--neutral-100);
+  padding: 0.5rem 0.75rem;
+  background: transparent;
   border: 1px solid transparent;
   border-radius: 999px;
   cursor: pointer;
@@ -1163,7 +1163,8 @@ select:disabled {
 }
 
 .welcome-language-selector:hover {
-  background: var(--neutral-200);
+  background: var(--neutral-100);
+  border-color: var(--neutral-200);
 }
 
 .welcome-language-selector.pending {
@@ -1171,8 +1172,41 @@ select:disabled {
   cursor: wait;
 }
 
+/* Desktop language button - icon only, square shape, same height as Sign In button */
+.welcome-language-selector-desktop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--neutral-300);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--neutral-700);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.welcome-language-selector-desktop:hover {
+  background: var(--neutral-100);
+  border-color: var(--neutral-400);
+}
+
+.welcome-language-selector-desktop.pending {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .welcome-language-flag {
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 .welcome-language-label {
@@ -1192,13 +1226,14 @@ select:disabled {
 
 .welcome-language-dropdown {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: 100%;
   inset-inline-start: 0;
   min-width: 180px;
   background: #fff;
   border: 1px solid var(--neutral-200);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
+  margin-top: 8px;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -1254,15 +1289,58 @@ select:disabled {
   border-radius: 12px;
 }
 
+/* Mobile trigger button styled exactly like Sign In/Sign Up */
+.welcome-language-mobile-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 1px solid var(--neutral-300);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--neutral-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.welcome-language-mobile-trigger:hover {
+  background: var(--neutral-50);
+  border-color: var(--neutral-400);
+}
+
+.welcome-language-mobile-trigger.pending {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.welcome-language-chevron {
+  transition: transform 0.2s ease;
+  color: var(--neutral-600);
+}
+
+.welcome-language-chevron.is-open {
+  transform: rotate(180deg);
+}
+
 .welcome-language-mobile .welcome-language-dropdown {
   position: static;
   box-shadow: none;
   border: 1px solid var(--neutral-100);
+  margin-top: 8px;
 }
 
 .welcome-language-mobile .welcome-language-option {
   border-radius: 8px;
+  padding: 0.75rem 0.9rem;
 }
+
+/* Mobile native select styling for language switcher */
+/* (previous native select variant removed) */
 
 /* Hero Section */
 .welcome-hero {

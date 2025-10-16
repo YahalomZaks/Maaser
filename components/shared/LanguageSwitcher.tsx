@@ -1,7 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, Languages } from "lucide-react";
+import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -37,18 +38,24 @@ export function LanguageSwitcher({
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<number | null>(null);
 
   const languages = useMemo(
     () => [
-      { code: "he" as SupportedLanguage, label: t("hebrew"), flag: "🇮🇱" },
-      { code: "en" as SupportedLanguage, label: t("english"), flag: "🇺🇸" },
+      {
+        code: "he" as SupportedLanguage,
+        label: t("hebrew"),
+        emoji: "🇮🇱",
+        flagSrc: "/flags/il.svg",
+      },
+      {
+        code: "en" as SupportedLanguage,
+        label: t("english"),
+        emoji: "🇺🇸",
+        flagSrc: "/flags/us.svg",
+      },
     ],
     [t],
-  );
-
-  const activeLanguage = useMemo(
-    () => languages.find((language) => language.code === locale) ?? languages[0],
-    [languages, locale],
   );
 
   const closeDropdown = useCallback(() => {
@@ -135,6 +142,65 @@ export function LanguageSwitcher({
     closeDropdown();
   }, [closeDropdown, pathname]);
 
+  // Mobile: show styled dropdown to match Sign In/Sign Up buttons
+  if (variant === "mobile") {
+    return (
+      <div
+        ref={containerRef}
+        className={clsx("welcome-language-wrapper welcome-language-mobile", className, {
+          "is-open": isOpen,
+          "is-pending": isPending,
+        })}
+      >
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={clsx("welcome-language-mobile-trigger", { pending: isPending })}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+        >
+          <span className="welcome-language-label">{t("changeLabel")}</span>
+          <svg
+            width="12"
+            height="8"
+            viewBox="0 0 12 8"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={clsx("welcome-language-chevron", { "is-open": isOpen })}
+          >
+            <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        {isOpen && (
+          <div className="welcome-language-dropdown" role="listbox">
+            {languages.map((language) => (
+              <button
+                key={language.code}
+                type="button"
+                onClick={() => handleLanguageChange(language.code)}
+                className={clsx("welcome-language-option", {
+                  active: locale === language.code,
+                })}
+                role="option"
+                aria-selected={locale === language.code}
+              >
+                <span className="welcome-language-option-flag" aria-hidden>
+                  {language.emoji}
+                </span>
+                <span className="welcome-language-option-label">
+                  {language.label}
+                </span>
+                {locale === language.code && (
+                  <Check className="welcome-language-option-check" size={14} />)
+                }
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -147,27 +213,29 @@ export function LanguageSwitcher({
           "is-pending": isPending,
         },
       )}
+      onMouseEnter={() => {
+        if (closeTimer.current) {
+          window.clearTimeout(closeTimer.current);
+          closeTimer.current = null;
+        }
+        setIsOpen(true);
+      }}
+      onMouseLeave={() => {
+        // small delay to prevent accidental close when moving to dropdown
+        closeTimer.current = window.setTimeout(() => setIsOpen(false), 120);
+      }}
     >
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={clsx("welcome-language-selector", {
+        className={clsx("welcome-language-selector-desktop", {
           pending: isPending,
         })}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-label={t("changeLabel")}
       >
-        <span className="welcome-language-flag" aria-hidden>
-          {activeLanguage.flag}
-        </span>
-        <span className="welcome-language-label">{activeLanguage.label}</span>
-        <ChevronDown
-          size={16}
-          strokeWidth={2}
-          className={clsx("welcome-language-arrow", {
-            "is-open": isOpen,
-          })}
-        />
+        <Languages size={18} />
       </button>
       {isOpen && (
         <div className="welcome-language-dropdown" role="listbox">
@@ -183,7 +251,7 @@ export function LanguageSwitcher({
               aria-selected={locale === language.code}
             >
               <span className="welcome-language-option-flag" aria-hidden>
-                {language.flag}
+                <Image src={language.flagSrc} alt="" width={18} height={12} style={{ width: "auto", height: "auto" }} />
               </span>
               <span className="welcome-language-option-label">
                 {language.label}

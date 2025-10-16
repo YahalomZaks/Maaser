@@ -12,18 +12,6 @@ const intlMiddleware = createIntlMiddleware({
 
 export async function middleware(req: NextRequest) {
   try {
-    // Rewrite localized favicon.ico (e.g., /he/favicon.ico) to the real favicon.png
-    const { pathname } = req.nextUrl;
-    if (pathname === "/favicon.ico") {
-      const url = req.nextUrl.clone();
-      url.pathname = "/favicon.png";
-      return NextResponse.rewrite(url);
-    }
-    if (/^\/[a-zA-Z-]{2,}(?:\/[A-Z]{2})?\/favicon\.ico$/.test(pathname)) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/favicon.png";
-      return NextResponse.rewrite(url);
-    }
     return intlMiddleware(req);
   } catch (error) {
     console.error("Middleware error:", error);
@@ -36,12 +24,11 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.png (favicon file)
-     * - sitemap.xml (SEO sitemap)
-     * - robots.txt (robots directives)
+     * - _next (all Next.js internal assets)
+     * - _vercel (Vercel platform internals)
+     * - Any path that looks like a static asset file (e.g. has an extension like .svg, .png, .css)
+     * - favicon files and SEO files
      */
-    "/((?!api|_next/static|_next/image|favicon.png|sitemap.xml|robots.txt).*)",
+    "/((?!api|_next|_vercel|.*\\..*|favicon.ico|favicon.png|sitemap.xml|robots.txt).*)",
   ],
 };

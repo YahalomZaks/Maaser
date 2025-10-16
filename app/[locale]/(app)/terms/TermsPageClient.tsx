@@ -27,6 +27,7 @@ const TermsPageClient = () => {
 							"acceptance",
 							"service",
 							"privacy",
+							"cookies",
 							"accounts",
 							"acceptableUse",
 							"intellectualProperty",
