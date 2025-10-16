@@ -129,6 +129,7 @@
   background: linear-gradient(45deg, #e8effe, #edf5fd);
   /* Small global top offset so generic pages aren't tight under the fixed navbar */
   padding-top: clamp(0.5rem, 2.5vw, 1rem);
+  box-sizing: border-box;
 }
 
 .dark {
@@ -351,6 +352,11 @@ select:disabled {
   padding-block-end: clamp(2rem, 4vw, 3rem);
   padding-inline: clamp(1rem, 4vw, 2rem);
   background: var(--neutral-50);
+}
+
+/* Variant for onboarding that should hug the navbar and remove extra top gap */
+.content-page.onboarding {
+  padding-block-start: var(--navbar-height);
 }
 
 /* Welcome Page CSS Variables */

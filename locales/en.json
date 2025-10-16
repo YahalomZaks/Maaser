@@ -686,6 +686,85 @@
       },
       "note": "All of the answers can be updated later—this is just a quick start so you're never looking at an empty screen."
     },
+    "explainDashboard": {
+      "title": "Dashboard - Complete Overview",
+      "subtitle": "Let's explore the dashboard - where you'll see all important information at a glance.",
+      "description": "The dashboard is your control center for maaser. Here you'll see your maaser balance, monthly and yearly progress, and all the important information you need to manage your donations wisely.",
+      "features": {
+        "overview": {
+          "title": "Complete Overview",
+          "description": "Quick snapshot of all your income and donations, with automatic calculations of balances and obligations."
+        },
+        "balance": {
+          "title": "Maaser Balance",
+          "description": "The system shows you exactly how much you've donated and how much more you need to donate to cover your maaser."
+        },
+        "monthly": {
+          "title": "Monthly Tracking",
+          "description": "View details by month - what were the income, donations and balance each month."
+        },
+        "progress": {
+          "title": "Progress and Trends",
+          "description": "Charts and metrics showing your progress over time and identifying trends."
+        }
+      }
+    },
+    "explainIncome": {
+      "title": "Income Page - Track Income",
+      "subtitle": "Learn how to manage and track all your income.",
+      "description": "The income page allows you to record and track all your income sources - salary, self-employment, investments and more. The system automatically calculates how much maaser to give from each income.",
+      "features": {
+        "sources": {
+          "title": "Track Income Sources",
+          "description": "You can record income from all sources - work, business, investments and more. The system tracks each source separately."
+        },
+        "types": {
+          "title": "Different Income Types",
+          "description": "Fixed income (monthly), one-time income, or income over several months. Each type is handled appropriately."
+        },
+        "tracking": {
+          "title": "Automatic Maaser Calculation",
+          "description": "The system automatically calculates 10% (or another percentage you set) from each income, and updates your maaser balance."
+        }
+      }
+    },
+    "explainDonations": {
+      "title": "Donations Page - Manage Donations",
+      "subtitle": "Understand how to manage all donations and commitments.",
+      "description": "The donations page allows you to track all your donations - recurring, one-time or installments. The system tracks each commitment and shows you what still needs to be paid.",
+      "features": {
+        "recurring": {
+          "title": "Recurring Donations",
+          "description": "Donations that repeat every month automatically. Ideal for organizations you donate to regularly."
+        },
+        "installments": {
+          "title": "Installment Donations",
+          "description": "Commitments to donate over several months. The system tracks the number of payments remaining."
+        },
+        "oneTime": {
+          "title": "One-Time Donations",
+          "description": "Donations made once. Suitable for special donations or emergency situations."
+        }
+      }
+    },
+    "setupIncome": {
+      "title": "Income Setup",
+      "subtitle": "Now let's set up your basic income.",
+      "monthlyIncome": "Monthly income",
+      "maaserAmount": "Monthly maaser"
+    },
+    "setupDonations": {
+      "title": "Add Donations",
+      "subtitle": "Let's add your recurring donations (optional)."
+    },
+    "steps": {
+      "welcome": "Welcome",
+      "explainDashboard": "Dashboard",
+      "explainIncome": "Income Page",
+      "explainDonations": "Donations Page",
+      "setupIncome": "Income Setup",
+      "setupDonations": "Add Donations"
+    },
     "income": {
       "title": "Income Setup",
       "description": "Set your base currency, tithe rate, and monthly income so calculations stay accurate.",

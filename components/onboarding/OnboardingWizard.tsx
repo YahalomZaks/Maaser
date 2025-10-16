@@ -1,13 +1,12 @@
 "use client";
 
-import { Building2, Globe2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, Coins, Gauge, Globe2, HandCoins, Plus, Sparkles, Trash2, TrendingUp, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -32,7 +31,7 @@ interface DonationDraft {
   installmentsRemaining: string;
 }
 
-const STEP_ORDER = ["welcome", "income", "summary"] as const;
+const STEP_ORDER = ["welcome", "explainDashboard", "explainIncome", "explainDonations", "setupIncome", "setupDonations"] as const;
 
 type StepKey = (typeof STEP_ORDER)[number];
 
@@ -45,6 +44,7 @@ const INSTALLMENT_OPTIONS = Array.from({ length: 36 }, (_, index) => String(inde
 
 export function OnboardingWizard() {
   const locale = useLocale();
+  const isRTL = locale === "he";
   const router = useRouter();
   const t = useTranslations("firstTimeSetup");
   const tCommon = useTranslations("common");
@@ -87,13 +87,25 @@ export function OnboardingWizard() {
         label: t("welcome.title"),
         description: t("welcome.subtitle"),
       },
-      income: {
-        label: t("income.title"),
-        description: t("income.description"),
+      explainDashboard: {
+        label: t("explainDashboard.title"),
+        description: t("explainDashboard.subtitle"),
       },
-      summary: {
-        label: t("summary.title"),
-        description: t("summary.description"),
+      explainIncome: {
+        label: t("explainIncome.title"),
+        description: t("explainIncome.subtitle"),
+      },
+      explainDonations: {
+        label: t("explainDonations.title"),
+        description: t("explainDonations.subtitle"),
+      },
+      setupIncome: {
+        label: t("setupIncome.title"),
+        description: t("setupIncome.subtitle"),
+      },
+      setupDonations: {
+        label: t("setupDonations.title"),
+        description: t("setupDonations.subtitle"),
       },
     }),
     [t],
@@ -257,7 +269,7 @@ export function OnboardingWizard() {
     return true;
   }, [form.includeSpouseIncome, form.personalIncome, form.spouseIncome]);
 
-  const canProceed = step === "income" ? canProceedFromIncome : true;
+  const canProceed = step === "setupIncome" ? canProceedFromIncome : true;
   const canAddDonation = useMemo(() => {
     if (donationDraft.organization.trim().length === 0) {
       return false;
@@ -271,345 +283,679 @@ export function OnboardingWizard() {
     return true;
   }, [donationDraft.amount, donationDraft.installmentsRemaining, donationDraft.organization, donationDraft.type]);
 
+  const stepLabels = useMemo(() => [
+    t("steps.welcome") || "ברוך הבא",
+    t("steps.explainDashboard") || "לוח בקרה",
+    t("steps.explainIncome") || "עמוד הכנסות",
+    t("steps.explainDonations") || "עמוד תרומות",
+    t("steps.setupIncome") || "הוספת הכנסות",
+    t("steps.setupDonations") || "הוספת תרומות"
+  ], [t]);
+
   return (
-    <Card className="overflow-hidden border-none shadow-xl">
-      <CardHeader className="relative space-y-4 bg-gradient-to-r from-primary to-primary/80 px-8 py-10 text-primary-foreground">
-        <div className="absolute inset-y-0 right-0 w-1/3 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)]" aria-hidden />
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {BRAND_ICONS.map(({ Icon, label }, index) => (
-                <span key={index} className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur">
-                  <Icon aria-hidden className="size-6" />
-                  <span className="sr-only">{label}</span>
-                </span>
-              ))}
-            </div>
-            <div>
-              <p className="flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-white/80">
-                <Sparkles className="size-4" />
-                {t("welcome.badge")}
-              </p>
-              <CardTitle className="mt-1 text-3xl font-semibold text-white">
-                {stepDetails[step].label}
-              </CardTitle>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {STEP_ORDER.map((key, index) => {
-              const isActive = key === step;
-              const isComplete = stepIndex > index;
-              return (
-                <div
-                  key={key}
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-full border border-white/40 text-sm font-semibold transition",
-                    isActive && "bg-white text-primary",
-                    !isActive && !isComplete && "bg-white/10 text-white/70",
-                    isComplete && "bg-white/30 text-white",
-                  )}
-                >
-                  {index + 1}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <p className="relative max-w-2xl text-sm text-white/90">{stepDetails[step].description}</p>
-      </CardHeader>
-      <CardContent className="space-y-8 bg-gradient-to-b from-white via-white to-muted/40 px-8 py-10">
-        {step === "welcome" && (
-          <div className="grid gap-6">
-            <div className="rounded-2xl border border-primary/10 bg-white/80 p-6 shadow-sm">
-              <p className="text-sm text-muted-foreground">{t("welcome.description")}</p>
-            </div>
-            <ul className="grid gap-4 md:grid-cols-2">
-              {FEATURE_KEYS.map((key) => (
-                <li
-                  key={key}
-                  className="rounded-xl border border-border/60 bg-white/90 p-4 shadow-xs"
-                >
-                  <p className="text-base font-semibold text-foreground">{t(`welcome.features.${key}`)}</p>
-                </li>
-              ))}
-            </ul>
-            <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground">
-              {t("welcome.note")}
-            </div>
-          </div>
-        )}
+    <div className="relative w-full">
 
-        {step === "income" && (
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="space-y-5">
-              <div className="grid gap-2">
-                <Label htmlFor="currency">{tIncome("baseCurrency")}</Label>
-                <select
-                  id="currency"
-                  value={form.currency}
-                  onChange={(event) => handleChange("currency", event.target.value as CurrencyCode)}
-                  className="rounded-md border border-border bg-white px-3 py-2 text-sm shadow-sm"
-                >
-                  {currencyOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {/* Main Container */}
+      <div className="relative w-full">
+        <div className="mx-auto w-full max-w-full px-3 md:px-5 lg:px-8 xl:px-10 2xl:px-12 py-3 md:py-4 flex flex-col pb-28 md:pb-32">
 
-              <div className="grid gap-2">
-                <Label htmlFor="tithePercent">{tIncome("tithePercentLabel")}</Label>
-                <Input
-                  id="tithePercent"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={form.tithePercent}
-                  onChange={(event) => handleChange("tithePercent", Number(event.target.value) || 0)}
-                />
-                <p className="text-xs text-muted-foreground">{tIncome("tithePercentHelper")}</p>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="personalIncome">{t("income.yourIncome")}</Label>
-                <Input
-                  id="personalIncome"
-                  type="number"
-                  min={0}
-                  value={form.personalIncome}
-                  onChange={(event) => handleChange("personalIncome", event.target.value)}
-                  placeholder="0"
-                />
-                <p className="text-xs text-muted-foreground">{t("income.helperNote")}</p>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 p-3">
-                <input
-                  id="includeSpouse"
-                  type="checkbox"
-                  checked={form.includeSpouseIncome}
-                  onChange={(event) => handleChange("includeSpouseIncome", event.target.checked)}
-                  className="h-4 w-4 rounded border-border text-primary"
-                />
-                <Label htmlFor="includeSpouse" className="font-normal">
-                  {t("income.hasSpouse")}
-                </Label>
-              </div>
-
-              {form.includeSpouseIncome && (
-                <div className="grid gap-2">
-                  <Label htmlFor="spouseIncome">{t("income.spouseIncome")}</Label>
-                  <Input
-                    id="spouseIncome"
-                    type="number"
-                    min={0}
-                    value={form.spouseIncome}
-                    onChange={(event) => handleChange("spouseIncome", event.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="space-y-4 rounded-2xl border border-primary/10 bg-white/90 p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-foreground">{t("summary.monthlyIncome")}</h3>
-              <p className="text-3xl font-bold text-primary">
-                {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(totalFixedIncome || 0)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {t("summary.maaserAmount")}: {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(estimatedMaaser || 0)}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {step === "summary" && (
-          <div className="space-y-8">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-primary/20 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-muted-foreground">{t("summary.monthlyIncome")}</h3>
-                <p className="mt-2 text-2xl font-bold text-foreground">
-                  {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(totalFixedIncome || 0)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-primary/20 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-muted-foreground">{t("summary.maaserAmount")}</h3>
-                <p className="mt-2 text-2xl font-bold text-foreground">
-                  {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(estimatedMaaser || 0)}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-4 rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-foreground">{t("donations.title")}</h3>
-                <p className="text-sm text-muted-foreground">{t("donations.helper")}</p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="donationOrg">{t("donations.organizationName")}</Label>
-                  <Input
-                    id="donationOrg"
-                    value={donationDraft.organization}
-                    onChange={(event) => handleDonationDraftChange("organization", event.target.value)}
-                    placeholder={t("donations.organizationName")}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="donationAmount">{t("donations.amount")}</Label>
-                  <Input
-                    id="donationAmount"
-                    type="number"
-                    min={0}
-                    value={donationDraft.amount}
-                    onChange={(event) => handleDonationDraftChange("amount", event.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="donationCurrency">{t("donations.currency")}</Label>
-                  <select
-                    id="donationCurrency"
-                    value={donationDraft.currency}
-                    onChange={(event) => handleDonationDraftChange("currency", event.target.value as CurrencyCode)}
-                    className="rounded-md border border-border bg-white px-3 py-2 text-sm shadow-sm"
-                  >
-                    {currencyOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="donationType">{t("donations.type")}</Label>
-                  <select
-                    id="donationType"
-                    value={donationDraft.type}
-                    onChange={(event) => handleDonationDraftChange("type", event.target.value as DonationType)}
-                    className="rounded-md border border-border bg-white px-3 py-2 text-sm shadow-sm"
-                  >
-                    {donationTypeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {donationDraft.type === "installments" && (
-                  <div className="grid gap-2">
-                    <Label htmlFor="donationInstallments">{t("donations.installmentsRemainingLabel")}</Label>
-                    <select
-                      id="donationInstallments"
-                      value={donationDraft.installmentsRemaining}
-                      onChange={(event) => handleDonationDraftChange("installmentsRemaining", event.target.value)}
-                      className="rounded-md border border-border bg-white px-3 py-2 text-sm shadow-sm"
-                    >
-                      {INSTALLMENT_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+          {/* Header with Logo */}
+          <div className="mb-4 md:mb-5">
+            <div className="flex items-center justify-center text-center">
+              {/* Logo */}
+              <div className="flex items-center gap-2 md:gap-3">
+                {BRAND_ICONS.slice(0, 2).map(({ Icon }, index) => (
+                  <div key={index} className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg md:rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+                    <Icon className="h-4 w-4 md:h-5 md:w-5" />
                   </div>
-                )}
+                ))}
+                <div className="text-center">
+                  <h1 className="text-lg md:text-xl font-bold text-slate-800 leading-tight">
+                    {locale === "he" ? "מעשרותִי" : "Maasroti"}
+                  </h1>
+                  <p className="text-xs md:text-sm text-slate-500">{t("welcome.badge")}</p>
+                </div>
               </div>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={!canAddDonation}
-                onClick={handleAddDonation}
-                className="inline-flex items-center gap-2"
-              >
-                <Plus className="size-4" />
-                {t("donations.addButton")}
-              </Button>
-              <div className="space-y-3">
-                <h4 className="font-semibold text-foreground">{t("donations.listTitle")}</h4>
-                {donations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t("donations.empty")}</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {donations.map((donation, index) => (
-                      <li
-                        key={`${donation.organization}-${index}`}
-                        className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">{donation.organization}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Intl.NumberFormat(locale, { style: "currency", currency: donation.currency }).format(Number(donation.amount) || 0)} · {tDonationTypes(donation.type)}
-                          </p>
-                          {donation.type === "installments" && Number(donation.installmentsRemaining) > 0 ? (
-                            <p className="text-xs text-muted-foreground">
-                              {t("donations.installmentsRemainingNote", { count: donation.installmentsRemaining })}
-                            </p>
-                          ) : null}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveDonation(index)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground">
-                {t("donations.note")}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-primary/20 bg-white p-6 text-sm text-muted-foreground shadow-sm">
-              <p>{t("summary.note")}</p>
             </div>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col gap-4 border-t border-border/60 bg-white px-8 py-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={stepIndex === 0 || isSubmitting}
-            onClick={handlePrevious}
-          >
-            {t("navigation.previous")}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={isSubmitting}
-            onClick={() => submitOnboarding(true)}
-            isLoading={isSubmitting}
-            loadingText={tCommon("loading")}
-          >
-            {t("navigation.skip")}
-          </Button>
+
+          {/* Progress Steps - Desktop */}
+
+          <div className="hidden md:block mb-8">
+            <div className="relative" dir={isRTL ? 'rtl' : 'ltr'}> {/* הוסף dir אם לא קיים גלובלית */}
+              {/* Progress Line Background */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200" />
+              {/* Progress Line Filled (RTL-aware) */}
+              <div
+                className="absolute top-5 h-0.5 bg-blue-500 transition-all duration-500"
+                style={{
+                  width: `${(stepIndex / (totalSteps - 1)) * 100}%`,
+                  ...(isRTL ? { right: 0 } : { left: 0 }),
+                }}
+              />
+
+              {/* Steps (logical order always, CSS + dir handles visual RTL reversal) */}
+              <div className="relative flex justify-between">
+                {STEP_ORDER.map((key, actualIndex) => {
+                  const isActive = key === step;
+                  const isComplete = stepIndex > actualIndex;
+                  const stepNumber = actualIndex + 1;
+                  const stepLabel = stepLabels[actualIndex]; // התאמה ללוגיקה
+                  return (
+                    <div key={key} className="flex flex-col items-center flex-1 min-w-0"> {/* flex-1 לשוויון */}
+                      <div
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full font-semibold text-sm transition-all duration-300 mb-2",
+                          isActive && "bg-blue-500 text-white shadow-lg scale-110 ring-4 ring-blue-100",
+                          isComplete && "bg-green-500 text-white",
+                          !isActive && !isComplete && "bg-white border-2 border-slate-200 text-slate-400"
+                        )}
+                      >
+                        {isComplete ? <Check className="h-5 w-5" /> : stepNumber}
+                      </div>
+                      <p className={cn(
+                        "text-xs text-center font-medium transition-colors px-1", // px-1 למניעת overflow
+                        isActive && "text-blue-600",
+                        isComplete && "text-slate-600",
+                        !isActive && !isComplete && "text-slate-400"
+                      )}>
+                        {stepLabel}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+
+          {/* Progress Steps - Mobile */}
+          <div className="md:hidden mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              {/* Progress Bar */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-slate-700">
+                    שלב {stepIndex + 1} מתוך {totalSteps}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {Math.round(((stepIndex + 1) / totalSteps) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-500"
+                    style={{ width: `${((stepIndex + 1) / totalSteps) * 100}%` }}
+                  />
+                </div>
+              </div>
+              {/* Current Step Label */}
+              <p className="text-sm text-slate-600 text-center font-medium">
+                {stepLabels[stepIndex]}
+              </p>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="relative">
+            {step === "welcome" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Main Content Card */}
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 mb-4 md:mb-6">
+                  <p className="text-slate-700 text-center mb-6 md:mb-8 text-sm md:text-base">{t("welcome.description")}</p>
+
+                  {/* Feature Grid */}
+                  <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {FEATURE_KEYS.map((key, index) => (
+                      <div
+                        key={key}
+                        className="relative overflow-hidden rounded-lg md:rounded-xl bg-slate-50/80 p-4 md:p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white">
+                            <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-800 text-sm md:text-base">{t(`welcome.features.${key}`)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Info Note */}
+                <div className="rounded-lg md:rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-3 md:p-4 text-center">
+                  <p className="text-xs md:text-sm text-slate-600">{t("welcome.note")}</p>
+                </div>
+              </div>
+            )}
+
+            {step === "explainDashboard" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section with Icon */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <div className="inline-flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-xl md:rounded-2xl bg-blue-500 text-white shadow-lg mb-3 md:mb-4">
+                    <Gauge className="h-8 w-8 md:h-10 md:w-10" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Description Card */}
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 mb-4 md:mb-6">
+                  <p className="text-slate-700 text-center mb-6 md:mb-8 text-sm md:text-base">{t("explainDashboard.description")}</p>
+
+                  {/* Features Grid */}
+                  <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-lg md:rounded-xl bg-slate-50/80 p-4 md:p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-2 md:mb-3">
+                        <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+                          <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-sm md:text-base">{t("explainDashboard.features.overview.title")}</h4>
+                      </div>
+                      <p className="text-xs md:text-sm text-slate-600">{t("explainDashboard.features.overview.description")}</p>
+                    </div>
+
+                    <div className="rounded-lg md:rounded-xl bg-slate-50/80 p-4 md:p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-2 md:mb-3">
+                        <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+                          <Wallet className="h-4 w-4 md:h-5 md:w-5" />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-sm md:text-base">{t("explainDashboard.features.balance.title")}</h4>
+                      </div>
+                      <p className="text-xs md:text-sm text-slate-600">{t("explainDashboard.features.balance.description")}</p>
+                    </div>
+
+                    <div className="rounded-lg md:rounded-xl bg-slate-50/80 p-4 md:p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-2 md:mb-3">
+                        <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+                          <CalendarDays className="h-4 w-4 md:h-5 md:w-5" />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-sm md:text-base">{t("explainDashboard.features.monthly.title")}</h4>
+                      </div>
+                      <p className="text-xs md:text-sm text-slate-600">{t("explainDashboard.features.monthly.description")}</p>
+                    </div>
+
+                    <div className="rounded-lg md:rounded-xl bg-slate-50/80 p-4 md:p-5 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-2 md:mb-3">
+                        <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+                          <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-sm md:text-base">{t("explainDashboard.features.progress.title")}</h4>
+                      </div>
+                      <p className="text-xs md:text-sm text-slate-600">{t("explainDashboard.features.progress.description")}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "explainIncome" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section with Icon */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <div className="inline-flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-xl md:rounded-2xl bg-blue-500 text-white shadow-lg mb-3 md:mb-4">
+                    <Coins className="h-8 w-8 md:h-10 md:w-10" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Description Card */}
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 mb-4 md:mb-6 max-w-4xl mx-auto">
+                  <p className="text-slate-700 text-center mb-6 md:mb-8 text-sm md:text-base">{t("explainIncome.description")}</p>
+
+                  {/* Steps List */}
+                  <div className="space-y-3 md:space-y-4">
+                    <div className="flex gap-3 md:gap-4 p-4 md:p-5 rounded-lg md:rounded-xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-base md:text-lg">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainIncome.features.sources.title")}</h4>
+                        <p className="text-xs md:text-sm text-slate-600">{t("explainIncome.features.sources.description")}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 md:gap-4 p-4 md:p-5 rounded-lg md:rounded-xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-base md:text-lg">
+                        2
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainIncome.features.types.title")}</h4>
+                        <p className="text-xs md:text-sm text-slate-600">{t("explainIncome.features.types.description")}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 md:gap-4 p-4 md:p-5 rounded-lg md:rounded-xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-base md:text-lg">
+                        3
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainIncome.features.tracking.title")}</h4>
+                        <p className="text-xs md:text-sm text-slate-600">{t("explainIncome.features.tracking.description")}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "explainDonations" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section with Icon */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <div className="inline-flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-xl md:rounded-2xl bg-blue-500 text-white shadow-lg mb-3 md:mb-4">
+                    <HandCoins className="h-8 w-8 md:h-10 md:w-10" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Description Card */}
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 mb-4 md:mb-6 max-w-4xl mx-auto">
+                  <p className="text-slate-700 text-center mb-6 md:mb-8 text-sm md:text-base">{t("explainDonations.description")}</p>
+
+                  {/* Steps List */}
+                  <div className="space-y-3 md:space-y-4">
+                    <div className="flex gap-3 md:gap-4 p-4 md:p-5 rounded-lg md:rounded-xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-base md:text-lg">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainDonations.features.recurring.title")}</h4>
+                        <p className="text-xs md:text-sm text-slate-600">{t("explainDonations.features.recurring.description")}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 md:gap-4 p-4 md:p-5 rounded-lg md:rounded-xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-base md:text-lg">
+                        2
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainDonations.features.installments.title")}</h4>
+                        <p className="text-xs md:text-sm text-slate-600">{t("explainDonations.features.installments.description")}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 md:gap-4 p-4 md:p-5 rounded-lg md:rounded-xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                      <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-base md:text-lg">
+                        3
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainDonations.features.oneTime.title")}</h4>
+                        <p className="text-xs md:text-sm text-slate-600">{t("explainDonations.features.oneTime.description")}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "setupIncome" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Form Grid */}
+                <div className="grid gap-4 md:gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                  {/* Input Form */}
+                  <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 space-y-4 md:space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="currency" className="text-slate-700 font-semibold">{tIncome("baseCurrency")}</Label>
+                      <select
+                        id="currency"
+                        value={form.currency}
+                        onChange={(event) => handleChange("currency", event.target.value as CurrencyCode)}
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      >
+                        {currencyOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tithePercent" className="text-slate-700 font-semibold">{tIncome("tithePercentLabel")}</Label>
+                      <Input
+                        id="tithePercent"
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={form.tithePercent}
+                        onChange={(event) => handleChange("tithePercent", Number(event.target.value) || 0)}
+                        className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      />
+                      <p className="text-xs text-slate-500">{tIncome("tithePercentHelper")}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="personalIncome" className="text-slate-700 font-semibold">{t("income.yourIncome")}</Label>
+                      <Input
+                        id="personalIncome"
+                        type="number"
+                        min={0}
+                        value={form.personalIncome}
+                        onChange={(event) => handleChange("personalIncome", event.target.value)}
+                        placeholder="0"
+                        className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      />
+                      <p className="text-xs text-slate-500">{t("income.helperNote")}</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-xl border-2 border-slate-200 bg-slate-50 p-4">
+                      <input
+                        id="includeSpouse"
+                        type="checkbox"
+                        checked={form.includeSpouseIncome}
+                        onChange={(event) => handleChange("includeSpouseIncome", event.target.checked)}
+                        className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <Label htmlFor="includeSpouse" className="font-medium text-slate-700 cursor-pointer">
+                        {t("income.hasSpouse")}
+                      </Label>
+                    </div>
+
+                    {form.includeSpouseIncome && (
+                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Label htmlFor="spouseIncome" className="text-slate-700 font-semibold">{t("income.spouseIncome")}</Label>
+                        <Input
+                          id="spouseIncome"
+                          type="number"
+                          min={0}
+                          value={form.spouseIncome}
+                          onChange={(event) => handleChange("spouseIncome", event.target.value)}
+                          placeholder="0"
+                          className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Summary Card */}
+                  <div className="bg-blue-500 rounded-xl md:rounded-2xl shadow-lg p-5 md:p-8 text-white">
+                    <div className="space-y-4 md:space-y-6">
+                      <div>
+                        <p className="text-blue-100 text-xs md:text-sm font-medium mb-2">{t("setupIncome.monthlyIncome")}</p>
+                        <p className="text-2xl md:text-3xl lg:text-4xl font-bold">
+                          {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(totalFixedIncome || 0)}
+                        </p>
+                      </div>
+                      <div className="h-px bg-white/20" />
+                      <div>
+                        <p className="text-blue-100 text-xs md:text-sm font-medium mb-2">{t("setupIncome.maaserAmount")}</p>
+                        <p className="text-xl md:text-2xl lg:text-3xl font-bold">
+                          {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(estimatedMaaser || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "setupDonations" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Summary Cards */}
+                <div className="grid gap-3 md:gap-4 sm:grid-cols-2 mb-4 md:mb-6">
+                  <div className="bg-blue-500 rounded-lg md:rounded-xl shadow-md p-4 md:p-5 text-white">
+                    <p className="text-blue-100 text-xs md:text-sm font-medium mb-1">{t("setupIncome.monthlyIncome")}</p>
+                    <p className="text-xl md:text-2xl lg:text-3xl font-bold">
+                      {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(totalFixedIncome || 0)}
+                    </p>
+                  </div>
+                  <div className="bg-blue-600 rounded-lg md:rounded-xl shadow-md p-4 md:p-5 text-white">
+                    <p className="text-blue-100 text-xs md:text-sm font-medium mb-1">{t("setupIncome.maaserAmount")}</p>
+                    <p className="text-xl md:text-2xl lg:text-3xl font-bold">
+                      {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(estimatedMaaser || 0)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Donation Form */}
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 space-y-4 md:space-y-6">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">{t("donations.title")}</h3>
+                    <p className="text-sm text-slate-600">{t("donations.helper")}</p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="donationOrg" className="text-slate-700 font-semibold">{t("donations.organizationName")}</Label>
+                      <Input
+                        id="donationOrg"
+                        value={donationDraft.organization}
+                        onChange={(event) => handleDonationDraftChange("organization", event.target.value)}
+                        placeholder={t("donations.organizationName")}
+                        className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="donationAmount" className="text-slate-700 font-semibold">{t("donations.amount")}</Label>
+                      <Input
+                        id="donationAmount"
+                        type="number"
+                        min={0}
+                        value={donationDraft.amount}
+                        onChange={(event) => handleDonationDraftChange("amount", event.target.value)}
+                        placeholder="0"
+                        className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="donationCurrency" className="text-slate-700 font-semibold">{t("donations.currency")}</Label>
+                      <select
+                        id="donationCurrency"
+                        value={donationDraft.currency}
+                        onChange={(event) => handleDonationDraftChange("currency", event.target.value as CurrencyCode)}
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      >
+                        {currencyOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="donationType" className="text-slate-700 font-semibold">{t("donations.type")}</Label>
+                      <select
+                        id="donationType"
+                        value={donationDraft.type}
+                        onChange={(event) => handleDonationDraftChange("type", event.target.value as DonationType)}
+                        className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      >
+                        {donationTypeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {donationDraft.type === "installments" && (
+                      <div className="space-y-2 md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Label htmlFor="donationInstallments" className="text-slate-700 font-semibold">{t("donations.installmentsRemainingLabel")}</Label>
+                        <select
+                          id="donationInstallments"
+                          value={donationDraft.installmentsRemaining}
+                          onChange={(event) => handleDonationDraftChange("installmentsRemaining", event.target.value)}
+                          className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        >
+                          {INSTALLMENT_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={!canAddDonation}
+                    onClick={handleAddDonation}
+                    className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all"
+                  >
+                    <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                    {t("donations.addButton")}
+                  </Button>
+                  {/* Donations List */}
+                  <div className="space-y-3 md:space-y-4">
+                    <h4 className="font-semibold text-slate-800 text-base md:text-lg">{t("donations.listTitle")}</h4>
+                    {donations.length === 0 ? (
+                      <div className="text-center py-6 md:py-8 rounded-lg md:rounded-xl bg-slate-50 border-2 border-dashed border-slate-200">
+                        <HandCoins className="h-10 w-10 md:h-12 md:w-12 text-slate-300 mx-auto mb-2" />
+                        <p className="text-xs md:text-sm text-slate-500">{t("donations.empty")}</p>
+                      </div>
+                    ) : (
+                      <ul className="space-y-2 md:space-y-3">
+                        {donations.map((donation, index) => (
+                          <li
+                            key={`${donation.organization}-${index}`}
+                            className="flex items-center justify-between rounded-lg md:rounded-xl border border-slate-200 bg-slate-50 p-3 md:p-4 hover:border-blue-400 hover:shadow-sm transition-all"
+                          >
+                            <div className="flex-1 min-w-0 pr-3">
+                              <p className="font-semibold text-slate-800 text-sm md:text-base truncate">{donation.organization}</p>
+                              <p className="text-xs md:text-sm text-slate-600 mt-1">
+                                {new Intl.NumberFormat(locale, { style: "currency", currency: donation.currency }).format(Number(donation.amount) || 0)} · {tDonationTypes(donation.type)}
+                              </p>
+                              {donation.type === "installments" && Number(donation.installmentsRemaining) > 0 ? (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  {t("donations.installmentsRemainingNote", { count: donation.installmentsRemaining })}
+                                </p>
+                              ) : null}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveDonation(index)}
+                              className="text-slate-400 hover:text-red-500 hover:bg-red-50 shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="rounded-lg md:rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-3 md:p-4">
+                    <p className="text-xs md:text-sm text-slate-600">{t("donations.note")}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Footer (sticky) */}
+          <div className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-[0_-6px_12px_-6px_rgba(15,23,42,0.12)]">
+            <div className="mx-auto w-full max-w-full px-3 md:px-6 py-3 md:py-4">
+              <div className="flex items-center justify-between gap-3 md:gap-4">
+                {/* Left Side Buttons */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={stepIndex === 0 || isSubmitting}
+                    onClick={handlePrevious}
+                    className="gap-2 hover:bg-slate-100 text-slate-600 text-base md:text-base px-3 md:px-4 h-12 md:h-11"
+                  >
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    <span className="hidden sm:inline">{t("navigation.previous")}</span>
+                  </Button>
+
+                  {step !== "setupDonations" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={isSubmitting}
+                      onClick={() => submitOnboarding(true)}
+                      isLoading={isSubmitting}
+                      loadingText={tCommon("loading")}
+                      className="gap-2 hover:bg-slate-100 text-slate-500 text-base md:text-base px-3 md:px-4 h-12 md:h-11"
+                    >
+                      {t("navigation.skip")}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Right Side Button */}
+                <div>
+                  {step !== "setupDonations" ? (
+                    <Button
+                      type="button"
+                      disabled={!canProceed || isSubmitting}
+                      onClick={handleNext}
+                      className="gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all min-w-[120px] md:min-w-[140px] text-base md:text-base h-12 md:h-11 px-5"
+                    >
+                      <span>{t("navigation.next")}</span>
+                      <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => submitOnboarding(false)}
+                      isLoading={isSubmitting}
+                      loadingText={tCommon("loading")}
+                      className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all min-w-[150px] md:min-w-[180px] text-base md:text-base h-12 md:h-11 px-5"
+                    >
+                      <Check className="h-4 w-4 md:h-5 md:w-5" />
+                      <span>{nextLabel}</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
-          {step !== "summary" && (
-            <Button type="button" disabled={!canProceed || isSubmitting} onClick={handleNext}>
-              {t("navigation.next")}
-            </Button>
-          )}
-          {step === "summary" && (
-            <Button
-              type="button"
-              className="min-w-[160px]"
-              disabled={isSubmitting}
-              onClick={() => submitOnboarding(false)}
-              isLoading={isSubmitting}
-              loadingText={tCommon("loading")}
-            >
-              {nextLabel}
-            </Button>
-          )}
-        </div>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
