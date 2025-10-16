@@ -6,6 +6,7 @@ import { Suspense } from "react";
 
 import Navbar from "@/components/shared/navbar";
 import { Toaster } from "@/components/ui/sonner";
+import { getOrganizationJsonLd, getRootMetadata, resolveLocaleParam } from "@/lib/seo";
 import { ThemeProvider } from "@/providers/themeProviders";
 
 import "./globals.css";
@@ -31,105 +32,10 @@ const latoFont = Lato({
 	display: "swap",
 });
 
-const META_BY_LOCALE: Record<"he" | "en", {
-	title: string;
-	description: string;
-	keywords: string[];
-	siteName: string;
-	twitterTitle: string;
-	twitterDescription: string;
-	openGraphLocale: string;
-}> = {
-	he: {
-		title: "מעשרותִי",
-		description:
-			"מעשרותִי מאפשרת לנהל הכנסות, תרומות וחישובי מעשר בצורה יעילה ומדויקת – כולל מעקב חודשי, דוחות, תזכורות וכלי חישוב הלכתיים.",
-		keywords: [
-			"מעשרותִי",
-			"מעשרותי",
-			"מעשר",
-			"חישוב מעשרות",
-			"מעשרות הכנסה",
-			"הפרשת מעשר",
-			"ניהול מעשרות",
-			"ניהול תרומות",
-			"ניהול צדקה",
-			"חישוב צדקה",
-			"רישום תרומות",
-			"מעקב תרומות",
-			"תכנון תרומות",
-			"דוחות מעשרות",
-			"סכום מעשר",
-			"מחשבון מעשר",
-		],
-		siteName: "מעשרותִי",
-		twitterTitle: "מעשרותִי – מערכת דיגיטלית לניהול וחישוב מעשרות",
-		twitterDescription:
-			"כלים חכמים לניהול הכנסות ותרומות, מעקב אחרי הפרשת מעשר ודוחות מפורטים בעברית.",
-		openGraphLocale: "he_IL",
-	},
-	en: {
-		title: "Maasroti",
-		description:
-			"Maasroti helps you track income, donations, and maaser obligations with automated calculations, clear dashboards, and reminders.",
-		keywords: [
-			"Maasroti",
-			"maaser calculator",
-			"tithe calculator",
-			"tithe management",
-			"donation tracker",
-			"charity management",
-			"maaser tracking",
-			"maaser planning",
-			"automatic maaser",
-			"income tithe",
-			"charity reports",
-			"donation budgeting",
-			"tzedakah calculator",
-			"tzedakah management",
-			"generosity planning",
-		],
-		siteName: "Maasroti",
-		twitterTitle: "Maasroti – Manage Your Maaser & Donations Smarter",
-		twitterDescription:
-			"Track income, donations, and maaser obligations with automated calculations, reminders, and multilingual dashboards.",
-		openGraphLocale: "en_US",
-	},
-};
-
 export async function generateMetadata(): Promise<Metadata> {
 	const locale = await getLocale();
-	const key = locale === "he" ? "he" : "en";
-	const meta = META_BY_LOCALE[key];
-
-	return {
-		title: meta.title,
-		description: meta.description,
-		keywords: meta.keywords,
-		authors: [{ name: meta.siteName }],
-		creator: meta.siteName,
-		publisher: meta.siteName,
-		robots: {
-			index: true,
-			follow: true,
-		},
-		icons: {
-			icon: "/favicon.png",
-			apple: "/favicon.png",
-		},
-		openGraph: {
-			type: "website",
-			locale: meta.openGraphLocale,
-			title: meta.title,
-			description: meta.description,
-			siteName: meta.siteName,
-		},
-		twitter: {
-			card: "summary_large_image",
-			title: meta.twitterTitle,
-			description: meta.twitterDescription,
-		},
-	};
+	const normalized = resolveLocaleParam(locale);
+	return getRootMetadata(normalized);
 }
 
 // Mark the root layout as dynamic to allow request-scoped locale/messages
@@ -142,21 +48,27 @@ export default async function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const locale = await getLocale();
+	const normalizedLocale = resolveLocaleParam(locale);
 	const messages = await getMessages();
-	const isRTL = locale === "he";
+	const isRTL = normalizedLocale === "he";
+	const organizationJsonLd = getOrganizationJsonLd(normalizedLocale);
 
 	return (
-		<html lang={locale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
+		<html lang={normalizedLocale} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
 			<head>
 				<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 				<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer />
 				<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer />
+				<script
+					type="application/ld+json"
+					dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+				/>
 			</head>
 			<body
 				className={`${interFont.variable} ${heeboFont.variable} ${latoFont.variable} ${latoFont.className} antialiased bg-neutral-50 text-neutral-900 min-h-screen`}
 				suppressHydrationWarning
 			>
-				<NextIntlClientProvider locale={locale} messages={messages}>
+				<NextIntlClientProvider locale={normalizedLocale} messages={messages}>
 						<ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light" disableTransitionOnChange>
 						<Suspense fallback={null}>
 							<Navbar />

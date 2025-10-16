@@ -1,6 +1,19 @@
-import { SignupForm } from "@/components/shared/SignupForm";
+import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 
-export default function SignUpPage() {
+import { SignupForm } from "@/components/shared/SignupForm";
+import { getPageMetadata } from "@/lib/seo";
+
+type PageProps = {
+  params: { locale: string };
+};
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  return getPageMetadata(params.locale, "signup");
+}
+
+export default function SignUpPage({ params }: PageProps) {
+  setRequestLocale(params.locale);
   return (
     <section className="content-page">
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 md:p-10">
