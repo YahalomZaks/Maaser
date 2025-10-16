@@ -6,14 +6,16 @@ import { getPageMetadata } from "@/lib/seo";
 import FaqPageClient from "./FaqPageClient";
 
 type PageProps = {
-	params: { locale: string };
+	params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "faq");
+	const { locale } = await params;
+	return getPageMetadata(locale, "faq");
 }
 
-export default function FAQPage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function FAQPage({ params }: PageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <FaqPageClient />;
 }

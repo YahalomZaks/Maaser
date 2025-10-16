@@ -4,15 +4,17 @@ import { setRequestLocale } from "next-intl/server";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { getPageMetadata } from "@/lib/seo";
 
-type PageProps = {
-	params: { locale: string };
+type DashboardPageProps = {
+	params: Promise<{ locale: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "dashboard");
+export async function generateMetadata({ params }: DashboardPageProps): Promise<Metadata> {
+	const { locale } = await params;
+	return getPageMetadata(locale, "dashboard");
 }
 
-export default function DashboardPage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function DashboardPage({ params }: DashboardPageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <DashboardOverview />;
 }

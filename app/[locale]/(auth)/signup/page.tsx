@@ -5,15 +5,17 @@ import { SignupForm } from "@/components/shared/SignupForm";
 import { getPageMetadata } from "@/lib/seo";
 
 type PageProps = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return getPageMetadata(params.locale, "signup");
+  const { locale } = await params;
+  return getPageMetadata(locale, "signup");
 }
 
-export default function SignUpPage({ params }: PageProps) {
-  setRequestLocale(params.locale);
+export default async function SignUpPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return (
     <section className="content-page">
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 md:p-10">

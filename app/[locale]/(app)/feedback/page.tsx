@@ -6,14 +6,16 @@ import { getPageMetadata } from "@/lib/seo";
 import FeedbackPageClient from "./FeedbackPageClient";
 
 type PageProps = {
-	params: { locale: string };
+	params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "feedback");
+	const { locale } = await params;
+	return getPageMetadata(locale, "feedback");
 }
 
-export default function FeedbackPage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function FeedbackPage({ params }: PageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <FeedbackPageClient />;
 }

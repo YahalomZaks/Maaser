@@ -5,15 +5,17 @@ import { LoginForm } from "@/components/shared/LoginForm";
 import { getPageMetadata } from "@/lib/seo";
 
 type PageProps = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return getPageMetadata(params.locale, "signin");
+  const { locale } = await params;
+  return getPageMetadata(locale, "signin");
 }
 
-export default function SignInPage({ params }: PageProps) {
-  setRequestLocale(params.locale);
+export default async function SignInPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return (
     <section className="content-page">
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 md:p-10">

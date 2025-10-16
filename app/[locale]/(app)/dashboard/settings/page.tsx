@@ -4,15 +4,17 @@ import { setRequestLocale } from "next-intl/server";
 import { SettingsManager } from "@/components/dashboard/SettingsManager";
 import { getPageMetadata } from "@/lib/seo";
 
-type PageProps = {
-	params: { locale: string };
+type SettingsPageProps = {
+	params: Promise<{ locale: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "dashboardSettings");
+export async function generateMetadata({ params }: SettingsPageProps): Promise<Metadata> {
+	const { locale } = await params;
+	return getPageMetadata(locale, "dashboardSettings");
 }
 
-export default function SettingsPage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function SettingsPage({ params }: SettingsPageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <SettingsManager />;
 }

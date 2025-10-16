@@ -6,14 +6,16 @@ import { getPageMetadata } from "@/lib/seo";
 import HomePageContent from "./HomePageContent";
 
 type PageProps = {
-	params: { locale: string };
+	params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "home");
+	const { locale } = await params;
+	return getPageMetadata(locale, "home");
 }
 
-export default function HomePage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function HomePage({ params }: PageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <HomePageContent />;
 }

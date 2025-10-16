@@ -4,15 +4,17 @@ import { setRequestLocale } from "next-intl/server";
 import { DonationsManager } from "@/components/dashboard/DonationsManager";
 import { getPageMetadata } from "@/lib/seo";
 
-type PageProps = {
-	params: { locale: string };
+type DonationsPageProps = {
+	params: Promise<{ locale: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "dashboardDonations");
+export async function generateMetadata({ params }: DonationsPageProps): Promise<Metadata> {
+	const { locale } = await params;
+	return getPageMetadata(locale, "dashboardDonations");
 }
 
-export default function DonationsPage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function DonationsPage({ params }: DonationsPageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <DonationsManager />;
 }

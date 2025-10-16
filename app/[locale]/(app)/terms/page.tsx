@@ -6,14 +6,16 @@ import { getPageMetadata } from "@/lib/seo";
 import TermsPageClient from "./TermsPageClient";
 
 type PageProps = {
-	params: { locale: string };
+	params: Promise<{ locale: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-	return getPageMetadata(params.locale, "terms");
+	const { locale } = await params;
+	return getPageMetadata(locale, "terms");
 }
 
-export default function TermsPage({ params }: PageProps) {
-	setRequestLocale(params.locale);
+export default async function TermsPage({ params }: PageProps) {
+	const { locale } = await params;
+	setRequestLocale(locale);
 	return <TermsPageClient />;
 }
