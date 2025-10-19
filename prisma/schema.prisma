@@ -10,6 +10,8 @@ datasource db {
 model User {
   id              String            @id @default(uuid())
   name            String
+  firstName       String?
+  lastName        String?
   email           String            @unique
   emailVerified   Boolean           @default(false)
   password        String?
@@ -68,20 +70,23 @@ model Notification {
 }
 
 model UserSettings {
-  id                        String        @id @default(uuid())
-  userId                    String        @unique
-  language                  Language      @default(HE)
-  currency                  Currency      @default(ILS)
-  tithePercent              Float         @default(10)
-  fixedPersonalIncome       Float         @default(0)
-  fixedSpouseIncome         Float         @default(0)
-  includeSpouseIncome       Boolean       @default(false)
-  startingBalance           Float         @default(0)
-  carryStrategy             CarryStrategy @default(CARRY)
-  isFirstTimeSetupCompleted Boolean       @default(false)
-  createdAt                 DateTime      @default(now())
-  updatedAt                 DateTime      @updatedAt
-  user                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                        String             @id @default(uuid())
+  userId                    String             @unique
+  language                  Language           @default(HE)
+  currency                  Currency           @default(ILS)
+  tithePercent              Float              @default(10)
+  fixedPersonalIncome       Float              @default(0)
+  fixedSpouseIncome         Float              @default(0)
+  includeSpouseIncome       Boolean            @default(false)
+  startingBalance           Float              @default(0)
+  carryStrategy             CarryStrategy      @default(CARRY)
+  monthCarryStrategy        MonthCarryStrategy @default(CARRY_FORWARD)
+  notifyDonationEnding      Boolean            @default(true)
+  notifyDebtTwoMonths       Boolean            @default(true)
+  isFirstTimeSetupCompleted Boolean            @default(false)
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  user                      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
 }
@@ -239,6 +244,13 @@ enum IncomeSource {
 enum CarryStrategy {
   CARRY
   RESET
+  CARRY_POSITIVE_ONLY
+}
+
+enum MonthCarryStrategy {
+  INDEPENDENT
+  CARRY_FORWARD
+  ASK_ME
 }
 
 // Feedback

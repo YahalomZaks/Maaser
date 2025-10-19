@@ -50,7 +50,6 @@ const Navbar = () => {
 	const { data: session, isPending } = useSession();
 	const t = useTranslations("navigation");
 	const tFeedback = useTranslations("feedback");
-	const tCommon = useTranslations("common");
 	const tLang = useTranslations("settings.language");
 	const locale = useLocale();
 	const isRTL = locale === "he";
@@ -147,7 +146,8 @@ const Navbar = () => {
 
 	const publicAuthControls: ReactNode = useMemo(() => {
 		if (isPending) {
-			return <div className="welcome-btn welcome-btn-secondary">{tCommon("loading")}</div>;
+			// Avoid showing LOADING text; keep layout stable with an empty placeholder.
+			return <div className="welcome-btn-placeholder" aria-hidden />;
 		}
 
 		return (
@@ -160,11 +160,11 @@ const Navbar = () => {
 				</Link>
 			</>
 		);
-	}, [isPending, locale, t, tCommon]);
+	}, [isPending, locale, t]);
 
 	const publicMobileControls: ReactNode = useMemo(() => {
 		if (isPending) {
-			return <div className="welcome-mobile-auth-note">{tCommon("loading")}</div>;
+			return <div className="welcome-mobile-auth-placeholder" aria-hidden />;
 		}
 
 		return (
@@ -177,10 +177,21 @@ const Navbar = () => {
 				</Link>
 			</div>
 		);
-	}, [isPending, locale, t, tCommon]);
+	}, [isPending, locale, t]);
 
 	const fallbackAccountLabel = useMemo(() => (locale === "he" ? "חשבון" : "Account"), [locale]);
-	const userName = session?.user?.name || session?.user?.email?.split("@")[0] || fallbackAccountLabel;
+	const [overrideName, setOverrideName] = useState<string | null>(null);
+	useEffect(() => {
+		const handler = (e: Event) => {
+			const ce = e as CustomEvent<{ name?: string }>;
+			if (ce.detail?.name) {
+				setOverrideName(ce.detail.name);
+			}
+		};
+		window.addEventListener("profile:name-updated", handler as EventListener);
+		return () => window.removeEventListener("profile:name-updated", handler as EventListener);
+	}, []);
+	const userName = overrideName || session?.user?.name || session?.user?.email?.split("@")[0] || fallbackAccountLabel;
 	const userEmail = session?.user?.email;
 
 	// Language options and helpers (mirrors LanguageSwitcher behavior)
@@ -208,14 +219,16 @@ const Navbar = () => {
 		[languages, pathname, searchParams],
 	);
 
-	const handleDesktopLanguageChange = useCallback(
+	const changeLanguage = useCallback(
 		(nextLocale: SupportedLanguage) => {
-			if (locale === nextLocale) {
+			if (isPending || locale === nextLocale) {
 				return;
 			}
+
 			const targetPath = buildLocalizedPath(nextLocale);
 			router.push(targetPath);
 			router.refresh();
+
 			if (session?.user) {
 				fetch("/api/settings/language", {
 					method: "POST",
@@ -224,7 +237,7 @@ const Navbar = () => {
 				}).catch((error) => console.error("Failed to persist language preference", error));
 			}
 		},
-		[buildLocalizedPath, locale, router, session?.user],
+		[buildLocalizedPath, isPending, locale, router, session?.user],
 	);
 
 	const renderAuthenticatedNav = () => (
@@ -306,7 +319,7 @@ const Navbar = () => {
 										{languages.map((lng) => (
 											<DropdownMenuItem
 												key={lng.code}
-												onClick={() => handleDesktopLanguageChange(lng.code)}
+												onClick={() => changeLanguage(lng.code)}
 												className={`dropdown-menu-link justify-between ${locale === lng.code ? "bg-blue-50 text-blue-700" : ""}`}
 											>
 												<span className="inline-flex items-center gap-2">
@@ -462,7 +475,11 @@ const Navbar = () => {
 		);
 	}
 
-	return isAuthenticated ? renderAuthenticatedNav() : renderPublicNav();
+	return (
+		<>
+			{isAuthenticated ? renderAuthenticatedNav() : renderPublicNav()}
+		</>
+	);
 };
 
 export default Navbar;

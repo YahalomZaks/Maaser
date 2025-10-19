@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertCurrency, formatCurrency } from "@/lib/finance";
 import type { CurrencyCode, IncomeSchedule, IncomeSource, VariableIncome } from "@/types/finance";
 
@@ -476,18 +477,32 @@ export function IncomeManager() {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="i-currency">{t("form.currencyLabel")}</Label>
-                  <select id="i-currency" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.currency} onChange={(e) => onChange("currency", e.target.value)}>
-                    <option value="ILS">ILS</option>
-                    <option value="USD">USD</option>
-                  </select>
+                  <Select value={form.currency} onValueChange={(value) => onChange("currency", value)}>
+                    <SelectTrigger id="i-currency" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ILS">ILS</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="i-source">{t("form.sourceLabel")}</Label>
-                  <select id="i-source" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.source} onChange={(e) => onChange("source", e.target.value)}>
-                    {sourceOptions.map((s) => (<option key={s} value={s}>{t(`sources.${s}`)}</option>))}
-                  </select>
+                  <Select value={form.source} onValueChange={(value) => onChange("source", value)}>
+                    <SelectTrigger id="i-source" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sourceOptions.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {t(`sources.${s}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="i-date">{t("form.dateLabel")}</Label>

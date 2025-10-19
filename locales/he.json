@@ -570,94 +570,113 @@
   },
   "settings": {
     "title": "הגדרות",
+    "tabs": {
+      "profile": "פרופיל",
+      "general": "כללי",
+      "language": "שפה",
+      "notifications": "התראות ועדכונים"
+    },
+    "profile": {
+      "title": "פרופיל משתמש",
+      "description": "עדכנו את הפרטים האישיים שלכם",
+      "firstName": "שם פרטי",
+      "firstNamePlaceholder": "הזן שם פרטי",
+      "lastName": "שם משפחה",
+      "lastNamePlaceholder": "הזן שם משפחה",
+      "email": "כתובת אימייל",
+      "emailReadOnly": "אימייל הוא ייחודי ולא ניתן לשינוי",
+      "changePassword": "שינוי סיסמה",
+      "saveChanges": "שמור שינויים"
+    },
+    "general": {
+      "title": "הגדרות כלליות",
+      "description": "הגדרות בסיסיות למערכת המעשרות",
+      "baseCurrency": "מטבע בסיס",
+  "baseCurrencyPlaceholder": "בחרו מטבע בסיס",
+      "baseCurrencyHelper": "כל החישובים יהיו במטבע זה",
+      "currencyOptions": {
+        "ILS": "שקל חדש (₪)",
+        "USD": "דולר אמריקאי ($)"
+      },
+      "tithePercent": "אחוז מעשר",
+      "tithePercentHelper": "אחוז ברירת המחדל למעשר (10%)",
+      "yearEndStrategy": "טיפול בסוף שנה",
+      "yearEndStrategyHelper": "כיצד לטפל ביתרות ומינוסים בסוף השנה",
+      "yearEndOptions": {
+        "carry": "גלגול יתרות וחוסרים",
+        "carryDesc": "העברת כל היתרות והחוסרים לשנה הבאה",
+        "carryPositiveOnly": "גלגול יתרות בלבד",
+        "carryPositiveOnlyDesc": "העברת רק יתרות חיוביות, איפוס חוסרים",
+        "reset": "איפוס מלא",
+        "resetDesc": "התחלה מחדש עם איפוס כל היתרות והחוסרים"
+      },
+      "monthStartStrategy": "תחילת חודש",
+      "monthStartStrategyHelper": "כיצד לטפל ביתרות ומינוסים מחודש קודם",
+      "monthStartOptions": {
+        "independent": "כל חודש בפני עצמו",
+        "independentDesc": "כל חודש מתחיל ללא השפעה מחודשים קודמים",
+        "carryForward": "העברת יתרות ומינוסים",
+        "carryForwardDesc": "יתרות ומינוסים עוברים אוטומטית לחודש הבא",
+        "askMe": "תשאל אותי בכל חודש",
+        "askMeDesc": "תקבל שאלה בתחילת כל חודש כיצד לטפל ביתרות"
+      }
+    },
     "language": {
-      "title": "שפה",
+      "title": "הגדרות שפה",
+      "description": "בחרו את שפת הממשק המועדפת בכל המכשירים",
+      "preferredLanguage": "שפה מועדפת",
+  "preferredLanguagePlaceholder": "בחרו שפה",
+      "preferredLanguageHelper": "השפה שתוצג כשתתחברו מכל מכשיר",
       "hebrew": "עברית",
       "english": "אנגלית",
-      "description": "בחרו את שפת הממשק וכיוון הכתיבה.",
       "label": "שפת המערכת",
       "changeLabel": "שינוי שפה",
       "options": {
-        "he": "עברית (ימין לשמאל)",
-        "en": "אנגלית (שמאל לימין)"
+        "he": "עברית",
+        "en": "אנגלית"
       },
-      "helper": "שינוי השפה משפיע על תפריטים, טבלאות וזרימת הנגישות.",
-      "notice": "החלפת השפה תטען מחדש את לוח הבקרה בשפה שנבחרה."
+      "helper": "שינוי השפה ישפיע על כל המערכת בכל המכשירים שלך",
+      "notice": "השפה המועדפת תישמר בפרופיל שלך ותחול גם כשתתחבר ממכשירים אחרים. שינוי זמני של השפה מהסרגל יתבטל בהתחברות מחדש.",
+      "changeConfirmTitle": "להחליף את שפת הממשק?",
+      "changeConfirmBody": "שינוי השפה יחליף את מעשרתי לשפה הנבחרת בכל המכשירים שלך.",
+      "changeConfirmConfirm": "כן, החלף שפה",
+      "changeConfirmCancel": "ביטול"
+    },
+    "notifications": {
+      "title": "התראות ועדכונים",
+      "description": "נהלו את ההתראות והתזכורות שתרצו לקבל",
+      "donationEnding": {
+        "title": "התראה על תרומה שנגמרת",
+        "description": "קבלו התראה כאשר תרומה בתשלומים מגיעה לסיום החודש"
+      },
+      "debtAlert": {
+        "title": "התראה על חוסר במעשר",
+        "description": "קבלו התראה כאשר יש חוסר במעשר יותר מחודשיים"
+      },
+      "monthlySummary": {
+        "title": "סיכום חודשי",
+        "description": "קבלו דוח חודשי עם הכנסות, תרומות ויתרה"
+      },
+      "conversionAlerts": {
+        "title": "התראות המרה",
+        "description": "קבלו הודעה כשמתבצעת המרה ממטבע אחר"
+      },
+      "endOfYear": {
+        "title": "תזכורת סוף שנה",
+        "description": "תזכורת לסגירת השנה ולבחירה בין גלגול או איפוס"
+      }
     },
     "currency": {
       "title": "מטבע",
       "ils": "שקל חדש (₪)",
       "usd": "דולר אמריקאי ($)"
     },
-    "profile": {
-      "title": "פרטים אישיים",
-      "name": "שם מלא",
-      "email": "כתובת אימייל",
-      "changePassword": "שינוי סיסמה"
-    },
     "saveSuccess": "ההגדרות נשמרו בהצלחה",
     "saveError": "שגיאה בשמירת ההגדרות",
+    "saving": "שומר...",
+    "saved": "נשמר בהצלחה",
     "headline": "העדפות מערכת",
     "subheadline": "הגדירו כיצד מנוע המעשר מטפל במטבעות, אחוזים ותזכורות.",
-    "profileSummary": {
-      "title": "ההגדרות הנוכחיות",
-      "description": "תצוגה מהירה של ההעדפות הפעילות שלך.",
-      "currencyLabel": "מטבע בסיס",
-      "currencyOptions": {
-        "ILS": "שקל חדש (₪)",
-        "USD": "דולר אמריקאי ($)"
-      },
-      "titheLabel": "אחוז מעשר",
-      "sampleAmount": "סכום לדוגמה (לאחר המרה)",
-      "helper": "שער המרה לדוגמה: 1$ ≈ {rate}₪."
-    },
-    "financial": {
-      "title": "כללי פיננסים",
-      "description": "שליטה במטבע הבסיס, אחוז המעשר והתנהגות סוף השנה.",
-      "baseCurrencyLabel": "מטבע בסיס",
-      "currencyOptions": {
-        "ils": "שקל חדש (₪)",
-        "usd": "דולר אמריקאי ($)"
-      },
-      "currencyHelper": "כל ההכנסות והתרומות מומרות למטבע זה לצורך חישובים.",
-      "titheLabel": "אחוז מעשר",
-      "titheHelper": "האחוז שמיושם על הכנסות בחישוב החיוב.",
-      "closingLabel": "טיפול בסוף שנה",
-      "closingOptions": {
-        "carry": {
-          "title": "גלגול יתרה",
-          "description": "מעבירים עודף או חוב לשנה האזרחית הבאה."
-        },
-        "reset": {
-          "title": "איפוס יתרה",
-          "description": "מתחילים כל שנה מחדש ומעבירים לארכיון את היתרה הקודמת."
-        }
-      },
-      "carryDebtForward": "גלגל יתרות שליליות לשנה הבאה"
-    },
-    "languageSectionTitle": "העדפות שפה",
-    "notifications": {
-      "title": "התראות",
-      "description": "בחרו אילו תזכורות תרצו לקבל.",
-      "monthlySummary": {
-        "title": "סיכום חודשי",
-        "description": "קבלו דוח חודשי עם הכנסות, תרומות ויתרה."
-      },
-      "conversionAlerts": {
-        "title": "התראות המרה",
-        "description": "קבלו הודעה כשמתבצעת המרה ממטבע אחר."
-      },
-      "endOfYear": {
-        "title": "תזכורת סוף שנה",
-        "description": "תזכורת לסגירת השנה ולבחירה בין גלגול או איפוס."
-      }
-    },
-    "conversionNotice": {
-      "title": "הודעת המרת מטבע",
-      "description": "ההמרות הן קירוב ומתבססות על השער שהוגדר.",
-      "warnings": "הציגו באנר אזהרה בעת המרת סכומים",
-      "helper": "מומלץ לבדוק ידנית המרות גדולות כדי לוודא דיוק."
-    },
     "form": {
       "success": "העדפות נשמרו."
     }

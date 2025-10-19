@@ -10,6 +10,7 @@ import { MobileYearlyMonthsList } from "@/components/dashboard/MobileYearlyMonth
 import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/finance";
 import type { UserFinancialSettings } from "@/lib/financial-data";
 import { cn } from "@/lib/utils";
@@ -296,17 +297,18 @@ export function DashboardOverview() {
 								<h1 className="text-xl font-bold">{selectedYear}</h1>
 							</div>
 						</div>
-						<select
-							className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-							value={selectedYear}
-							onChange={(event) => setSelectedYear(Number(event.target.value))}
-						>
-							{yearOptions.map((yearOption) => (
-								<option key={yearOption} value={yearOption}>
-									{yearOption}
-								</option>
-							))}
-						</select>
+						<Select value={String(selectedYear)} onValueChange={(value) => setSelectedYear(Number(value))}>
+							<SelectTrigger aria-label={t("overview.yearPickerLabel")} className="min-w-[4.5rem] px-2 py-1 text-sm">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{yearOptions.map((yearOption) => (
+									<SelectItem key={yearOption} value={String(yearOption)}>
+										{yearOption}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 				</div>
 
@@ -391,22 +393,19 @@ export function DashboardOverview() {
 				{viewMode === "monthly" && (
 					<div className="mb-4">
 						<h3 className="text-sm font-semibold mb-2">{t("table.title")}</h3>
-						<select
-							value={selectedMonth?.id ?? ""}
-							onChange={(e) => setSelectedMonthId(e.target.value)}
-							className="w-full rounded-md border border-border/60 bg-muted/30 p-2 text-sm font-medium transition-all"
-						>
-							{allYearMonths.map((monthOption) => (
-								<option
-									key={monthOption.monthIndex}
-									value={monthOption.id}
-									disabled={!monthOption.hasData}
-								>
-									{tMonths(MONTH_KEYS[monthOption.monthIndex])}{" "}
-									{!monthOption.hasData ? `(${t("empty.noData")})` : ""}
-								</option>
-							))}
-						</select>
+						<Select value={selectedMonthId ?? undefined} onValueChange={(value) => setSelectedMonthId(value)}>
+							<SelectTrigger className="w-full border-border/60 bg-muted/30 p-2 text-sm font-medium transition-all">
+								<SelectValue placeholder={t("table.title")} />
+							</SelectTrigger>
+							<SelectContent>
+								{allYearMonths.map((monthOption) => (
+									<SelectItem key={monthOption.id} value={monthOption.id} disabled={!monthOption.hasData}>
+										{tMonths(MONTH_KEYS[monthOption.monthIndex])}{" "}
+										{!monthOption.hasData ? `(${t("empty.noData")})` : ""}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 				)}
 
@@ -489,17 +488,18 @@ export function DashboardOverview() {
 					<div className="flex flex-col gap-3 lg:flex-row lg:items-center xl:flex-row xl:items-center">
 						<label className="flex items-center gap-2 text-sm font-medium">
 							<span className="whitespace-nowrap">{t("overview.yearPickerLabel")}</span>
-							<select
-								className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-								value={selectedYear}
-								onChange={(event) => setSelectedYear(Number(event.target.value))}
-							>
-								{yearOptions.map((yearOption) => (
-									<option key={yearOption} value={yearOption}>
-										{yearOption}
-									</option>
-								))}
-							</select>
+							<Select value={String(selectedYear)} onValueChange={(value) => setSelectedYear(Number(value))}>
+								<SelectTrigger aria-label={t("overview.yearPickerLabel")} className="min-w-[5rem]">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{yearOptions.map((yearOption) => (
+										<SelectItem key={yearOption} value={String(yearOption)}>
+											{yearOption}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</label>
 						<div className="flex rounded-lg border border-border bg-muted/40 p-1">
 							{VIEW_MODES.map((mode) => (

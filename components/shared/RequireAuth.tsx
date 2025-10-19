@@ -6,6 +6,8 @@ import { useEffect, type ReactNode } from "react";
 
 import { useSession } from "@/lib/auth-client";
 
+import LoadingScreen from "./LoadingScreen";
+
 interface RequireAuthProps {
 	children: ReactNode;
 	fallback?: ReactNode;
@@ -23,13 +25,7 @@ export function RequireAuth({ children, fallback }: RequireAuthProps) {
 	}, [isPending, session, router, locale]);
 
 	if (isPending) {
-		return (
-			fallback ?? (
-				<div className="flex min-h-[320px] items-center justify-center">
-					<p className="text-sm text-muted-foreground">Loading…</p>
-				</div>
-			)
-		);
+		return fallback ?? <LoadingScreen />;
 	}
 
 	if (!session) {

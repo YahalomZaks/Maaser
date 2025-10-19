@@ -10,7 +10,11 @@ export const SUPPORTED_CURRENCIES = ["ILS", "USD"] as const;
 export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
 export const DEFAULT_CURRENCY: CurrencyCode = "ILS";
 
-export const SUPPORTED_CARRY_STRATEGIES = ["CARRY", "RESET"] as const;
+export const SUPPORTED_CARRY_STRATEGIES = [
+  "CARRY",
+  "CARRY_POSITIVE_ONLY",
+  "RESET",
+] as const;
 export type CarryStrategy = (typeof SUPPORTED_CARRY_STRATEGIES)[number];
 export const DEFAULT_CARRY_STRATEGY: CarryStrategy = "CARRY";
 
@@ -117,7 +121,10 @@ export async function upsertUserSettings(
 /**
  * Update user language preference
  */
-export async function updateUserLanguage(userId: string, language: LanguageCode) {
+export async function updateUserLanguage(
+  userId: string,
+  language: LanguageCode
+) {
   try {
     const settings = await upsertUserSettings(userId, { language });
     return settings;
@@ -130,7 +137,10 @@ export async function updateUserLanguage(userId: string, language: LanguageCode)
 /**
  * Update user currency preference
  */
-export async function updateUserCurrency(userId: string, currency: CurrencyCode) {
+export async function updateUserCurrency(
+  userId: string,
+  currency: CurrencyCode
+) {
   try {
     const settings = await upsertUserSettings(userId, { currency });
     return settings;
@@ -180,7 +190,10 @@ export async function updateCarryStrategy(
   }
 }
 
-export async function updateStartingBalance(userId: string, startingBalance: number) {
+export async function updateStartingBalance(
+  userId: string,
+  startingBalance: number
+) {
   try {
     const settings = await upsertUserSettings(userId, { startingBalance });
     return settings;

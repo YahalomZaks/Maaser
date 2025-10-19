@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertCurrency, formatCurrency } from "@/lib/finance";
 import type { CurrencyCode, DonationEntry, DonationType } from "@/types/finance";
 
@@ -202,10 +203,35 @@ export function DonationsManagerRevised() {
               <div className="space-y-1"><Label htmlFor="d-org">{t("form.organizationLabel")}</Label><Input id="d-org" value={form.organization} onChange={(e) => onChange("organization", e.target.value)} /></div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1"><Label htmlFor="d-amount">{t("form.amountLabel")}</Label><Input id="d-amount" type="number" min={0} step="0.01" value={form.amount} onChange={(e) => onChange("amount", e.target.value)} /></div>
-                <div className="space-y-1"><Label htmlFor="d-currency">{t("form.currencyLabel")}</Label><select id="d-currency" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.currency} onChange={(e) => onChange("currency", e.target.value)}><option value="ILS">ILS</option><option value="USD">USD</option></select></div>
+                <div className="space-y-1">
+                  <Label htmlFor="d-currency">{t("form.currencyLabel")}</Label>
+                  <Select value={form.currency} onValueChange={(value) => onChange("currency", value)}>
+                    <SelectTrigger id="d-currency" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ILS">ILS</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1"><Label htmlFor="d-type">{t("form.typeLabel")}</Label><select id="d-type" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.type} onChange={(e) => onChange("type", e.target.value)}>{typeOptions.map((opt) => (<option key={opt} value={opt}>{t(`form.typeOptions.${opt}`)}</option>))}</select></div>
+                <div className="space-y-1">
+                  <Label htmlFor="d-type">{t("form.typeLabel")}</Label>
+                  <Select value={form.type} onValueChange={(value) => onChange("type", value)}>
+                    <SelectTrigger id="d-type" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {typeOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {t(`form.typeOptions.${opt}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-1"><Label htmlFor="d-date">{t("form.dateLabel")}</Label><Input id="d-date" type="date" value={form.startDate} onChange={(e) => onChange("startDate", e.target.value)} /></div>
               </div>
               {form.type === "installments" ? (

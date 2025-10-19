@@ -40,10 +40,22 @@ export function LoginForm() {
 					onStart: () => {
 						toast.loading(t('loading'));
 					},
-					onSuccess: () => {
-						router.push(`/${locale}/dashboard`);
+					onSuccess: async () => {
+						let targetLocale = locale;
+						try {
+							const response = await fetch('/api/settings', { credentials: 'include' });
+							if (response.ok) {
+								const data: { preferredLanguage?: string } | null = await response.json();
+								if (data?.preferredLanguage === 'he' || data?.preferredLanguage === 'en') {
+									targetLocale = data.preferredLanguage;
+								}
+							}
+						} catch (error) {
+							console.error('Failed to resolve preferred language after login', error);
+						}
 						toast.dismiss();
 						toast.success(t('success'));
+						router.push(`/${targetLocale}/dashboard`);
 					},
 					onError: (error) => {
 						const message = error?.error?.message || t('error');

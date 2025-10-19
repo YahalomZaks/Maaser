@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
-import { SettingsManager } from "@/components/dashboard/SettingsManager";
+import SettingsManager from "@/components/dashboard/SettingsManager";
 import { getPageMetadata } from "@/lib/seo";
 
 type SettingsPageProps = {

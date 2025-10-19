@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
@@ -42,6 +43,8 @@ const GoogleIcon = ({ className }: { className?: string }) => (
 export function SocialLogin() {
 	const tSocial = useTranslations("auth.social");
 	const tSignin = useTranslations("auth.signin");
+	const locale = useLocale();
+	const router = useRouter();
 
 	const handleGoogleLogin = useCallback(async () => {
 		await signIn.social(
@@ -53,7 +56,20 @@ export function SocialLogin() {
 				onStart: () => {
 					toast.loading(tSignin("loading"), { id: TOAST_ID });
 				},
-				onSuccess: () => {
+				onSuccess: async () => {
+					let targetLocale = locale;
+					try {
+						const response = await fetch("/api/settings", { credentials: "include" });
+						if (response.ok) {
+							const data: { preferredLanguage?: string } | null = await response.json();
+							if (data?.preferredLanguage === "he" || data?.preferredLanguage === "en") {
+								targetLocale = data.preferredLanguage;
+							}
+						}
+					} catch (error) {
+						console.error("Failed to resolve preferred language after social login", error);
+					}
+					router.push(`/${targetLocale}/dashboard`);
 					toast.dismiss(TOAST_ID);
 					toast.success(tSignin("success"));
 				},
@@ -66,7 +82,7 @@ export function SocialLogin() {
 				},
 			},
 		);
-	}, [tSignin]);
+	}, [locale, router, tSignin]);
 
 	if (!GOOGLE_ENABLED) {
 		return null;

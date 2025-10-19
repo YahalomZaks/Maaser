@@ -373,6 +373,7 @@
       "title": "Financial preferences",
       "description": "Set the base currency and tithe percentage used for calculations.",
       "baseCurrency": "Base currency",
+  "baseCurrencyPlaceholder": "Select base currency",
       "baseCurrencyOptions": {
         "ils": "Israeli Shekel (₪)",
         "usd": "US Dollar ($)"
@@ -553,30 +554,106 @@
   },
   "settings": {
     "title": "Settings",
+    "tabs": {
+      "profile": "Profile",
+      "general": "General",
+      "language": "Language",
+      "notifications": "Notifications & Updates"
+    },
+    "profile": {
+      "title": "User Profile",
+      "description": "Update your personal information",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "Enter first name",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Enter last name",
+      "email": "Email Address",
+      "emailReadOnly": "Email is unique and cannot be changed",
+      "changePassword": "Change Password",
+      "saveChanges": "Save Changes"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Basic settings for the maaser system",
+      "baseCurrency": "Base Currency",
+  "baseCurrencyPlaceholder": "Select base currency",
+      "baseCurrencyHelper": "All calculations will be in this currency",
+      "currencyOptions": {
+        "ILS": "Israeli Shekel (₪)",
+        "USD": "US Dollar ($)"
+      },
+      "tithePercent": "Tithe Percentage",
+      "tithePercentHelper": "Default percentage for maaser (10%)",
+      "yearEndStrategy": "Year-End Handling",
+      "yearEndStrategyHelper": "How to handle balances and deficits at year-end",
+      "yearEndOptions": {
+        "carry": "Carry Balances & Deficits",
+        "carryDesc": "Transfer all balances and deficits to next year",
+        "carryPositiveOnly": "Carry Positive Balances Only",
+        "carryPositiveOnlyDesc": "Transfer only positive balances, reset deficits",
+        "reset": "Full Reset",
+        "resetDesc": "Start fresh with all balances and deficits reset"
+      },
+      "monthStartStrategy": "Month Start Handling",
+      "monthStartStrategyHelper": "How to handle balances and deficits from previous month",
+      "monthStartOptions": {
+        "independent": "Each Month Independent",
+        "independentDesc": "Each month starts without influence from previous months",
+        "carryForward": "Carry Balances & Deficits",
+        "carryForwardDesc": "Balances and deficits automatically transfer to next month",
+        "askMe": "Ask Me Each Month",
+        "askMeDesc": "You'll be asked at the start of each month how to handle balances"
+      }
+    },
     "language": {
-      "title": "Language",
-      "hebrew": "עברית",
+      "title": "Language Settings",
+      "description": "Choose your preferred interface language across all devices",
+      "preferredLanguage": "Preferred Language",
+  "preferredLanguagePlaceholder": "Select language",
+      "preferredLanguageHelper": "The language displayed when you log in from any device",
+      "hebrew": "Hebrew",
       "english": "English",
-      "description": "Choose the interface language and direction.",
       "label": "Application language",
       "changeLabel": "Change language",
       "options": {
-        "he": "Hebrew (RTL)",
-        "en": "English (LTR)"
+        "he": "Hebrew",
+        "en": "English"
       },
-      "helper": "Language changes affect menus, tables, and accessibility flow.",
-      "notice": "Switching the language reloads the dashboard with the selected locale."
+      "helper": "Language changes will affect the entire system across all your devices",
+      "notice": "Your preferred language will be saved to your profile and applied when you log in from other devices. Temporary language changes from the toolbar will be reset on next login.",
+      "changeConfirmTitle": "Switch interface language?",
+      "changeConfirmBody": "Changing the interface language will switch Maasroti to the selected language on all of your devices.",
+      "changeConfirmConfirm": "Yes, change language",
+      "changeConfirmCancel": "Cancel"
+    },
+    "notifications": {
+      "title": "Notifications & Updates",
+      "description": "Manage the alerts and reminders you want to receive",
+      "donationEnding": {
+        "title": "Donation Ending Alert",
+        "description": "Get notified when an installment donation is ending this month"
+      },
+      "debtAlert": {
+        "title": "Maaser Deficit Alert",
+        "description": "Get notified when there's a maaser deficit for more than two months"
+      },
+      "monthlySummary": {
+        "title": "Monthly Summary",
+        "description": "Receive a monthly report with income, donations, and balance"
+      },
+      "conversionAlerts": {
+        "title": "Conversion Alerts",
+        "description": "Get notified when currency conversion occurs"
+      },
+      "endOfYear": {
+        "title": "Year-End Reminder",
+        "description": "Reminder to close the year and choose between carry or reset"
+      }
     },
     "currency": {
       "title": "Currency",
       "ils": "Israeli Shekel (₪)",
       "usd": "US Dollar ($)"
-    },
-    "profile": {
-      "title": "Personal Information",
-      "name": "Full name",
-      "email": "Email address",
-      "changePassword": "Change Password"
     },
     "saveSuccess": "Settings saved successfully",
     "saveError": "Error saving settings",
@@ -619,28 +696,14 @@
       "carryDebtForward": "Carry negative balances into the next year"
     },
     "languageSectionTitle": "Language preferences",
-    "notifications": {
-      "title": "Notifications",
-      "description": "Choose which reminders you receive.",
-      "monthlySummary": {
-        "title": "Monthly summary",
-        "description": "Receive a monthly digest with income, donations, and balance."
-      },
-      "conversionAlerts": {
-        "title": "Conversion alerts",
-        "description": "Notify me when a record is converted from another currency."
-      },
-      "endOfYear": {
-        "title": "End-of-year prompt",
-        "description": "Remind me to close the year and choose carry or reset."
-      }
-    },
     "conversionNotice": {
       "title": "Currency conversion notice",
       "description": "Conversions are approximate and rely on the configured static rate.",
       "warnings": "Show a warning banner when conversions occur",
       "helper": "We recommend reviewing large conversions manually for accuracy."
     },
+    "saving": "Saving...",
+    "saved": "Saved successfully",
     "form": {
       "success": "Preferences saved."
     }

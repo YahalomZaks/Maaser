@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { CurrencyCode, DonationType } from "@/types/finance";
 
@@ -635,18 +636,21 @@ export function OnboardingWizard() {
                   <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 space-y-4 md:space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="currency" className="text-slate-700 font-semibold">{tIncome("baseCurrency")}</Label>
-                      <select
-                        id="currency"
-                        value={form.currency}
-                        onChange={(event) => handleChange("currency", event.target.value as CurrencyCode)}
-                        className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      >
-                        {currencyOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={form.currency} onValueChange={(value) => handleChange("currency", value as CurrencyCode)}>
+                        <SelectTrigger
+                          id="currency"
+                          className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencyOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
@@ -788,49 +792,58 @@ export function OnboardingWizard() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="donationCurrency" className="text-slate-700 font-semibold">{t("donations.currency")}</Label>
-                      <select
-                        id="donationCurrency"
-                        value={donationDraft.currency}
-                        onChange={(event) => handleDonationDraftChange("currency", event.target.value as CurrencyCode)}
-                        className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      >
-                        {currencyOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={donationDraft.currency} onValueChange={(value) => handleDonationDraftChange("currency", value as CurrencyCode)}>
+                        <SelectTrigger
+                          id="donationCurrency"
+                          className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencyOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="donationType" className="text-slate-700 font-semibold">{t("donations.type")}</Label>
-                      <select
-                        id="donationType"
-                        value={donationDraft.type}
-                        onChange={(event) => handleDonationDraftChange("type", event.target.value as DonationType)}
-                        className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      >
-                        {donationTypeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={donationDraft.type} onValueChange={(value) => handleDonationDraftChange("type", value as DonationType)}>
+                        <SelectTrigger
+                          id="donationType"
+                          className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {donationTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     {donationDraft.type === "installments" && (
                       <div className="space-y-2 md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
                         <Label htmlFor="donationInstallments" className="text-slate-700 font-semibold">{t("donations.installmentsRemainingLabel")}</Label>
-                        <select
-                          id="donationInstallments"
-                          value={donationDraft.installmentsRemaining}
-                          onChange={(event) => handleDonationDraftChange("installmentsRemaining", event.target.value)}
-                          className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                        >
-                          {INSTALLMENT_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
+                        <Select value={donationDraft.installmentsRemaining} onValueChange={(value) => handleDonationDraftChange("installmentsRemaining", value)}>
+                          <SelectTrigger
+                            id="donationInstallments"
+                            className="w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {INSTALLMENT_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                   </div>
