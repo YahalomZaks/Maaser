@@ -51,10 +51,10 @@ type SiteLocaleMeta = {
 
 export const LOCALE_SITE_META: Record<Locale, SiteLocaleMeta> = {
 	he: {
-		siteName: "מעשרותִי",
-		title: "מעשרותִי",
+		siteName: "מעשרותי",
+		title: "מעשרותי | ניהול חכם של מעשרות אונליין",
 		description:
-			"מעשרותִי מאפשרת לנהל הכנסות, תרומות וחישובי מעשר בצורה יעילה ומדויקת – כולל מעקב חודשי, דוחות, תזכורות וכלי חישוב הלכתיים.",
+			"מערכת חכמה לניהול מעשרות ותרומות – מחשבון מעשר אוטומטי שמחשב כמה להפריש בכל חודש לפי ההכנסות, עוקב אחרי התרומות, שולח תזכורות חכמות ומציג אם עמדתם ביעד. פשוט, נוח ובחינם.",
 		keywords: [
 			"מעשרותִי",
 			"מעשרותי",
@@ -73,15 +73,16 @@ export const LOCALE_SITE_META: Record<Locale, SiteLocaleMeta> = {
 			"סכום מעשר",
 			"מחשבון מעשר",
 		],
-		twitterTitle: "מעשרותִי – מערכת דיגיטלית לניהול וחישוב מעשרות",
-		twitterDescription: "כלים חכמים לניהול הכנסות ותרומות, מעקב אחרי הפרשת מעשר ודוחות מפורטים בעברית.",
+		twitterTitle: "מעשרותי | ניהול חכם של מעשרות אונליין",
+		twitterDescription:
+			"מערכת חכמה לניהול מעשרות ותרומות – מחשבון מעשר אוטומטי, מעקב תרומות ותזכורות חכמות. הכול פשוט, נוח ובחינם.",
 		openGraphLocale: "he_IL",
 	},
 	en: {
 		siteName: "Maasroti",
-		title: "Maasroti",
+		title: "Maasroti | Smart Online Maaser Management",
 		description:
-			"Maasroti helps you track income, donations, and maaser obligations with automated calculations, clear dashboards, and reminders.",
+			"Smart platform for managing maaser and donations – an automatic maaser calculator that shows how much to give each month, tracks donations, sends smart reminders, and shows whether you hit your goal. Simple, convenient, and free.",
 		keywords: [
 			"Maasroti",
 			"maaser calculator",
@@ -99,9 +100,9 @@ export const LOCALE_SITE_META: Record<Locale, SiteLocaleMeta> = {
 			"tzedakah management",
 			"generosity planning",
 		],
-		twitterTitle: "Maasroti – Manage Your Maaser & Donations Smarter",
+		twitterTitle: "Maasroti | Smart Online Maaser Management",
 		twitterDescription:
-			"Track income, donations, and maaser obligations with automated calculations, reminders, and multilingual dashboards.",
+			"Automatic maaser calculator, donation tracking, smart reminders, and progress insights – everything you need in one simple, free platform.",
 		openGraphLocale: "en_US",
 	},
 };
@@ -113,9 +114,9 @@ const PAGE_SEO_CONFIG: Record<PageKey, PageSeoConfig> = {
 		priority: 1,
 		locales: {
 			he: {
-				title: "מעשרותִי – ניהול חכם של הכנסות, תרומות ומעשר",
+				title: "מעשרותי | ניהול חכם של מעשרות אונליין",
 				description:
-					"המערכת הדיגיטלית שמרכזת עבורך את כל ההכנסות והתרומות, מחשבת מעשר אוטומטית ומספקת דוחות ברורים בכל רגע.",
+					"מערכת חכמה לניהול מעשרות ותרומות – מחשבון מעשר אוטומטי שמחשב כמה להפריש בכל חודש לפי ההכנסות, עוקב אחרי התרומות, שולח תזכורות חכמות ומציג אם עמדתם ביעד. פשוט, נוח ובחינם.",
 				keywords: [
 					"ניהול מעשר",
 					"מעקב תרומות",
@@ -124,9 +125,9 @@ const PAGE_SEO_CONFIG: Record<PageKey, PageSeoConfig> = {
 				],
 			},
 			en: {
-				title: "Maasroti – Smart Maaser & Donation Management",
+				title: "Maasroti | Smart Online Maaser Management",
 				description:
-					"The modern platform to organise income, donations, and maaser obligations with automatic calculations and insightful dashboards.",
+					"Smart platform for managing maaser and donations – an automatic maaser calculator that shows how much to give each month, tracks donations, sends smart reminders, and shows whether you hit your goal. Simple, convenient, and free.",
 				keywords: ["maaser tracking", "donation management", "tithe software"],
 			},
 		},
@@ -389,7 +390,10 @@ export function getRootMetadata(locale: Locale): Metadata {
 			follow: true,
 		},
 		icons: {
-			icon: "/favicon.png",
+			icon: [
+				{ url: "/favicon.png" },
+				{ url: "/favicon-512.png", sizes: "512x512", type: "image/png" },
+			],
 			apple: "/favicon.png",
 		},
 		alternates: {
@@ -493,17 +497,7 @@ export function getOrganizationJsonLd(localeParam: string): Record<string, unkno
 
 export function buildSitemapEntries(): MetadataRoute.Sitemap {
 	const lastModified = new Date();
-	const sitemapEntries: MetadataRoute.Sitemap = [
-		{
-			url: BASE_URL,
-			lastModified,
-			changeFrequency: "daily",
-			priority: 1,
-			alternates: {
-				languages: buildAlternateLanguages(""),
-			},
-		},
-	];
+	const sitemapEntries: MetadataRoute.Sitemap = [];
 
 	(Object.entries(PAGE_SEO_CONFIG) as [PageKey, PageSeoConfig][]).forEach(([_, config]) => {
 		const shouldInclude = config.sitemap ?? config.index !== false;
