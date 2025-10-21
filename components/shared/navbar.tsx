@@ -3,6 +3,7 @@
 import {
 	ChevronDown,
 	HandCoins,
+	Bell,
 	LayoutDashboard,
 	LogOut,
 	Menu,
@@ -108,6 +109,66 @@ const Navbar = () => {
 			},
 		];
 	}, [isAuthenticated, localePrefix, t]);
+
+	const [unreadCount, setUnreadCount] = useState(0);
+	const hasUnread = unreadCount > 0;
+
+	const fetchUnreadCount = useCallback(async () => {
+		if (!session?.user) {
+			setUnreadCount(0);
+			return;
+		}
+
+		try {
+			const response = await fetch("/api/notifications", {
+				method: "GET",
+				credentials: "include",
+				cache: "no-store",
+			});
+			if (!response.ok) {
+				return;
+			}
+			const payload = (await response.json()) as { unreadCount?: number };
+			setUnreadCount(payload.unreadCount ?? 0);
+		} catch (error) {
+			console.error("Failed to load unread notifications count", error);
+		}
+	}, [session?.user]);
+
+	useEffect(() => {
+		if (!isMounted) {
+			return;
+		}
+
+		if (!session?.user) {
+			setUnreadCount(0);
+			return;
+		}
+
+		void fetchUnreadCount();
+		const interval = window.setInterval(fetchUnreadCount, 60_000);
+		return () => window.clearInterval(interval);
+	}, [fetchUnreadCount, isMounted, session?.user]);
+
+	useEffect(() => {
+		if (!session?.user || !isMounted) {
+			return;
+		}
+
+		const handleVisibility = () => {
+			if (document.visibilityState === "visible") {
+				void fetchUnreadCount();
+			}
+		};
+
+		window.addEventListener("focus", handleVisibility);
+		document.addEventListener("visibilitychange", handleVisibility);
+
+		return () => {
+			window.removeEventListener("focus", handleVisibility);
+			document.removeEventListener("visibilitychange", handleVisibility);
+		};
+	}, [fetchUnreadCount, isMounted, session?.user]);
 
 	const isActive = useCallback(
 		(basePath: string) => {
@@ -339,6 +400,17 @@ const Navbar = () => {
 							<DropdownMenuSeparator className="mx-0" />
 							<div className="dropdown-menu-items">
 								<DropdownMenuItem asChild>
+									<Link href={`${localePrefix}/dashboard/notifications`} className="dropdown-menu-link">
+										<span className="relative inline-flex items-center gap-2">
+											<Bell className="h-4 w-4" />
+											<span>{t("notifications")}</span>
+											{hasUnread ? (
+												<span className="absolute -right-3 top-1 block h-2 w-2 rounded-full bg-red-500" aria-hidden />
+											) : null}
+										</span>
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild>
 									<Link href={`${localePrefix}/dashboard/settings`} className="dropdown-menu-link">
 										<Settings className="h-4 w-4" />
 										<span>{t("settings")}</span>
@@ -386,6 +458,20 @@ const Navbar = () => {
 								</span>
 							</Link>
 						))}
+						{/* Notifications link in mobile menu */}
+						<Link
+							href={`${localePrefix}/dashboard/notifications`}
+							onClick={() => setIsMobileMenuOpen(false)}
+							className={`dashboard-mobile-link${isActive("/dashboard/notifications") ? " is-active" : ""}`}
+						>
+							<span className="relative inline-flex items-center gap-2">
+								<Bell className="h-4 w-4" />
+								{t("notifications")}
+								{hasUnread ? (
+									<span className="absolute -right-3 top-1 block h-2 w-2 rounded-full bg-red-500" aria-hidden />
+								) : null}
+							</span>
+						</Link>
 						{/* Settings link in mobile menu */}
 						<Link
 							href={`${localePrefix}/dashboard/settings`}

@@ -22,6 +22,7 @@ type PageKey =
 	| "dashboardIncome"
 	| "dashboardDonations"
 	| "dashboardSettings"
+	| "dashboardNotifications"
 	| "onboarding";
 
 type LocalizedSeoCopy = {
@@ -319,6 +320,25 @@ const PAGE_SEO_CONFIG: Record<PageKey, PageSeoConfig> = {
 				description:
 					"Adjust personal settings, notifications, and calculation preferences for your Maasroti account.",
 				keywords: ["account settings", "maasroti preferences"],
+			},
+		},
+	},
+	dashboardNotifications: {
+		path: "/dashboard/notifications",
+		index: false,
+		sitemap: false,
+		locales: {
+			he: {
+				title: "מעשרותִי | התראות ועדכונים",
+				description:
+					"מרכז ההתראות של מעשרותִי עם תזכורות לתרומות בתשלומים, הכנסות זמניות ועדכוני מערכת.",
+				keywords: ["התראות מעשרות", "תזכורות תרומה"],
+			},
+			en: {
+				title: "Maasroti | Notifications & Updates",
+				description:
+					"View smart reminders for installment donations, limited incomes, and system announcements inside Maasroti.",
+				keywords: ["maasroti notifications", "tithe reminders"],
 			},
 		},
 	},

@@ -131,12 +131,13 @@
     "retry": "נסו שוב"
   },
   "navigation": {
-  "appName": "מעשרותִי",
+    "appName": "מעשרותִי",
     "dashboard": "ראשי",
+    "notifications": "התראות",
     "income": "הכנסות",
     "donations": "תרומות",
-  "settings": "הגדרות",
-  "admin": "ניהול",
+    "settings": "הגדרות",
+    "admin": "ניהול",
     "logout": "התנתק",
     "logoutSuccess": "התנתקת מהמערכת בהצלחה",
     "login": "התחבר",
@@ -441,7 +442,8 @@
         "obligation": "חובת מעשר",
         "donations": "תרומות שניתנו",
         "remaining": "נותר לתת",
-        "surplus": "עודף שניתן"
+        "surplus": "עודף שניתן",
+        "clickForDetails": "לחץ לפרטים"
       }
     },
     "yearlyView": {
@@ -777,6 +779,80 @@
     "subheadline": "הגדירו כיצד מנוע המעשר מטפל במטבעות, אחוזים ותזכורות.",
     "form": {
       "success": "העדפות נשמרו."
+    }
+  },
+  "notifications": {
+    "installments": {
+      "finalPayment": {
+        "title": "תזכורת לתשלום אחרון",
+        "body": "נותר רק תשלום אחד לתרומה ל{organization}. סך הכול {totalInstallments} תשלומים. סכום התשלום האחרון: {amount}."
+      }
+    },
+    "incomes": {
+      "lastMonth": {
+        "title": "הכנסה מוגבלת עומדת להסתיים",
+        "body": "{description} נכנסת לחודש האחרון שלה. התשלום האחרון צפוי עד {endDate}."
+      }
+    }
+  },
+  "notificationsCenter": {
+    "title": "התראות ועדכונים",
+    "description": "מרכז אחד לכל התזכורות על תרומות בתשלומים, הכנסות מוגבלות ועדכוני מערכת.",
+    "error": "לא הצלחנו לטעון את ההתראות. נסו שוב.",
+    "summary": {
+      "total": "{count, plural, =0 {אין התראות כרגע} one {התראה אחת} other {# התראות}}",
+      "unread": "{count, plural, =0 {הכול נקרא} one {התראה שלא נקראה} other {# התראות שלא נקראו}}",
+      "updated": "עודכן {time}"
+    },
+    "filters": {
+      "all": "הכול",
+      "unread": "לא נקראו"
+    },
+    "bulk": {
+      "selectVisible": "בחר את כל המוצגות"
+    },
+    "actions": {
+      "markRead": "סמן כנקרא",
+      "markUnread": "סמן כלא נקרא",
+      "markAllRead": "סמן הכול כנקרא",
+      "refresh": "רענן",
+      "delete": "מחק",
+      "confirmDeleteTitle": "למחוק את ההתראות שנבחרו?",
+      "confirmDeleteBody": "{count, plural, one {הפעולה תמחק לצמיתות התראה אחת.} other {הפעולה תמחק לצמיתות # התראות.}}",
+      "confirmDeleteSingle": "הפעולה תמחק לצמיתות את ההתראה הזו. האם להמשיך?",
+      "confirmDeleteConfirm": "מחק",
+      "confirmDeleteCancel": "ביטול"
+    },
+    "toast": {
+      "nothingSelected": "בחרו לפחות התראה אחת.",
+      "alreadyAligned": "ההתראות האלה כבר במצב הזה.",
+      "updated": "ההתראות עודכנו.",
+      "deleted": "{count, plural, =0 {לא נמחקו התראות.} one {התראה אחת נמחקה.} other {# התראות נמחקו.}}",
+      "everythingRead": "כבר קראתם הכול."
+    },
+    "empty": {
+      "title": "אתם מעודכנים",
+      "subtitle": "נעדכן כאן כשמשהו ידרוש את תשומת הלב שלכם.",
+      "filter": "אין התראות שלא נקראו. חזרו לתצוגת הכול כדי לראות היסטוריה."
+    },
+    "selection": "{count, plural, one {נבחרה התראה אחת} other {נבחרו # התראות}}",
+    "unreadFlag": "לא נקרא",
+    "severity": {
+      "info": "מידע",
+      "warning": "תזכורת",
+      "critical": "חשוב"
+    },
+    "types": {
+      "FINAL_PAYMENT": "תרומה בתשלומים",
+      "DEBT_REMINDER": "תזכורת חוב",
+      "SYSTEM_UPDATE": "עדכון מערכת",
+      "GENERAL": "כללי",
+      "INCOME_ENDING": "הכנסה מסתיימת"
+    },
+    "entityLabels": {
+      "donation": "תרומה",
+      "income": "הכנסה",
+      "system": "מערכת"
     }
   },
   "admin": {

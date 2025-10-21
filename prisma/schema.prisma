@@ -61,11 +61,15 @@ model Notification {
   title     String
   message   String
   type      NotificationType
+  contextId String?
+  metadata  Json?
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
+  @@unique([userId, type, contextId])
   @@map("notification")
 }
 
@@ -217,6 +221,7 @@ enum NotificationType {
   DEBT_REMINDER
   SYSTEM_UPDATE
   GENERAL
+  INCOME_ENDING
 }
 
 enum Language {

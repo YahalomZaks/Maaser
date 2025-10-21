@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Edit2, HandCoins, Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,13 +30,30 @@ interface FormState {
   amount: string;
   currency: CurrencyCode;
   type: DonationType;
-  startDate: string;
+  startYear: number;
+  startMonth: number;
   installmentsTotal?: string;
   installmentsPaid?: string;
   note?: string;
 }
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const getCurrentMonthYear = () => {
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+};
+
+const toMonthStartISO = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}-01`;
+
+const parseISOToMonthYear = (iso: string) => {
+  const [yearPart, monthPart] = iso.split("-");
+  const fallback = getCurrentMonthYear();
+  const year = Number(yearPart);
+  const month = Number(monthPart);
+  return {
+    year: Number.isFinite(year) ? year : fallback.year,
+    month: Number.isFinite(month) ? month : fallback.month,
+  };
+};
 const MONTH_FORMAT = (date: Date, locale: string) =>
   date.toLocaleDateString(locale === "he" ? "he-IL" : "en-US", { year: "numeric", month: "long" });
 
@@ -48,7 +72,20 @@ export function DonationsManager() {
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [form, setForm] = useState<FormState>({ organization: "", amount: "", currency: "ILS", type: "recurring", startDate: todayISO(), installmentsTotal: undefined, installmentsPaid: "0", note: "" });
+  const [form, setForm] = useState<FormState>(() => {
+    const { year, month } = getCurrentMonthYear();
+    return {
+      organization: "",
+      amount: "",
+      currency: "ILS",
+      type: "recurring",
+      startYear: year,
+      startMonth: month,
+      installmentsTotal: undefined,
+      installmentsPaid: "0",
+      note: "",
+    };
+  });
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() + 1 }; });
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
@@ -76,17 +113,45 @@ export function DonationsManager() {
 
   useEffect(() => { load(); }, [load]);
 
-  const openCreate = () => { setModalMode("create"); setForm({ organization: "", amount: "", currency: baseCurrency, type: "recurring", startDate: todayISO(), installmentsTotal: undefined, installmentsPaid: "0", note: "" }); setModalOpen(true); };
+  const openCreate = () => {
+    setModalMode("create");
+    const { year, month } = getCurrentMonthYear();
+    setForm({
+      organization: "",
+      amount: "",
+      currency: baseCurrency,
+      type: "recurring",
+      startYear: year,
+      startMonth: month,
+      installmentsTotal: undefined,
+      installmentsPaid: "0",
+      note: "",
+    });
+    setModalOpen(true);
+  };
 
   const openEdit = (row: DonationEntry) => {
     setModalMode("edit");
     // Format amount with commas for display
     const formattedAmount = String(row.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    setForm({ id: row.id, organization: row.organization, amount: formattedAmount, currency: row.currency, type: row.type, startDate: row.startDate, installmentsTotal: row.installmentsTotal ? String(row.installmentsTotal) : undefined, installmentsPaid: row.installmentsPaid ? String(row.installmentsPaid) : "0", note: row.note ?? "" });
+    const { year, month } = parseISOToMonthYear(row.startDate);
+    setForm({
+      id: row.id,
+      organization: row.organization,
+      amount: formattedAmount,
+      currency: row.currency,
+      type: row.type,
+      startYear: year,
+      startMonth: month,
+      installmentsTotal: row.installmentsTotal ? String(row.installmentsTotal) : undefined,
+      installmentsPaid: row.installmentsPaid ? String(row.installmentsPaid) : "0",
+      note: row.note ?? "",
+    });
     setModalOpen(true);
   };
 
-  const onChange = (k: keyof FormState, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const onChange = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const visible = useMemo(() => items.filter((i) => { const d = new Date(i.startDate); return d.getFullYear() === cursor.year && d.getMonth() + 1 === cursor.month; }), [items, cursor]);
 
@@ -116,6 +181,11 @@ export function DonationsManager() {
     // when the grid switches between 3 and 4 columns.
     return monthNames.map((label, idx) => ({ label, idx }));
   }, [monthNames]);
+  const yearOptions = useMemo(() => {
+    const start = 1990;
+    const end = 2100;
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, []);
   const selectMonth = (mIndex: number) => {
     setCursor((c) => ({ year: c.year, month: mIndex + 1 }));
     setMonthPickerOpen(false);
@@ -132,7 +202,7 @@ export function DonationsManager() {
       amount: amountNumber,
       currency: form.currency,
       type: form.type,
-      startDate: form.startDate,
+      startDate: toMonthStartISO(form.startYear, form.startMonth),
       installmentsTotal: form.type === "installments" ? Number(form.installmentsTotal) || null : null,
       installmentsPaid: form.type === "installments" ? Number(form.installmentsPaid) || null : null,
       note: form.note?.trim() || null,
@@ -149,6 +219,18 @@ export function DonationsManager() {
       }
       setModalOpen(false);
       toast.success(t("form.success"));
+      const { year, month } = getCurrentMonthYear();
+      setForm({
+        organization: "",
+        amount: "",
+        currency: baseCurrency,
+        type: "recurring",
+        startYear: year,
+        startMonth: month,
+        installmentsTotal: undefined,
+        installmentsPaid: "0",
+        note: "",
+      });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "donations" } }));
       }
@@ -306,87 +388,139 @@ export function DonationsManager() {
         </CardContent>
       </Card>
 
-      {modalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 sm:px-6 pt-16 sm:pt-24 pb-6 overflow-y-auto">
-          <div className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] rounded-lg bg-background shadow-lg flex flex-col">
-            <div className="flex items-center justify-between border-b px-4 py-3"><h3 className="text-base font-semibold">{modalMode === "create" ? t("form.title") : tCommon("edit")}</h3><button onClick={() => setModalOpen(false)} className="rounded p-1 hover:bg-muted"><X className="h-4 w-4" /></button></div>
-            <div className="p-4 space-y-3 flex-1 overflow-y-auto">
-              <div className="space-y-1"><Label htmlFor="d-org">{t("form.organizationLabel")}</Label><Input id="d-org" value={form.organization} onChange={(e) => onChange("organization", e.target.value)} /></div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="d-amount">{t("form.amountLabel")}</Label>
-                  <Input 
-                    id="d-amount" 
-                    type="text" 
-                    inputMode="decimal"
-                    value={form.amount} 
-                    onChange={(e) => {
-                      // Allow only numbers, decimal point, and comma
-                      const value = e.target.value.replace(/[^\d.,]/g, '');
-                      // Remove existing commas for processing
-                      const numericValue = value.replace(/,/g, '');
-                      // Check if it's a valid number
-                      if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
-                        // Format with commas
-                        const parts = numericValue.split('.');
-                        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        onChange("amount", parts.join('.'));
-                      }
-                    }} 
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="d-currency">{t("form.currencyLabel")}</Label>
-                  <Select value={form.currency} onValueChange={(value) => onChange("currency", value)}>
-                    <SelectTrigger id="d-currency" className="w-full">
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HandCoins className="h-5 w-5" />
+              {modalMode === "create" ? t("form.title") : tCommon("edit")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <div className="space-y-1"><Label htmlFor="d-org">{t("form.organizationLabel")}</Label><Input id="d-org" value={form.organization} onChange={(e) => onChange("organization", e.target.value)} /></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="d-amount">{t("form.amountLabel")}</Label>
+                <Input 
+                  id="d-amount" 
+                  type="text" 
+                  inputMode="decimal"
+                  value={form.amount} 
+                  onChange={(e) => {
+                    // Allow only numbers, decimal point, and comma
+                    const value = e.target.value.replace(/[^\d.,]/g, '');
+                    // Remove existing commas for processing
+                    const numericValue = value.replace(/,/g, '');
+                    // Check if it's a valid number
+                    if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
+                      // Format with commas
+                      const parts = numericValue.split('.');
+                      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                      onChange("amount", parts.join('.'));
+                    }
+                  }} 
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="d-currency">{t("form.currencyLabel")}</Label>
+                <Select
+                  value={form.currency}
+                  onValueChange={(value) => onChange("currency", value as CurrencyCode)}
+                >
+                  <SelectTrigger id="d-currency" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ILS">ILS</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="d-type">{t("form.typeLabel")}</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(value) => onChange("type", value as DonationType)}
+                >
+                  <SelectTrigger id="d-type" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typeOptions.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {t(`form.typeOptions.${opt}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="d-date-month">{t("form.dateLabel")}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={String(form.startMonth)}
+                    onValueChange={(value) => onChange("startMonth", Number(value))}
+                  >
+                    <SelectTrigger id="d-date-month" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ILS">ILS</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
+                      {gridMonths.map(({ idx, label }) => (
+                        <SelectItem key={idx} value={String(idx + 1)}>
+                          {label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="d-type">{t("form.typeLabel")}</Label>
-                  <Select value={form.type} onValueChange={(value) => onChange("type", value)}>
-                    <SelectTrigger id="d-type" className="w-full">
+                  <Select
+                    value={String(form.startYear)}
+                    onValueChange={(value) => onChange("startYear", Number(value))}
+                  >
+                    <SelectTrigger id="d-date-year" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      {typeOptions.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {t(`form.typeOptions.${opt}`)}
+                    <SelectContent className="max-h-[360px] overflow-y-auto">
+                      {yearOptions.map((yr) => (
+                        <SelectItem key={yr} value={String(yr)}>
+                          {yr}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1"><Label htmlFor="d-date">{t("form.dateLabel")}</Label><Input id="d-date" type="date" value={form.startDate} onChange={(e) => onChange("startDate", e.target.value)} /></div>
               </div>
-              {form.type === "installments" ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1"><Label htmlFor="d-total">{t("form.installmentsRemainingLabel")}</Label><Input id="d-total" type="number" min={1} value={form.installmentsTotal ?? ""} onChange={(e) => onChange("installmentsTotal", e.target.value)} /></div>
-                  <div className="space-y-1"><Label htmlFor="d-paid">{t("form.installmentsPaidLabel")}</Label><Input id="d-paid" type="number" min={0} value={form.installmentsPaid ?? "0"} onChange={(e) => onChange("installmentsPaid", e.target.value)} /></div>
-                </div>
-              ) : null}
-              <div className="space-y-1"><Label htmlFor="d-note">{t("form.noteLabel")}</Label><textarea id="d-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} /></div>
             </div>
-            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">{modalMode === "edit" ? (
+            {form.type === "installments" ? (
+              <div className="grid gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="d-total">{t("form.installmentsRemainingLabel")}</Label>
+                  <Input
+                    id="d-total"
+                    type="number"
+                    min={1}
+                    value={form.installmentsTotal ?? ""}
+                    onChange={(e) => onChange("installmentsTotal", e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : null}
+            <div className="space-y-1"><Label htmlFor="d-note">{t("form.noteLabel")}</Label><textarea id="d-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} /></div>
+          </div>
+          <DialogFooter className="gap-2">
+            {modalMode === "edit" ? (
               <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
                 <Trash2 className="h-4 w-4" /> {tCommon("delete")}
               </Button>
             ) : null}
-              <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
-                {tCommon("save")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
+              {tCommon("save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

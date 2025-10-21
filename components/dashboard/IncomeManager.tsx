@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Edit2, Plus, Trash2, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Coins, Edit2, Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,14 +38,31 @@ interface FormState {
   amount: string;
   currency: CurrencyCode;
   source: IncomeSource;
-  date: string;
+  startYear: number;
+  startMonth: number;
   schedule: IncomeSchedule;
   totalMonths?: string;
   note?: string;
   recurringLimit?: RecurringLimit;
 }
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const getCurrentMonthYear = () => {
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+};
+
+const toMonthStartISO = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}-01`;
+
+const parseISOToMonthYear = (iso: string) => {
+  const [yearPart, monthPart] = iso.split("-");
+  const fallback = getCurrentMonthYear();
+  const year = Number(yearPart);
+  const month = Number(monthPart);
+  return {
+    year: Number.isFinite(year) ? year : fallback.year,
+    month: Number.isFinite(month) ? month : fallback.month,
+  };
+};
 
 export function IncomeManager() {
   const t = useTranslations("income");
@@ -55,16 +79,20 @@ export function IncomeManager() {
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [form, setForm] = useState<FormState>({
-    description: "",
-    amount: "",
-    currency: "ILS",
-    source: "other",
-    date: todayISO(),
-    schedule: "oneTime",
-    totalMonths: undefined,
-    note: "",
-    recurringLimit: "unlimited",
+  const [form, setForm] = useState<FormState>(() => {
+    const { year, month } = getCurrentMonthYear();
+    return {
+      description: "",
+      amount: "",
+      currency: "ILS",
+      source: "other",
+      startYear: year,
+      startMonth: month,
+      schedule: "oneTime",
+      totalMonths: undefined,
+      note: "",
+      recurringLimit: "unlimited",
+    };
   });
 
   const [cursor, setCursor] = useState(() => {
@@ -93,6 +121,12 @@ export function IncomeManager() {
 
     return keys.map((key, idx) => ({ idx, label: tMonths(key) }));
   }, [tMonths]);
+
+  const yearOptions = useMemo(() => {
+    const start = 1990;
+    const end = 2100;
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, []);
 
   const selectMonth = useCallback((idx: number) => {
     setCursor((prev) => ({ ...prev, month: idx + 1 }));
@@ -133,7 +167,19 @@ export function IncomeManager() {
 
   const openCreate = () => {
     setModalMode("create");
-    setForm({ description: "", amount: "", currency: baseCurrency, source: "other", date: todayISO(), schedule: "oneTime", totalMonths: undefined, note: "", recurringLimit: "unlimited" });
+    const { year, month } = getCurrentMonthYear();
+    setForm({
+      description: "",
+      amount: "",
+      currency: baseCurrency,
+      source: "other",
+      startYear: year,
+      startMonth: month,
+      schedule: "oneTime",
+      totalMonths: undefined,
+      note: "",
+      recurringLimit: "unlimited",
+    });
     setModalOpen(true);
   };
 
@@ -141,13 +187,15 @@ export function IncomeManager() {
     setModalMode("edit");
     // Format amount with commas for display
     const formattedAmount = String(row.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const { year, month } = parseISOToMonthYear(row.date);
     setForm({
       id: row.id,
       description: row.description,
       amount: formattedAmount,
       currency: row.currency,
       source: row.source,
-      date: row.date,
+      startYear: year,
+      startMonth: month,
       // Show multiMonth as recurring with a limit in the UI
       schedule: row.schedule === "multiMonth" ? "recurring" : row.schedule,
       totalMonths: row.totalMonths ? String(row.totalMonths) : undefined,
@@ -157,7 +205,8 @@ export function IncomeManager() {
     setModalOpen(true);
   };
 
-  const onChange = (key: keyof FormState, value: string) => setForm((p) => ({ ...p, [key]: value }));
+  const onChange = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const visible = useMemo(() => {
     return items.filter((i) => {
@@ -238,8 +287,12 @@ export function IncomeManager() {
 
     if (schedule === "multiMonth") {
       const totalMonthsNumber = Math.floor(Number(form.totalMonths));
-      if (!Number.isFinite(totalMonthsNumber) || totalMonthsNumber < 2) {
-        toast.error(t("form.errors.monthsRequired"));
+      if (!form.totalMonths || form.totalMonths.trim() === '') {
+        toast.error(locale === "he" ? "יש להזין מספר חודשים" : "Please enter number of months");
+        return;
+      }
+      if (!Number.isFinite(totalMonthsNumber) || totalMonthsNumber < 1) {
+        toast.error(locale === "he" ? "מספר החודשים חייב להיות 1 או יותר" : "Number of months must be 1 or more");
         return;
       }
       totalMonthsValue = totalMonthsNumber;
@@ -252,7 +305,7 @@ export function IncomeManager() {
       amount: amountNumber,
       currency: form.currency,
       source: form.source,
-      date: form.date,
+      date: toMonthStartISO(form.startYear, form.startMonth),
       schedule,
       totalMonths: totalMonthsValue,
       note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : null,
@@ -281,12 +334,14 @@ export function IncomeManager() {
 
   toast.success(modalMode === "create" ? t("form.success") : tCommon("success"));
       setModalOpen(false);
+      const { year, month } = getCurrentMonthYear();
       setForm({
         description: "",
         amount: "",
         currency: baseCurrency,
         source: "other",
-        date: todayISO(),
+        startYear: year,
+        startMonth: month,
         schedule: "oneTime",
         totalMonths: undefined,
         note: "",
@@ -302,7 +357,7 @@ export function IncomeManager() {
     } finally {
       setIsSaving(false);
     }
-  }, [baseCurrency, form, isSaving, load, modalMode, t, tCommon]);
+  }, [baseCurrency, form, isSaving, load, locale, modalMode, t, tCommon]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -466,143 +521,191 @@ export function IncomeManager() {
         </CardContent>
       </Card>
 
-      {modalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 sm:px-6 pt-16 sm:pt-24 pb-6 overflow-y-auto">
-          <div className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] rounded-lg bg-background shadow-lg flex flex-col">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <h3 className="text-base font-semibold">{(() => {
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coins className="h-5 w-5" />
+              {(() => {
                 if (modalMode === "create") {
                   return locale === "he" ? "הוספת הכנסה" : "Add income";
                 }
                 return tCommon("edit");
-              })()}</h3>
-              <button onClick={() => setModalOpen(false)} className="rounded p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+              })()}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Type selector */}
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => onChange("schedule", "recurring")}
+                className={`rounded-full border px-4 py-2 text-sm ${form.schedule === "recurring" ? "border-primary text-primary" : "border-border"}`}
+              >
+                {locale === "he" ? "קבועה חודשית" : "Monthly recurring"}
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange("schedule", "oneTime")}
+                className={`rounded-full border px-4 py-2 text-sm ${form.schedule === "oneTime" ? "border-primary text-primary" : "border-border"}`}
+              >
+                {locale === "he" ? "חד פעמית" : "One-time"}
+              </button>
             </div>
-            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-              {/* Type selector */}
+            {form.schedule === "recurring" && (
               <div className="flex items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => onChange("schedule", "recurring")}
-                  className={`rounded-full border px-4 py-2 text-sm ${form.schedule === "recurring" ? "border-primary text-primary" : "border-border"}`}
+                  onClick={() => setForm((p) => ({ ...p, recurringLimit: "unlimited", totalMonths: undefined }))}
+                  className={`rounded-full border px-3 py-1.5 text-xs ${form.recurringLimit !== "months" ? "border-primary text-primary" : "border-border"}`}
                 >
-                  {locale === "he" ? "קבועה חודשית" : "Monthly recurring"}
+                  {locale === "he" ? "ללא הגבלה" : "Unlimited"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => onChange("schedule", "oneTime")}
-                  className={`rounded-full border px-4 py-2 text-sm ${form.schedule === "oneTime" ? "border-primary text-primary" : "border-border"}`}
+                  onClick={() => setForm((p) => ({ ...p, recurringLimit: "months" }))}
+                  className={`rounded-full border px-3 py-1.5 text-xs ${form.recurringLimit === "months" ? "border-primary text-primary" : "border-border"}`}
                 >
-                  {locale === "he" ? "חד פעמית" : "One-time"}
+                  {locale === "he" ? "מוגבל" : "Limited"}
                 </button>
               </div>
-              {form.schedule === "recurring" && (
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setForm((p) => ({ ...p, recurringLimit: "unlimited" }))}
-                    className={`rounded-full border px-3 py-1.5 text-xs ${form.recurringLimit !== "months" ? "border-primary text-primary" : "border-border"}`}
-                  >
-                    {locale === "he" ? "ללא הגבלה" : "Unlimited"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((p) => ({ ...p, recurringLimit: "months" }))}
-                    className={`rounded-full border px-3 py-1.5 text-xs ${form.recurringLimit === "months" ? "border-primary text-primary" : "border-border"}`}
-                  >
-                    {locale === "he" ? "מוגבל" : "Limited"}
-                  </button>
-                </div>
-              )}
-              {/* If limited recurring, show months first */}
-              {form.schedule === "recurring" && form.recurringLimit === "months" && (
-                <div className="space-y-1">
-                  <Label htmlFor="i-months">{t("form.totalMonthsLabel")}</Label>
-                  <Input id="i-months" type="number" min={2} value={form.totalMonths ?? ""} onChange={(e) => onChange("totalMonths", e.target.value)} />
-                </div>
-              )}
-              {/* Common fields */}
+            )}
+            {/* If limited recurring, show months first */}
+            {form.schedule === "recurring" && form.recurringLimit === "months" && (
               <div className="space-y-1">
-                <Label htmlFor="i-desc">{t("form.descriptionLabel")}</Label>
-                <Input id="i-desc" value={form.description} onChange={(e) => onChange("description", e.target.value)} />
+                <Label htmlFor="i-months">{t("form.totalMonthsLabel")}</Label>
+                <Input 
+                  id="i-months" 
+                  type="text" 
+                  inputMode="numeric"
+                  value={form.totalMonths ?? ""} 
+                  onChange={(e) => {
+                    // Allow only numbers
+                    const value = e.target.value.replace(/[^\d]/g, '');
+                    onChange("totalMonths", value);
+                  }}
+                  placeholder="1"
+                />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="i-amount">{t("form.amountLabel")}</Label>
-                  <Input 
-                    id="i-amount" 
-                    type="text" 
-                    inputMode="decimal"
-                    value={form.amount} 
-                    onChange={(e) => {
-                      // Allow only numbers, decimal point, and comma
-                      const value = e.target.value.replace(/[^\d.,]/g, '');
-                      // Remove existing commas for processing
-                      const numericValue = value.replace(/,/g, '');
-                      // Check if it's a valid number
-                      if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
-                        // Format with commas
-                        const parts = numericValue.split('.');
-                        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                        onChange("amount", parts.join('.'));
-                      }
-                    }} 
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="i-currency">{t("form.currencyLabel")}</Label>
-                  <Select value={form.currency} onValueChange={(value) => onChange("currency", value)}>
-                    <SelectTrigger id="i-currency" className="w-full">
+            )}
+            {/* Common fields */}
+            <div className="space-y-1">
+              <Label htmlFor="i-desc">{t("form.descriptionLabel")}</Label>
+              <Input id="i-desc" value={form.description} onChange={(e) => onChange("description", e.target.value)} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="i-amount">{t("form.amountLabel")}</Label>
+                <Input 
+                  id="i-amount" 
+                  type="text" 
+                  inputMode="decimal"
+                  value={form.amount} 
+                  onChange={(e) => {
+                    // Allow only numbers, decimal point, and comma
+                    const value = e.target.value.replace(/[^\d.,]/g, '');
+                    // Remove existing commas for processing
+                    const numericValue = value.replace(/,/g, '');
+                    // Check if it's a valid number
+                    if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
+                      // Format with commas
+                      const parts = numericValue.split('.');
+                      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                      onChange("amount", parts.join('.'));
+                    }
+                  }} 
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="i-currency">{t("form.currencyLabel")}</Label>
+                <Select
+                  value={form.currency}
+                  onValueChange={(value) => onChange("currency", value as CurrencyCode)}
+                >
+                  <SelectTrigger id="i-currency" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ILS">ILS</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="i-source">{t("form.sourceLabel")}</Label>
+                <Select
+                  value={form.source}
+                  onValueChange={(value) => onChange("source", value as IncomeSource)}
+                >
+                  <SelectTrigger id="i-source" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sourceOptions.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {t(`sources.${s}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="i-date-month">{t("form.dateLabel")}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={String(form.startMonth)}
+                    onValueChange={(value) => onChange("startMonth", Number(value))}
+                  >
+                    <SelectTrigger id="i-date-month" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ILS">ILS</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
+                      {gridMonths.map(({ idx, label }) => (
+                        <SelectItem key={idx} value={String(idx + 1)}>
+                          {label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="i-source">{t("form.sourceLabel")}</Label>
-                  <Select value={form.source} onValueChange={(value) => onChange("source", value)}>
-                    <SelectTrigger id="i-source" className="w-full">
+                  <Select
+                    value={String(form.startYear)}
+                    onValueChange={(value) => onChange("startYear", Number(value))}
+                  >
+                    <SelectTrigger id="i-date-year" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      {sourceOptions.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {t(`sources.${s}`)}
+                    <SelectContent className="max-h-[360px] overflow-y-auto">
+                      {yearOptions.map((yr) => (
+                        <SelectItem key={yr} value={String(yr)}>
+                          {yr}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="i-date">{t("form.dateLabel")}</Label>
-                  <Input id="i-date" type="date" value={form.date} onChange={(e) => onChange("date", e.target.value)} />
-                </div>
-              </div>
-              {/* Additional fields for limited recurring handled above */}
-              <div className="space-y-1">
-                <Label htmlFor="i-note">{t("form.noteLabel")}</Label>
-                <textarea id="i-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} />
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
-              {modalMode === "edit" ? (
-                <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
-                  <Trash2 className="h-4 w-4" /> {tCommon("delete")}
-                </Button>
-              ) : null}
-              <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
-                {tCommon("save")}
-              </Button>
+            {/* Additional fields for limited recurring handled above */}
+            <div className="space-y-1">
+              <Label htmlFor="i-note">{t("form.noteLabel")}</Label>
+              <textarea id="i-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} />
             </div>
           </div>
-        </div>
-      ) : null}
+          <DialogFooter className="gap-2">
+            {modalMode === "edit" ? (
+              <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
+                <Trash2 className="h-4 w-4" /> {tCommon("delete")}
+              </Button>
+            ) : null}
+            <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
+              {tCommon("save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

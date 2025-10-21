@@ -91,10 +91,11 @@
   "navigation": {
     "appName": "Maasroti",
     "dashboard": "Main",
+    "notifications": "Notifications",
     "income": "Income",
     "donations": "Donations",
-  "settings": "Settings",
-  "admin": "Admin",
+    "settings": "Settings",
+    "admin": "Admin",
     "logout": "Sign Out",
     "login": "Sign In",
     "signup": "Sign Up",
@@ -424,7 +425,8 @@
         "obligation": "maaser obligation",
         "donations": "Donations given",
         "remaining": "Remaining to give",
-        "surplus": "Surplus given"
+        "surplus": "Surplus given",
+        "clickForDetails": "Click for details"
       }
     },
     "yearlyView": {
@@ -802,6 +804,80 @@
     "saved": "Saved successfully",
     "form": {
       "success": "Preferences saved."
+    }
+  },
+  "notifications": {
+    "installments": {
+      "finalPayment": {
+        "title": "Final installment reminder",
+        "body": "Only one installment remains for {organization}. Total installments: {totalInstallments}. Amount remaining: {amount}."
+      }
+    },
+    "incomes": {
+      "lastMonth": {
+        "title": "Limited income is ending",
+        "body": "{description} is entering its final month. Expect the last payment by {endDate}."
+      }
+    }
+  },
+  "notificationsCenter": {
+    "title": "Notifications & Updates",
+    "description": "Stay on top of ending installments, limited incomes, and important system alerts in one place.",
+    "error": "Couldn't load notifications. Please try again.",
+    "summary": {
+      "total": "{count, plural, =0 {No notifications yet} one {# notification} other {# notifications}}",
+      "unread": "{count, plural, =0 {All caught up} one {# unread} other {# unread}}",
+      "updated": "Updated {time}"
+    },
+    "filters": {
+      "all": "All",
+      "unread": "Unread"
+    },
+    "bulk": {
+      "selectVisible": "Toggle visible selection"
+    },
+    "actions": {
+      "markRead": "Mark as read",
+      "markUnread": "Mark as unread",
+      "markAllRead": "Mark everything read",
+      "refresh": "Refresh",
+      "delete": "Delete",
+      "confirmDeleteTitle": "Delete selected notifications?",
+      "confirmDeleteBody": "{count, plural, one {This will permanently delete # notification.} other {This will permanently delete # notifications.}}",
+      "confirmDeleteSingle": "This will permanently delete this notification. Continue?",
+      "confirmDeleteConfirm": "Delete",
+      "confirmDeleteCancel": "Cancel"
+    },
+    "toast": {
+      "nothingSelected": "Select at least one notification first.",
+      "alreadyAligned": "Those notifications are already in that state.",
+      "updated": "Notifications updated.",
+      "deleted": "{count, plural, =0 {No notifications deleted.} one {Deleted # notification.} other {Deleted # notifications.}}",
+      "everythingRead": "You're already caught up."
+    },
+    "empty": {
+      "title": "You're all caught up",
+      "subtitle": "We'll let you know here whenever something needs your attention.",
+      "filter": "No unread notifications. Switch back to all to review history."
+    },
+    "selection": "{count, plural, one {# notification selected} other {# notifications selected}}",
+    "unreadFlag": "Unread",
+    "severity": {
+      "info": "Info",
+      "warning": "Reminder",
+      "critical": "Important"
+    },
+    "types": {
+      "FINAL_PAYMENT": "Installment",
+      "DEBT_REMINDER": "Debt reminder",
+      "SYSTEM_UPDATE": "System update",
+      "GENERAL": "General",
+      "INCOME_ENDING": "Income ending"
+    },
+    "entityLabels": {
+      "donation": "Donation",
+      "income": "Income",
+      "system": "System"
     }
   },
   "admin": {
