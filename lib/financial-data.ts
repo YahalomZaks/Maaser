@@ -97,6 +97,19 @@ function buildDefaultSettings(): UserFinancialSettings {
 function mapUserSettingsRecord(
   record: UserSettingsRecord | null
 ): UserFinancialSettings {
+  const normalizeMonthCarryStrategy = (
+    value: unknown
+  ): UserFinancialSettings["monthCarryStrategy"] => {
+    // Temporarily disable ASK_ME – treat as CARRY_FORWARD
+    if (value === "ASK_ME") {
+      return "CARRY_FORWARD";
+    }
+    if (value === "CARRY_FORWARD" || value === "INDEPENDENT") {
+      return value as UserFinancialSettings["monthCarryStrategy"];
+    }
+    return "INDEPENDENT";
+  };
+
   if (!record) {
     return buildDefaultSettings();
   }
@@ -107,7 +120,7 @@ function mapUserSettingsRecord(
     tithePercent: record.tithePercent ?? 10,
     startingBalance: record.startingBalance ?? 0,
     carryStrategy: record.carryStrategy ?? DEFAULT_STRATEGY,
-    monthCarryStrategy: (record.monthCarryStrategy as any) ?? "INDEPENDENT",
+    monthCarryStrategy: normalizeMonthCarryStrategy(record.monthCarryStrategy),
     isFirstTimeSetupCompleted: record.isFirstTimeSetupCompleted ?? false,
   };
 }

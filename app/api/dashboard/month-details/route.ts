@@ -8,11 +8,7 @@ import {
   listDonations,
   listVariableIncomes,
 } from "@/lib/financial-data";
-import type {
-  CurrencyCode,
-  DonationEntry,
-  VariableIncome,
-} from "@/types/finance";
+import type { CurrencyCode, VariableIncome } from "@/types/finance";
 
 function toMonthIndex(year: number, monthIndex: number) {
   return year * 12 + monthIndex;
@@ -27,11 +23,17 @@ function isIncomeInMonth(
   const startIdx = toMonthIndex(start.getFullYear(), start.getMonth());
   const targetIdx = toMonthIndex(targetYear, targetMonthIndex);
 
-  if (entry.schedule === "oneTime") return startIdx === targetIdx;
-  if (entry.schedule === "recurring") return targetIdx >= startIdx;
+  if (entry.schedule === "oneTime") {
+    return startIdx === targetIdx;
+  }
+  if (entry.schedule === "recurring") {
+    return targetIdx >= startIdx;
+  }
   // multiMonth
   const total = entry.totalMonths ?? 0;
-  if (total <= 0) return startIdx === targetIdx;
+  if (total <= 0) {
+    return startIdx === targetIdx;
+  }
   return targetIdx >= startIdx && targetIdx < startIdx + total;
 }
 

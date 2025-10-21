@@ -227,11 +227,12 @@ export function IncomeManager() {
       return;
     }
 
-    const schedule: IncomeSchedule = form.schedule === "recurring"
-      ? form.recurringLimit === "months"
-        ? "multiMonth"
-        : "recurring"
-      : "oneTime";
+    let schedule: IncomeSchedule;
+    if (form.schedule === "recurring") {
+      schedule = form.recurringLimit === "months" ? "multiMonth" : "recurring";
+    } else {
+      schedule = "oneTime";
+    }
 
     let totalMonthsValue: number | null = null;
 

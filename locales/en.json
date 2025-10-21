@@ -906,6 +906,12 @@
         }
       }
     },
+    "explainFeedback": {
+      "title": "Feedback Page - Help Us Improve",
+      "subtitle": "We want to hear from you and improve continuously!",
+      "mainMessage": "It's important to us to improve all the time, so if you have new ideas to improve the system or you found any bug in the system, we'd be happy if you send us feedback so we can work on it and keep improving.",
+      "encouragement": "Every feedback, suggestion, or bug report helps us improve the system and make it better for you!"
+    },
     "setupIncome": {
       "title": "Income Setup",
       "subtitle": "Choose your base currency and get a quick checklist for recording incomes.",
@@ -945,6 +951,7 @@
       "explainDashboard": "Dashboard",
       "explainIncome": "Income Page",
       "explainDonations": "Donations Page",
+      "explainFeedback": "Feedback Page",
       "setupIncome": "Income Setup",
       "setupDonations": "Add Donations"
     },

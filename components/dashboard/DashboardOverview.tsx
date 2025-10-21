@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable curly, no-nested-ternary */
+
 import {
   Calendar,
   CalendarDays,
@@ -8,7 +10,6 @@ import {
   HandCoins,
   TrendingUp,
   Wallet,
-  AlertCircle,
   Info,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,10 +25,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/finance";
-import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/finance";
 import type { UserFinancialSettings } from "@/lib/financial-data";
+import { cn } from "@/lib/utils";
 import type { MonthlySnapshot, YearSnapshot } from "@/types/finance";
 
 const MONTH_KEYS = [
@@ -123,7 +124,9 @@ export function DashboardOverview() {
       setIsLoading(true);
       setFetchError(null);
       const response = await fetch("/api/dashboard/overview");
-      if (!response.ok) throw new Error(`Failed to load dashboard overview: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load dashboard overview: ${response.status}`);
+      }
       const data: { years?: YearSnapshot[] | null; settings?: UserFinancialSettings | null } = await response.json();
       setSnapshots(Array.isArray(data?.years) ? data.years : []);
       setSettings(data?.settings ?? null);
@@ -148,7 +151,9 @@ export function DashboardOverview() {
   }, [loadData]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
     const handler = () => loadData();
     window.addEventListener("maaser:data-updated", handler);
     return () => window.removeEventListener("maaser:data-updated", handler);
@@ -201,18 +206,26 @@ export function DashboardOverview() {
   const hasData = Boolean(computedYear && year && months.length > 0);
 
   const selectedMonth = useMemo(() => {
-    if (!computedYear || months.length === 0) return null;
-    if (!selectedMonthId) return months[0];
+    if (!computedYear || months.length === 0) {
+      return null;
+    }
+    if (!selectedMonthId) {
+      return months[0];
+    }
     const found = months.find((m) => m.id === selectedMonthId);
     return found ?? months[0];
   }, [computedYear, months, selectedMonthId]);
 
   // earliest data date
   const registrationDate = useMemo(() => {
-    if (snapshots.length === 0) return undefined;
+    if (snapshots.length === 0) {
+      return undefined;
+    }
     const earliestYear = Math.min(...snapshots.map((s) => s.year));
     const earliestSnapshot = snapshots.find((s) => s.year === earliestYear);
-    if (!earliestSnapshot || earliestSnapshot.monthly.length === 0) return undefined;
+    if (!earliestSnapshot || earliestSnapshot.monthly.length === 0) {
+      return undefined;
+    }
     const earliestMonthIndex = Math.min(...earliestSnapshot.monthly.map((m) => m.monthIndex));
     return new Date(earliestYear, earliestMonthIndex, 1);
   }, [snapshots]);
@@ -240,12 +253,16 @@ export function DashboardOverview() {
   const [monthPickerYear, setMonthPickerYear] = useState(selectedYear);
 
   useEffect(() => {
-    if (isMonthPickerOpen) setMonthPickerYear(selectedYear);
+    if (isMonthPickerOpen) {
+      setMonthPickerYear(selectedYear);
+    }
   }, [isMonthPickerOpen, selectedYear]);
 
   const selectMonth = (mIndex: number) => {
     const targetSnapshot = orderedSnapshots.find((s) => s.year === monthPickerYear);
-    if (!targetSnapshot) return;
+    if (!targetSnapshot) {
+      return;
+    }
     const targetMonth = targetSnapshot.monthly.find((m) => m.monthIndex === mIndex);
     if (targetMonth) {
       setSelectedYear(monthPickerYear);
@@ -258,13 +275,17 @@ export function DashboardOverview() {
   const incMonthPickerYear = () => setMonthPickerYear((y) => y + 1);
 
   const isMonthDisabled = (monthIndex: number) => {
-    if (!registrationDate) return false;
+    if (!registrationDate) {
+      return false;
+    }
     const checkDate = new Date(monthPickerYear, monthIndex, 1);
     return checkDate < registrationDate;
   };
 
   const monthLabel = useMemo(() => {
-    if (!selectedMonth) return "";
+    if (!selectedMonth) {
+      return "";
+    }
     const date = new Date(selectedYear, selectedMonth.monthIndex, 1);
     return date.toLocaleDateString(locale === "he" ? "he-IL" : "en-US", { year: "numeric", month: "long" });
   }, [selectedMonth, selectedYear, locale]);
@@ -277,12 +298,16 @@ export function DashboardOverview() {
   });
 
   useEffect(() => {
-    if (isYearPickerOpen) setYearPickerStartYear(Math.floor(selectedYear / YEARS_PER_PAGE) * YEARS_PER_PAGE);
+    if (isYearPickerOpen) {
+      setYearPickerStartYear(Math.floor(selectedYear / YEARS_PER_PAGE) * YEARS_PER_PAGE);
+    }
   }, [isYearPickerOpen, selectedYear]);
 
   const yearPickerYears = useMemo(() => {
     const years = [];
-    for (let i = 0; i < YEARS_PER_PAGE; i++) years.push(yearPickerStartYear + i);
+    for (let i = 0; i < YEARS_PER_PAGE; i++) {
+      years.push(yearPickerStartYear + i);
+    }
     return years;
   }, [yearPickerStartYear]);
 
@@ -291,8 +316,12 @@ export function DashboardOverview() {
 
   const isYearDisabled = (yr: number) => {
     const currentYear = new Date().getFullYear();
-    if (yr > currentYear) return true;
-    if (registrationDate && yr < registrationDate.getFullYear()) return true;
+    if (yr > currentYear) {
+      return true;
+    }
+    if (registrationDate && yr < registrationDate.getFullYear()) {
+      return true;
+    }
     return !yearOptions.includes(yr);
   };
 
@@ -342,17 +371,15 @@ export function DashboardOverview() {
   };
 
   // carry strategy
-  const handleCarryDecision = async (shouldCarry: boolean) => {
-    await Promise.resolve();
-    return shouldCarry;
-  };
 
   // Prefer explicit month carry strategy from settings; fallback to a reasonable mapping if missing
   let monthCarryStrategy: "CARRY_FORWARD" | "INDEPENDENT" | "ASK_ME" = settings?.monthCarryStrategy ?? "CARRY_FORWARD";
   if (!settings?.monthCarryStrategy) {
     if (settings?.carryStrategy === "RESET") monthCarryStrategy = "INDEPENDENT";
-    else if (settings?.carryStrategy === "CARRY_POSITIVE_ONLY") monthCarryStrategy = "ASK_ME";
+    else if (settings?.carryStrategy === "CARRY_POSITIVE_ONLY") monthCarryStrategy = "CARRY_FORWARD";
   }
+  // Coerce deprecated ASK_ME to CARRY_FORWARD for simplified UX
+  if (monthCarryStrategy === "ASK_ME") monthCarryStrategy = "CARRY_FORWARD";
 
   if (isLoading) return <LoadingScreen />;
 
@@ -415,7 +442,6 @@ export function DashboardOverview() {
           balance: selectedMonth?.runningBalance ?? 0,
         };
 
-  const isCurrentMonth = selectedMonth?.monthIndex === new Date().getMonth() && selectedYear === new Date().getFullYear();
   const isDecember = selectedMonth?.monthIndex === 11;
   const isYearComplete = progressPercent >= 100 && isDecember;
 
@@ -459,6 +485,60 @@ export function DashboardOverview() {
             >
               <Calendar className="h-4 w-4" /> {monthLabel}
             </button>
+            {isMonthPickerOpen ? (
+              <div
+                className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pt-28 sm:pt-32 pb-6 overflow-y-auto"
+                aria-modal="true"
+                role="dialog"
+              >
+                <button
+                  aria-label="Dismiss"
+                  className="fixed inset-0 bg-black/20"
+                  onClick={() => setIsMonthPickerOpen(false)}
+                  type="button"
+                />
+                <div className="relative mt-2 w-[min(560px,96%)] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-xl">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <Button variant="ghost" size="icon" onClick={decMonthPickerYear} type="button">
+                      <ChevronRight className="h-4 w-4 rtl:hidden" />
+                      <ChevronLeft className="h-4 w-4 ltr:hidden" />
+                    </Button>
+                    <div className="text-sm font-semibold">{monthPickerYear}</div>
+                    <Button variant="ghost" size="icon" onClick={incMonthPickerYear} type="button">
+                      <ChevronLeft className="h-4 w-4 rtl:hidden" />
+                      <ChevronRight className="h-4 w-4 ltr:hidden" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 p-3 sm:grid-cols-4" dir={locale === "he" ? "rtl" : "ltr"}>
+                    {gridMonths.map(({ label, idx }) => {
+                      const disabled = isMonthDisabled(idx);
+                      const isSelected =
+                        selectedMonth?.monthIndex === idx && selectedYear === monthPickerYear;
+                      let className =
+                        "rounded-full border px-3 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ";
+                      if (isSelected) {
+                        className += "border-primary text-primary bg-background";
+                      } else if (disabled) {
+                        className += "border-border bg-muted/50 text-muted-foreground cursor-not-allowed";
+                      } else {
+                        className += "border-border bg-background hover:bg-muted";
+                      }
+                      return (
+                        <button
+                          key={`${monthPickerYear}-${idx}`}
+                          type="button"
+                          onClick={() => (disabled ? undefined : selectMonth(idx))}
+                          disabled={disabled}
+                          className={className}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Progress card */}
@@ -480,9 +560,6 @@ export function DashboardOverview() {
                 if (monthCarryStrategy === "CARRY_FORWARD") {
                   if (isSurplusBal) carryMsg = tCarry("automaticCarry.surplus", { amount: absFormatted });
                   else if (isDebtBal) carryMsg = tCarry("automaticCarry.debt", { amount: absFormatted });
-                } else if (monthCarryStrategy === "ASK_ME") {
-                  if (isSurplusBal) carryMsg = tCarry("askMe.message", { amount: absFormatted });
-                  else if (isDebtBal) carryMsg = tCarry("askMe.debt", { amount: absFormatted });
                 } else if (monthCarryStrategy === "INDEPENDENT") {
                   if (isSurplusBal) carryMsg = tCarry("independent.surplus", { amount: absFormatted });
                 }
@@ -799,7 +876,6 @@ export function DashboardOverview() {
               monthCarryStrategy={monthCarryStrategy}
               isDecember={true}
               isYearComplete={true}
-              onCarryDecision={handleCarryDecision}
             />
           )}
         </div>

@@ -76,7 +76,7 @@ export default async function RootLayout({
 							<main className="app-main relative">
 							{children}
 						</main>
-						<Toaster richColors />
+						<Toaster />
 					</ThemeProvider>
 				</NextIntlClientProvider>
 			</body>

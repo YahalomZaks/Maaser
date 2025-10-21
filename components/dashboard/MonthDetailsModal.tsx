@@ -3,7 +3,6 @@
 import { CalendarDays, Coins, HandCoins } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/finance";
@@ -47,11 +46,11 @@ export function MonthDetailsModal({
 	onOpenChange,
 	monthIndex,
 	year,
-	incomeEntries = [],
-	donationEntries = [],
+		incomeEntries = [],
+		donationEntries = [],
 		isLoading = false,
-	recurringIncome = 0,
-	variableIncome = 0,
+		recurringIncome = 0,
+		variableIncome = 0,
 	totalIncome = 0,
 	totalDonations = 0,
 	currency,
@@ -88,30 +87,38 @@ export function MonthDetailsModal({
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="income" className="space-y-4 min-h-[260px] sm:min-h-[300px]">
-						{isLoading ? (
-							<div className="rounded-xl border divide-y animate-pulse">
-								{Array.from({ length: 4 }).map((_, i) => (
-									<div key={i} className="flex items-center justify-between px-4 py-3">
-										<div className="h-4 w-40 bg-muted rounded" />
-										<div className="h-4 w-24 bg-muted rounded" />
-									</div>
-								))}
-							</div>
-						) : incomeEntries.length > 0 ? (
-							<div className="rounded-xl border divide-y">
-								{incomeEntries.map((entry) => (
-									<div key={entry.id} className="flex items-center justify-between px-4 py-3">
-										<span className="font-medium">{entry.description}</span>
-										<span className="font-semibold">{formatCurrency(entry.amount, currency, locale)}</span>
-									</div>
-								))}
-							</div>
-						) : (
-							<div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-								{t("incomeBreakdown.noIncome")}
-							</div>
-						)}
+								<TabsContent value="income" className="space-y-4 min-h-[260px] sm:min-h-[300px]">
+									{(() => {
+										if (isLoading) {
+											return (
+												<div className="rounded-xl border divide-y animate-pulse">
+													{Array.from({ length: 4 }).map((_, i) => (
+														<div key={i} className="flex items-center justify-between px-4 py-3">
+															<div className="h-4 w-40 bg-muted rounded" />
+															<div className="h-4 w-24 bg-muted rounded" />
+														</div>
+													))}
+												</div>
+											);
+										}
+										if (incomeEntries.length > 0) {
+											return (
+												<div className="rounded-xl border divide-y">
+													{incomeEntries.map((entry) => (
+														<div key={entry.id} className="flex items-center justify-between px-4 py-3">
+															<span className="font-medium">{entry.description}</span>
+															<span className="font-semibold">{formatCurrency(entry.amount, currency, locale)}</span>
+														</div>
+													))}
+												</div>
+											);
+										}
+										return (
+											<div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+												{t("incomeBreakdown.noIncome")}
+											</div>
+										);
+									})()}
 						{isLoading ? (
 							<div className="flex items-center justify-between rounded-xl border bg-muted/20 px-4 py-3 font-semibold animate-pulse">
 								<div className="h-4 w-24 bg-muted rounded" />
@@ -123,32 +130,56 @@ export function MonthDetailsModal({
 								<span>{formatCurrency(totalIncome, currency, locale)}</span>
 							</div>
 						)}
+									{(recurringIncome > 0 || variableIncome > 0) && !isLoading ? (
+										<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+											{recurringIncome > 0 ? (
+												<div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm">
+													<span className="font-semibold block">{t("incomeBreakdown.recurring")}</span>
+													<span>{formatCurrency(recurringIncome, currency, locale)}</span>
+												</div>
+											) : null}
+											{variableIncome > 0 ? (
+												<div className="rounded-lg border border-secondary/30 bg-secondary/10 px-4 py-2 text-sm">
+													<span className="font-semibold block">{t("incomeBreakdown.variable")}</span>
+													<span>{formatCurrency(variableIncome, currency, locale)}</span>
+												</div>
+											) : null}
+										</div>
+									) : null}
 					</TabsContent>
 
-					<TabsContent value="donations" className="space-y-4 min-h-[260px] sm:min-h-[300px]">
-						{isLoading ? (
-							<div className="rounded-xl border divide-y animate-pulse">
-								{Array.from({ length: 4 }).map((_, i) => (
-									<div key={i} className="flex items-center justify-between px-4 py-3">
-										<div className="h-4 w-40 bg-muted rounded" />
-										<div className="h-4 w-24 bg-muted rounded" />
-									</div>
-								))}
-							</div>
-						) : donationEntries.length > 0 ? (
-							<div className="rounded-xl border divide-y">
-								{donationEntries.map((entry) => (
-									<div key={entry.id} className="flex items-center justify-between px-4 py-3">
-										<span className="font-medium">{entry.organization}</span>
-										<span className="font-semibold">{formatCurrency(entry.amount, currency, locale)}</span>
-									</div>
-								))}
-							</div>
-						) : (
-							<div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-								{t("donationBreakdown.noDonations")}
-							</div>
-						)}
+								<TabsContent value="donations" className="space-y-4 min-h-[260px] sm:min-h-[300px]">
+									{(() => {
+										if (isLoading) {
+											return (
+												<div className="rounded-xl border divide-y animate-pulse">
+													{Array.from({ length: 4 }).map((_, i) => (
+														<div key={i} className="flex items-center justify-between px-4 py-3">
+															<div className="h-4 w-40 bg-muted rounded" />
+															<div className="h-4 w-24 bg-muted rounded" />
+														</div>
+													))}
+												</div>
+											);
+										}
+										if (donationEntries.length > 0) {
+											return (
+												<div className="rounded-xl border divide-y">
+													{donationEntries.map((entry) => (
+														<div key={entry.id} className="flex items-center justify-between px-4 py-3">
+															<span className="font-medium">{entry.organization}</span>
+															<span className="font-semibold">{formatCurrency(entry.amount, currency, locale)}</span>
+														</div>
+													))}
+												</div>
+											);
+										}
+										return (
+											<div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+												{t("donationBreakdown.noDonations")}
+											</div>
+										);
+									})()}
 						{isLoading ? (
 							<div className="flex items-center justify-between rounded-xl border bg-muted/20 px-4 py-3 font-semibold animate-pulse">
 								<div className="h-4 w-24 bg-muted rounded" />

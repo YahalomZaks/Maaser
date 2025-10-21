@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, Coins, Gauge, Globe2, HandCoins, Plus, Sparkles, Trash2, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, Coins, Gauge, Globe2, HandCoins, MessageCircle, Plus, Sparkles, Trash2, TrendingUp, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -29,7 +29,7 @@ interface DonationDraft {
   installmentsRemaining: string;
 }
 
-const STEP_ORDER = ["welcome", "explainDashboard", "explainIncome", "explainDonations", "setupIncome", "setupDonations"] as const;
+const STEP_ORDER = ["welcome", "explainDashboard", "explainIncome", "explainDonations", "explainFeedback", "setupIncome", "setupDonations"] as const;
 
 type StepKey = (typeof STEP_ORDER)[number];
 
@@ -93,6 +93,10 @@ export function OnboardingWizard() {
       explainDonations: {
         label: t("explainDonations.title"),
         description: t("explainDonations.subtitle"),
+      },
+      explainFeedback: {
+        label: t("explainFeedback.title"),
+        description: t("explainFeedback.subtitle"),
       },
       setupIncome: {
         label: t("setupIncome.title"),
@@ -259,6 +263,7 @@ export function OnboardingWizard() {
     t("steps.explainDashboard") || "לוח בקרה",
     t("steps.explainIncome") || "עמוד הכנסות",
     t("steps.explainDonations") || "עמוד תרומות",
+    t("steps.explainFeedback") || "עמוד המשוב",
     t("steps.setupIncome") || "הוספת הכנסות",
     t("steps.setupDonations") || "הוספת תרומות"
   ], [t]);
@@ -582,6 +587,42 @@ export function OnboardingWizard() {
                         <h4 className="font-bold text-slate-800 mb-1 text-sm md:text-base">{t("explainDonations.features.oneTime.title")}</h4>
                         <p className="text-xs md:text-sm text-slate-600">{t("explainDonations.features.oneTime.description")}</p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "explainFeedback" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Hero Section with Icon */}
+                <div className="mb-6 md:mb-8 text-center">
+                  <div className="inline-flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-xl md:rounded-2xl bg-blue-500 text-white shadow-lg mb-3 md:mb-4">
+                    <MessageCircle className="h-8 w-8 md:h-10 md:w-10" />
+                  </div>
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
+                    {stepDetails[step].label}
+                  </h2>
+                  <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto px-4">
+                    {stepDetails[step].description}
+                  </p>
+                </div>
+
+                {/* Description Card */}
+                <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 mb-4 md:mb-6 max-w-4xl mx-auto">
+                  <div className="text-center space-y-4 md:space-y-6">
+                    <div className="inline-flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-blue-50 mb-4">
+                      <MessageCircle className="h-8 w-8 md:h-10 md:w-10 text-blue-500" />
+                    </div>
+                    
+                    <p className="text-slate-700 text-base md:text-lg leading-relaxed">
+                      {t("explainFeedback.mainMessage")}
+                    </p>
+
+                    <div className="bg-blue-50 rounded-lg md:rounded-xl p-4 md:p-6 border-2 border-blue-100">
+                      <p className="text-slate-700 text-sm md:text-base">
+                        {t("explainFeedback.encouragement")}
+                      </p>
                     </div>
                   </div>
                 </div>

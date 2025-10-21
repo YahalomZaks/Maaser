@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle, Info } from "lucide-react";
+import { CheckCircle, Info } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -18,7 +18,6 @@ interface BalanceCarryOverPanelProps {
 	monthCarryStrategy: MonthCarryStrategy;
 	isDecember?: boolean;
 	isYearComplete?: boolean;
-	onCarryDecision?: (shouldCarry: boolean) => void;
 	className?: string;
 }
 
@@ -28,7 +27,6 @@ export function BalanceCarryOverPanel({
 	monthCarryStrategy,
 	isDecember = false,
 	isYearComplete = false,
-	onCarryDecision,
 	className,
 }: BalanceCarryOverPanelProps) {
 	const locale = useLocale();
@@ -46,7 +44,7 @@ export function BalanceCarryOverPanel({
 
 	// Year-end special case (December with completed obligation)
 	if (isDecember && isYearComplete && isSurplus) {
-		return (
+			return (
 			<Card className={cn("border-primary/30 bg-primary/5", className)}>
 				<CardContent className="p-4">
 					<div className="flex items-start gap-3">
@@ -89,49 +87,29 @@ export function BalanceCarryOverPanel({
 			</Card>
 		);
 	}
-
-	// ASK_ME: Prompt user for decision (only for surplus, debt always carries)
-	if (monthCarryStrategy === "ASK_ME") {
-		if (isSurplus) {
+		// Coerce deprecated ASK_ME behavior to CARRY_FORWARD for now
+		if (monthCarryStrategy === "ASK_ME") {
 			return (
-				<Card className={cn("border-primary/30 bg-primary/5", className)}>
-					<CardContent className="p-4">
-						<div className="space-y-3">
-							<div className="flex items-start gap-3">
-								<Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-								<div className="flex-1">
-									<h3 className="font-semibold">{t("askMe.title")}</h3>
-									<p className="mt-1 text-sm text-muted-foreground">
-										{t("askMe.message", { amount: formattedBalance })}
-									</p>
-								</div>
-							</div>
-							<div className="flex gap-2">
-								<Button size="sm" variant="default" onClick={() => onCarryDecision?.(true)}>
-									{t("askMe.yes")}
-								</Button>
-								<Button size="sm" variant="outline" onClick={() => onCarryDecision?.(false)}>
-									{t("askMe.no")}
-								</Button>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			);
-		} else {
-			// Debt always carries
-			return (
-				<Card className={cn("border-l-4 border-l-orange-500 bg-orange-50/50", className)}>
+				<Card
+					className={cn(
+						"border-l-4",
+						isSurplus ? "border-l-emerald-500 bg-emerald-50/50" : "border-l-orange-500 bg-orange-50/50",
+						className,
+					)}
+				>
 					<CardContent className="p-4">
 						<div className="flex items-start gap-3">
-							<AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-orange-600" />
-							<p className="text-sm">{t("askMe.debt", { amount: formattedBalance })}</p>
+							<Info className="mt-0.5 h-5 w-5 shrink-0" />
+							<p className="text-sm">
+								{isSurplus
+									? t("automaticCarry.surplus", { amount: formattedBalance })
+									: t("automaticCarry.debt", { amount: formattedBalance })}
+							</p>
 						</div>
 					</CardContent>
 				</Card>
 			);
 		}
-	}
 
 	// INDEPENDENT: Each month on its own (show surplus info with settings link)
 	if (monthCarryStrategy === "INDEPENDENT" && isSurplus) {
