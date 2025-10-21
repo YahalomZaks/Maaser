@@ -3,14 +3,26 @@ import type { NextRequest } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { convertCurrency } from "@/lib/finance";
-import { getUserFinancialSettings, listDonations, listVariableIncomes } from "@/lib/financial-data";
-import type { CurrencyCode, DonationEntry, VariableIncome } from "@/types/finance";
+import {
+  getUserFinancialSettings,
+  listDonations,
+  listVariableIncomes,
+} from "@/lib/financial-data";
+import type {
+  CurrencyCode,
+  DonationEntry,
+  VariableIncome,
+} from "@/types/finance";
 
 function toMonthIndex(year: number, monthIndex: number) {
   return year * 12 + monthIndex;
 }
 
-function isIncomeInMonth(entry: VariableIncome, targetYear: number, targetMonthIndex: number) {
+function isIncomeInMonth(
+  entry: VariableIncome,
+  targetYear: number,
+  targetMonthIndex: number
+) {
   const start = new Date(entry.date);
   const startIdx = toMonthIndex(start.getFullYear(), start.getMonth());
   const targetIdx = toMonthIndex(targetYear, targetMonthIndex);
@@ -23,7 +35,9 @@ function isIncomeInMonth(entry: VariableIncome, targetYear: number, targetMonthI
   return targetIdx >= startIdx && targetIdx < startIdx + total;
 }
 
-function normalizeCurrency(value: CurrencyCode | null | undefined): CurrencyCode {
+function normalizeCurrency(
+  value: CurrencyCode | null | undefined
+): CurrencyCode {
   return value === "USD" ? "USD" : "ILS";
 }
 
@@ -37,7 +51,12 @@ export async function GET(request: NextRequest) {
   const year = Number(searchParams.get("year"));
   const month = Number(searchParams.get("month")); // 0-11
 
-  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 0 || month > 11) {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    month < 0 ||
+    month > 11
+  ) {
     return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
   }
 
@@ -53,7 +72,11 @@ export async function GET(request: NextRequest) {
   const incomeRows = incomes
     .filter((e) => isIncomeInMonth(e, year, month))
     .map((e) => {
-      const amountBase = convertCurrency(e.amount, normalizeCurrency(e.currency), baseCurrency);
+      const amountBase = convertCurrency(
+        e.amount,
+        normalizeCurrency(e.currency),
+        baseCurrency
+      );
       return { id: e.id, description: e.description, amountBase };
     });
 
@@ -63,7 +86,11 @@ export async function GET(request: NextRequest) {
       return dt.getFullYear() === year && dt.getMonth() === month;
     })
     .map((d) => {
-      const amountBase = convertCurrency(d.amount, normalizeCurrency(d.currency), baseCurrency);
+      const amountBase = convertCurrency(
+        d.amount,
+        normalizeCurrency(d.currency),
+        baseCurrency
+      );
       return { id: d.id, organization: d.organization, amountBase };
     });
 
