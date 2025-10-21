@@ -2,7 +2,6 @@ import type {
   Currency as CurrencyDb,
   Donation as DonationRecord,
   DonationType as DonationTypeDb,
-  Income as IncomeRecord,
   IncomeSchedule as IncomeScheduleDb,
   IncomeSource as IncomeSourceDb,
   UserSettings as UserSettingsRecord,
@@ -16,7 +15,7 @@ import {
   DEFAULT_CURRENCY,
   DEFAULT_LANGUAGE,
 } from "@/lib/user-settings";
-import type { CarryStrategy, FixedIncomeSettings } from "@/lib/user-settings";
+import type { CarryStrategy } from "@/lib/user-settings";
 import type {
   CurrencyCode,
   DonationEntry,
@@ -77,9 +76,9 @@ export interface UserFinancialSettings {
   language: string;
   currency: CurrencyCode;
   tithePercent: number;
-  fixedIncome: FixedIncomeSettings;
   startingBalance: number;
   carryStrategy: CarryStrategy;
+  monthCarryStrategy: "CARRY_FORWARD" | "INDEPENDENT" | "ASK_ME";
   isFirstTimeSetupCompleted: boolean;
 }
 
@@ -88,13 +87,9 @@ function buildDefaultSettings(): UserFinancialSettings {
     language: DEFAULT_LANGUAGE.toLowerCase(),
     currency: DEFAULT_CURRENCY,
     tithePercent: 10,
-    fixedIncome: {
-      personal: 0,
-      spouse: 0,
-      includeSpouse: false,
-    },
     startingBalance: 0,
     carryStrategy: DEFAULT_STRATEGY,
+    monthCarryStrategy: "INDEPENDENT",
     isFirstTimeSetupCompleted: false,
   };
 }
@@ -110,13 +105,9 @@ function mapUserSettingsRecord(
     language: record.language.toLowerCase(),
     currency: normalizeCurrency(record.currency),
     tithePercent: record.tithePercent ?? 10,
-    fixedIncome: {
-      personal: record.fixedPersonalIncome ?? 0,
-      spouse: record.fixedSpouseIncome ?? 0,
-      includeSpouse: record.includeSpouseIncome ?? false,
-    },
     startingBalance: record.startingBalance ?? 0,
     carryStrategy: record.carryStrategy ?? DEFAULT_STRATEGY,
+    monthCarryStrategy: (record.monthCarryStrategy as any) ?? "INDEPENDENT",
     isFirstTimeSetupCompleted: record.isFirstTimeSetupCompleted ?? false,
   };
 }
@@ -333,6 +324,8 @@ export async function updateDonationEntry(
 
 interface AggregatedMonth {
   incomes: number;
+  recurringIncome: number;
+  variableIncome: number;
   donations: number;
   convertedEntries: number;
   convertedTotal: number;
@@ -359,6 +352,8 @@ function getMonthAgg(target: Map<number, AggregatedMonth>, monthIndex: number) {
   if (!target.has(monthIndex)) {
     target.set(monthIndex, {
       incomes: 0,
+      recurringIncome: 0,
+      variableIncome: 0,
       donations: 0,
       convertedEntries: 0,
       convertedTotal: 0,
@@ -373,18 +368,11 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
-  const [settings, fixedIncomeRows, variableIncomeRows, donationRows] =
-    (await Promise.all([
-      prisma.userSettings.findUnique({ where: { userId } }),
-      prisma.income.findMany({ where: { userId } }),
-      prisma.variableIncome.findMany({ where: { userId } }),
-      prisma.donation.findMany({ where: { userId } }),
-    ])) as [
-      UserSettingsRecord | null,
-      IncomeRecord[],
-      VariableIncomeRecord[],
-      DonationRecord[]
-    ];
+  const [settings, variableIncomeRows, donationRows] = (await Promise.all([
+    prisma.userSettings.findUnique({ where: { userId } }),
+    prisma.variableIncome.findMany({ where: { userId } }),
+    prisma.donation.findMany({ where: { userId } }),
+  ])) as [UserSettingsRecord | null, VariableIncomeRecord[], DonationRecord[]];
 
   const userSettings = mapUserSettingsRecord(settings);
 
@@ -392,55 +380,102 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   const aggregated = ensureYearMonths();
 
-  const fixedMonthlyAmount =
-    userSettings.fixedIncome.personal +
-    (userSettings.fixedIncome.includeSpouse
-      ? userSettings.fixedIncome.spouse
-      : 0);
+  const now = new Date();
+  const nowIndex = now.getFullYear() * 12 + now.getMonth();
+  let maxMonthIndex = nowIndex;
 
-  const addFixedIncome = (year: number, monthIndex: number) => {
-    if (fixedMonthlyAmount === 0) {
-      return;
+  donationRows.forEach((row) => {
+    const idx = row.year * 12 + (row.month - 1);
+    maxMonthIndex = Math.max(maxMonthIndex, idx);
+  });
+
+  variableIncomeRows.forEach((row) => {
+    const date = row.date;
+    const idx = date.getFullYear() * 12 + date.getMonth();
+
+    if (
+      row.schedule === "MULTI_MONTH" &&
+      row.totalMonths &&
+      row.totalMonths > 0
+    ) {
+      maxMonthIndex = Math.max(maxMonthIndex, idx + row.totalMonths - 1);
+    } else {
+      maxMonthIndex = Math.max(maxMonthIndex, nowIndex);
     }
+  });
+
+  const addIncomeToMonth = (
+    year: number,
+    monthIndex: number,
+    amount: number,
+    currency: CurrencyCode,
+    category: "recurring" | "variable"
+  ) => {
     const monthMap = getMonthMap(aggregated, year);
     const agg = getMonthAgg(monthMap, monthIndex);
-    agg.incomes += convertCurrency(
-      fixedMonthlyAmount,
-      baseCurrency,
-      baseCurrency
-    );
+    const converted = convertCurrency(amount, currency, baseCurrency);
+    agg.incomes += converted;
+    if (category === "recurring") {
+      agg.recurringIncome += converted;
+    } else {
+      agg.variableIncome += converted;
+    }
+    if (currency !== baseCurrency) {
+      agg.convertedEntries += 1;
+      agg.convertedTotal += converted;
+    }
   };
-
-  // Seed all months for years present in fixed income records
-  if (fixedMonthlyAmount > 0) {
-    const years = new Set<number>();
-    const currentYear = new Date().getFullYear();
-    years.add(currentYear);
-    donationRows.forEach((row) => years.add(row.year));
-    variableIncomeRows.forEach((row) => years.add(row.date.getFullYear()));
-    fixedIncomeRows.forEach((row) => years.add(row.year));
-
-    years.forEach((year) => {
-      for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
-        addFixedIncome(year, monthIndex);
-      }
-    });
-  }
 
   variableIncomeRows.forEach((row) => {
     const date = row.date;
     const year = date.getFullYear();
     const monthIndex = date.getMonth();
-    const monthMap = getMonthMap(aggregated, year);
-    const agg = getMonthAgg(monthMap, monthIndex);
-
     const entryCurrency = normalizeCurrency(row.currency);
-    const converted = convertCurrency(row.amount, entryCurrency, baseCurrency);
-    agg.incomes += converted;
-    if (entryCurrency !== baseCurrency) {
-      agg.convertedEntries += 1;
-      agg.convertedTotal += converted;
+
+    const startIndex = year * 12 + monthIndex;
+
+    if (row.schedule === "RECURRING") {
+      for (let idx = startIndex; idx <= maxMonthIndex; idx++) {
+        if (idx < startIndex) {
+          continue;
+        }
+        const targetYear = Math.floor(idx / 12);
+        const targetMonth = idx % 12;
+        addIncomeToMonth(
+          targetYear,
+          targetMonth,
+          row.amount,
+          entryCurrency,
+          "recurring"
+        );
+      }
+      return;
     }
+
+    if (
+      row.schedule === "MULTI_MONTH" &&
+      row.totalMonths &&
+      row.totalMonths > 0
+    ) {
+      for (let offset = 0; offset < row.totalMonths; offset++) {
+        const idx = startIndex + offset;
+        if (idx > maxMonthIndex) {
+          break;
+        }
+        const targetYear = Math.floor(idx / 12);
+        const targetMonth = idx % 12;
+        addIncomeToMonth(
+          targetYear,
+          targetMonth,
+          row.amount,
+          entryCurrency,
+          "variable"
+        );
+      }
+      return;
+    }
+
+    addIncomeToMonth(year, monthIndex, row.amount, entryCurrency, "variable");
   });
 
   donationRows.forEach((row) => {
@@ -466,6 +501,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         (_, monthIndex) => {
           const record = monthsMap.get(monthIndex) ?? {
             incomes: 0,
+            recurringIncome: 0,
+            variableIncome: 0,
             donations: 0,
             convertedEntries: 0,
             convertedTotal: 0,
@@ -475,6 +512,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
             id: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
             monthIndex,
             incomesBase: record.incomes,
+            recurringIncomeBase: record.recurringIncome,
+            variableIncomeBase: record.variableIncome,
             donationsBase: record.donations,
             convertedEntries: record.convertedEntries,
             convertedTotal: record.convertedTotal,

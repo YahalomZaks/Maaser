@@ -47,6 +47,7 @@ export function DonationsManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [form, setForm] = useState<FormState>({ organization: "", amount: "", currency: "ILS", type: "recurring", startDate: todayISO(), installmentsTotal: undefined, installmentsPaid: "0", note: "" });
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() + 1 }; });
@@ -79,7 +80,9 @@ export function DonationsManager() {
 
   const openEdit = (row: DonationEntry) => {
     setModalMode("edit");
-    setForm({ id: row.id, organization: row.organization, amount: String(row.amount), currency: row.currency, type: row.type, startDate: row.startDate, installmentsTotal: row.installmentsTotal ? String(row.installmentsTotal) : undefined, installmentsPaid: row.installmentsPaid ? String(row.installmentsPaid) : "0", note: row.note ?? "" });
+    // Format amount with commas for display
+    const formattedAmount = String(row.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    setForm({ id: row.id, organization: row.organization, amount: formattedAmount, currency: row.currency, type: row.type, startDate: row.startDate, installmentsTotal: row.installmentsTotal ? String(row.installmentsTotal) : undefined, installmentsPaid: row.installmentsPaid ? String(row.installmentsPaid) : "0", note: row.note ?? "" });
     setModalOpen(true);
   };
 
@@ -121,7 +124,8 @@ export function DonationsManager() {
   const incYear = () => setCursor((c) => ({ ...c, year: c.year + 1 }));
 
   const submit = async () => {
-    const amountNumber = Number(form.amount);
+    // Remove commas before converting to number
+    const amountNumber = Number(form.amount.replace(/,/g, ''));
     if (!form.organization.trim() || !Number.isFinite(amountNumber) || amountNumber <= 0) { toast.error(t("form.errors.organizationRequired")); return; }
     const payload = {
       organization: form.organization.trim(),
@@ -145,11 +149,32 @@ export function DonationsManager() {
       }
       setModalOpen(false);
       toast.success(t("form.success"));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "donations" } }));
+      }
     } catch (e) { toast.error(e instanceof Error ? e.message : tCommon("error")); }
     finally { setIsSaving(false); }
   };
 
-  const removeRow = async (id: string) => { try { const res = await fetch(`/api/financial/donations/${id}`, { method: "DELETE", credentials: "include" }); if (!res.ok) { throw new Error((await res.json())?.error || tCommon("error")); } setItems((prev) => prev.filter((x) => x.id !== id)); toast.success(t("table.removed")); } catch (e) { toast.error(e instanceof Error ? e.message : tCommon("error")); } };
+  const removeRow = async (id: string) => {
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/financial/donations/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) {
+        throw new Error((await res.json())?.error || tCommon("error"));
+      }
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      toast.success(t("table.removed"));
+      setModalOpen(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "donations" } }));
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tCommon("error"));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -290,7 +315,26 @@ export function DonationsManager() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="d-amount">{t("form.amountLabel")}</Label>
-                  <Input id="d-amount" type="number" min={0} step="0.01" value={form.amount} onChange={(e) => onChange("amount", e.target.value)} />
+                  <Input 
+                    id="d-amount" 
+                    type="text" 
+                    inputMode="decimal"
+                    value={form.amount} 
+                    onChange={(e) => {
+                      // Allow only numbers, decimal point, and comma
+                      const value = e.target.value.replace(/[^\d.,]/g, '');
+                      // Remove existing commas for processing
+                      const numericValue = value.replace(/,/g, '');
+                      // Check if it's a valid number
+                      if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
+                        // Format with commas
+                        const parts = numericValue.split('.');
+                        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                        onChange("amount", parts.join('.'));
+                      }
+                    }} 
+                    placeholder="0"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="d-currency">{t("form.currencyLabel")}</Label>
@@ -331,7 +375,11 @@ export function DonationsManager() {
               ) : null}
               <div className="space-y-1"><Label htmlFor="d-note">{t("form.noteLabel")}</Label><textarea id="d-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} /></div>
             </div>
-            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">{modalMode === "edit" ? (<Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)}><Trash2 className="h-4 w-4" /> {tCommon("delete")}</Button>) : null}
+            <div className="flex items-center justify-end gap-2 border-t px-4 py-3">{modalMode === "edit" ? (
+              <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
+                <Trash2 className="h-4 w-4" /> {tCommon("delete")}
+              </Button>
+            ) : null}
               <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
                 {tCommon("save")}
               </Button>

@@ -64,7 +64,10 @@ export default function SettingsManager() {
                 const res = await fetch(`/api/settings`, { credentials: "include" });
                 if (res.ok) {
                     const data = await res.json();
-                    setSettings((s) => ({ ...s, ...data }));
+                    setSettings((s) => ({
+                        ...s,
+                        ...data,
+                    }));
                     setProfileDraft({ firstName: data.firstName ?? "", lastName: data.lastName ?? "" });
                 }
             } catch (e) {
@@ -120,7 +123,16 @@ export default function SettingsManager() {
         saveTimeout.current = window.setTimeout(() => {
             void saveSettings({ excludeProfile: true });
         }, 700);
-    }, [saveSettings, settings.baseCurrency, settings.tithePercent, settings.yearEndStrategy, settings.monthStartStrategy, settings.preferredLanguage, settings.notifyDonationEnding, settings.notifyDebtTwoMonths]);
+    }, [
+        saveSettings,
+    settings.baseCurrency,
+    settings.tithePercent,
+    settings.yearEndStrategy,
+        settings.monthStartStrategy,
+        settings.preferredLanguage,
+        settings.notifyDonationEnding,
+        settings.notifyDebtTwoMonths,
+    ]);
 
     const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
         setSettings((prev) => ({ ...prev, [key]: value }));

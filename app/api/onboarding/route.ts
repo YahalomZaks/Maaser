@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { logDonationActivity, logIncomeActivity, logSettingsUpdate } from "@/lib/activity-logger";
+import {
+  logDonationActivity,
+  logIncomeActivity,
+  logSettingsUpdate,
+} from "@/lib/activity-logger";
 import { auth } from "@/lib/auth";
 import {
   getUserFinancialSettings,
@@ -16,7 +20,12 @@ import {
   SUPPORTED_LANGUAGES,
   upsertUserSettings,
 } from "@/lib/user-settings";
-import type { CurrencyCode, DonationType, IncomeSchedule, IncomeSource } from "@/types/finance";
+import type {
+  CurrencyCode,
+  DonationType,
+  IncomeSchedule,
+  IncomeSource,
+} from "@/types/finance";
 
 interface OnboardingIncomeInput {
   description: string;
@@ -44,11 +53,6 @@ interface OnboardingPayload {
   language?: string;
   currency?: CurrencyCode;
   tithePercent?: number;
-  fixedIncome?: {
-    personal?: number;
-    spouse?: number;
-    includeSpouse?: boolean;
-  };
   startingBalance?: number;
   carryStrategy?: string;
   variableIncomes?: OnboardingIncomeInput[];
@@ -71,27 +75,37 @@ function normalizeCurrency(value?: string): CurrencyCode {
     return DEFAULT_CURRENCY;
   }
   const upper = value.toUpperCase();
-  return SUPPORTED_CURRENCIES.includes(upper as (typeof SUPPORTED_CURRENCIES)[number])
+  return SUPPORTED_CURRENCIES.includes(
+    upper as (typeof SUPPORTED_CURRENCIES)[number]
+  )
     ? (upper as CurrencyCode)
     : DEFAULT_CURRENCY;
 }
 
-function normalizeLanguage(value?: string): (typeof SUPPORTED_LANGUAGES)[number] {
+function normalizeLanguage(
+  value?: string
+): (typeof SUPPORTED_LANGUAGES)[number] {
   if (!value) {
     return SUPPORTED_LANGUAGES[0];
   }
   const upper = value.toUpperCase();
-  return SUPPORTED_LANGUAGES.includes(upper as (typeof SUPPORTED_LANGUAGES)[number])
+  return SUPPORTED_LANGUAGES.includes(
+    upper as (typeof SUPPORTED_LANGUAGES)[number]
+  )
     ? (upper as (typeof SUPPORTED_LANGUAGES)[number])
     : SUPPORTED_LANGUAGES[0];
 }
 
-function normalizeCarryStrategy(value?: string): (typeof SUPPORTED_CARRY_STRATEGIES)[number] {
+function normalizeCarryStrategy(
+  value?: string
+): (typeof SUPPORTED_CARRY_STRATEGIES)[number] {
   if (!value) {
     return DEFAULT_CARRY_STRATEGY;
   }
   const upper = value.toUpperCase();
-  return SUPPORTED_CARRY_STRATEGIES.includes(upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
+  return SUPPORTED_CARRY_STRATEGIES.includes(
+    upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number]
+  )
     ? (upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
     : DEFAULT_CARRY_STRATEGY;
 }
@@ -101,20 +115,31 @@ function sanitizeIncome(input: OnboardingIncomeInput): OnboardingIncomeInput {
     description: input.description.trim(),
     amount: Math.max(0, Number(input.amount) || 0),
     currency: normalizeCurrency(input.currency),
-    source: input.source === "spouse" || input.source === "other" ? input.source : "self",
+    source:
+      input.source === "spouse" || input.source === "other"
+        ? input.source
+        : "self",
     date: input.date || new Date().toISOString().slice(0, 10),
-    schedule: input.schedule === "recurring" || input.schedule === "multiMonth" ? input.schedule : "oneTime",
+    schedule:
+      input.schedule === "recurring" || input.schedule === "multiMonth"
+        ? input.schedule
+        : "oneTime",
     totalMonths:
-      input.schedule === "multiMonth" && Number.isFinite(Number(input.totalMonths))
+      input.schedule === "multiMonth" &&
+      Number.isFinite(Number(input.totalMonths))
         ? Number(input.totalMonths)
         : null,
     note: input.note ? input.note.trim() : null,
   };
 }
 
-function sanitizeDonation(input: OnboardingDonationInput): OnboardingDonationInput {
+function sanitizeDonation(
+  input: OnboardingDonationInput
+): OnboardingDonationInput {
   const normalizedType: DonationType =
-    input.type === "installments" || input.type === "oneTime" ? input.type : "recurring";
+    input.type === "installments" || input.type === "oneTime"
+      ? input.type
+      : "recurring";
 
   return {
     organization: input.organization.trim(),
@@ -123,11 +148,13 @@ function sanitizeDonation(input: OnboardingDonationInput): OnboardingDonationInp
     type: normalizedType,
     startDate: input.startDate || new Date().toISOString().slice(0, 10),
     installmentsTotal:
-      normalizedType === "installments" && Number.isFinite(Number(input.installmentsTotal))
+      normalizedType === "installments" &&
+      Number.isFinite(Number(input.installmentsTotal))
         ? Number(input.installmentsTotal)
         : null,
     installmentsPaid:
-      normalizedType === "installments" && Number.isFinite(Number(input.installmentsPaid))
+      normalizedType === "installments" &&
+      Number.isFinite(Number(input.installmentsPaid))
         ? Number(input.installmentsPaid)
         : null,
     note: input.note ? input.note.trim() : null,
@@ -152,39 +179,53 @@ export async function POST(request: NextRequest) {
       : 0;
     const carryStrategy = normalizeCarryStrategy(body.carryStrategy);
 
-    const fixedIncomePersonal = Math.max(0, Number(body.fixedIncome?.personal) || 0);
-    const fixedIncomeSpouse = Math.max(0, Number(body.fixedIncome?.spouse) || 0);
-    const includeSpouseIncome = Boolean(body.fixedIncome?.includeSpouse);
-
     await upsertUserSettings(session.user.id, {
       language,
       currency,
       tithePercent,
-      fixedPersonalIncome: fixedIncomePersonal,
-      fixedSpouseIncome: fixedIncomeSpouse,
-      includeSpouseIncome,
       startingBalance,
       carryStrategy,
       isFirstTimeSetupCompleted: true,
     });
 
-    await logSettingsUpdate(session.user.id, "SETTINGS", "Completed onboarding wizard", request);
+    await logSettingsUpdate(
+      session.user.id,
+      "SETTINGS",
+      "Completed onboarding wizard",
+      request
+    );
 
     const incomes = Array.isArray(body.variableIncomes)
-      ? body.variableIncomes.map(sanitizeIncome).filter((income) => income.description && income.amount > 0)
+      ? body.variableIncomes
+          .map(sanitizeIncome)
+          .filter((income) => income.description && income.amount > 0)
       : [];
     const donations = Array.isArray(body.donations)
-      ? body.donations.map(sanitizeDonation).filter((donation) => donation.organization && donation.amount > 0)
+      ? body.donations
+          .map(sanitizeDonation)
+          .filter((donation) => donation.organization && donation.amount > 0)
       : [];
 
     await Promise.all([
       ...incomes.map(async (income) => {
         const entry = await createVariableIncomeEntry(session.user.id, income);
-        await logIncomeActivity(session.user.id, "CREATE", entry.id, `Onboarding income: ${entry.description}`, request);
+        await logIncomeActivity(
+          session.user.id,
+          "CREATE",
+          entry.id,
+          `Onboarding income: ${entry.description}`,
+          request
+        );
       }),
       ...donations.map(async (donation) => {
         const entry = await createDonationEntry(session.user.id, donation);
-        await logDonationActivity(session.user.id, "CREATE", entry.id, `Onboarding donation: ${entry.organization}`, request);
+        await logDonationActivity(
+          session.user.id,
+          "CREATE",
+          entry.id,
+          `Onboarding donation: ${entry.organization}`,
+          request
+        );
       }),
     ]);
 

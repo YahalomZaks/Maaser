@@ -54,6 +54,7 @@ export function IncomeManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [form, setForm] = useState<FormState>({
     description: "",
     amount: "",
@@ -73,6 +74,38 @@ export function IncomeManager() {
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
   const monthLabel = useMemo(() => MONTH_FORMAT(new Date(cursor.year, cursor.month - 1, 1), locale), [cursor, locale]);
+
+  const gridMonths = useMemo(() => {
+    const keys = [
+      "january",
+      "february",
+      "march",
+      "april",
+      "may",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december",
+    ] as const;
+
+    return keys.map((key, idx) => ({ idx, label: tMonths(key) }));
+  }, [tMonths]);
+
+  const selectMonth = useCallback((idx: number) => {
+    setCursor((prev) => ({ ...prev, month: idx + 1 }));
+    setMonthPickerOpen(false);
+  }, []);
+
+  const decYear = useCallback(() => {
+    setCursor((prev) => ({ ...prev, year: prev.year - 1 }));
+  }, []);
+
+  const incYear = useCallback(() => {
+    setCursor((prev) => ({ ...prev, year: prev.year + 1 }));
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -106,10 +139,12 @@ export function IncomeManager() {
 
   const openEdit = (row: VariableIncome) => {
     setModalMode("edit");
+    // Format amount with commas for display
+    const formattedAmount = String(row.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     setForm({
       id: row.id,
       description: row.description,
-      amount: String(row.amount),
+      amount: formattedAmount,
       currency: row.currency,
       source: row.source,
       date: row.date,
@@ -136,116 +171,137 @@ export function IncomeManager() {
     return { sum };
   }, [visible, baseCurrency]);
 
-  // Helper to compute remaining months for a limited recurring income relative to the selected month
   const getRemainingMonths = useCallback((row: VariableIncome) => {
     const total = row.totalMonths ?? 0;
     if (row.schedule !== "multiMonth" || !total) {
       return null;
     }
-    const start = new Date(row.date);
-    const startYM = start.getFullYear() * 12 + (start.getMonth() + 1);
-    const cursorYM = cursor.year * 12 + cursor.month;
-    const elapsed = cursorYM < startYM ? 0 : (cursorYM - startYM) + 1; // inclusive of start month
-    const remaining = Math.max(0, total - elapsed);
-    return { total, remaining };
-  }, [cursor]);
 
-  // Month-year picker data
-  const monthNames = useMemo(
-    () => [
-      tMonths("january"),
-      tMonths("february"),
-      tMonths("march"),
-      tMonths("april"),
-      tMonths("may"),
-      tMonths("june"),
-      tMonths("july"),
-      tMonths("august"),
-      tMonths("september"),
-      tMonths("october"),
-      tMonths("november"),
-      tMonths("december"),
-    ],
-    [tMonths]
-  );
-  const gridMonths = useMemo(() => monthNames.map((label, idx) => ({ label, idx })), [monthNames]);
-  const selectMonth = (mIndex: number) => {
-    setCursor((c) => ({ year: c.year, month: mIndex + 1 }));
-    setMonthPickerOpen(false);
-  };
-  const decYear = () => setCursor((c) => ({ ...c, year: c.year - 1 }));
-  const incYear = () => setCursor((c) => ({ ...c, year: c.year + 1 }));
+    const incomeDate = new Date(row.date);
+    const startYear = incomeDate.getFullYear();
+    const startMonth = incomeDate.getMonth();
+    const nowMonthIndex = cursor.year * 12 + cursor.month - 1;
+    const startMonthIndex = startYear * 12 + startMonth;
+    const elapsed = nowMonthIndex - startMonthIndex;
+    const remaining = Math.max(total - (elapsed + 1), 0);
 
-  const submit = async () => {
-    const amountNumber = Number(form.amount);
-    if (!form.description.trim() || !Number.isFinite(amountNumber) || amountNumber <= 0) {
-      toast.error(t("form.errors.amountPositive"));
-      return;
-    }
-    // Map recurring with month limit to multiMonth for API
-    let scheduleForApi: IncomeSchedule = form.schedule;
-    let totalMonthsForApi: number | null = null;
-    if (form.schedule === "recurring" && form.recurringLimit === "months") {
-      const months = Number(form.totalMonths);
-      if (!Number.isFinite(months) || months < 2) {
-        toast.error(t("form.errors.monthsRequired"));
-        return;
-      }
-      scheduleForApi = "multiMonth";
-      totalMonthsForApi = months;
-    }
-    const payload = {
-      description: form.description.trim(),
-      amount: amountNumber,
-      currency: form.currency,
-      source: form.source,
-      date: form.date,
-      schedule: scheduleForApi,
-      totalMonths: totalMonthsForApi,
-      note: form.note?.trim() || null,
-    };
-    try {
-      setIsSaving(true);
-      const res = await fetch(
-        modalMode === "create" ? "/api/financial/incomes" : `/api/financial/incomes/${form.id}`,
-        {
-          method: modalMode === "create" ? "POST" : "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      if (!res.ok) {
-        throw new Error((await res.json())?.error || tCommon("error"));
-      }
-      const data = await res.json();
-      if (data?.income) {
-        setItems((prev) => {
-          const others = prev.filter((x) => x.id !== data.income.id);
-          return [data.income as VariableIncome, ...others].sort((a, b) => b.date.localeCompare(a.date));
-        });
-      }
-      setModalOpen(false);
-      toast.success(t("form.success"));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : tCommon("error"));
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    return { remaining, total };
+  }, [cursor.year, cursor.month]);
 
   const removeRow = async (id: string) => {
     try {
+      setIsDeleting(true);
       const res = await fetch(`/api/financial/incomes/${id}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) {
         throw new Error((await res.json())?.error || tCommon("error"));
       }
       setItems((prev) => prev.filter((x) => x.id !== id));
       toast.success(t("table.removed"));
+      setModalOpen(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "income" } }));
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tCommon("error"));
+    } finally {
+      setIsDeleting(false);
     }
   };
+
+  const submit = useCallback(async () => {
+    if (isSaving) {
+      return;
+    }
+
+    const trimmedDescription = form.description.trim();
+    // Remove commas before converting to number
+    const amountNumber = Number(form.amount.replace(/,/g, ''));
+
+    if (!trimmedDescription) {
+      toast.error(t("form.errors.descriptionRequired"));
+      return;
+    }
+
+    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+      toast.error(t("form.errors.amountPositive"));
+      return;
+    }
+
+    const schedule: IncomeSchedule = form.schedule === "recurring"
+      ? form.recurringLimit === "months"
+        ? "multiMonth"
+        : "recurring"
+      : "oneTime";
+
+    let totalMonthsValue: number | null = null;
+
+    if (schedule === "multiMonth") {
+      const totalMonthsNumber = Math.floor(Number(form.totalMonths));
+      if (!Number.isFinite(totalMonthsNumber) || totalMonthsNumber < 2) {
+        toast.error(t("form.errors.monthsRequired"));
+        return;
+      }
+      totalMonthsValue = totalMonthsNumber;
+    }
+
+    const trimmedNote = form.note?.trim();
+
+    const payload = {
+      description: trimmedDescription,
+      amount: amountNumber,
+      currency: form.currency,
+      source: form.source,
+      date: form.date,
+      schedule,
+      totalMonths: totalMonthsValue,
+      note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : null,
+    };
+
+    try {
+      setIsSaving(true);
+
+      const endpoint = modalMode === "edit" && form.id ? `/api/financial/incomes/${form.id}` : "/api/financial/incomes";
+      const method = modalMode === "edit" && form.id ? "PATCH" : "POST";
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error((data as { error?: string })?.error || tCommon("error"));
+      }
+
+      await load();
+
+  toast.success(modalMode === "create" ? t("form.success") : tCommon("success"));
+      setModalOpen(false);
+      setForm({
+        description: "",
+        amount: "",
+        currency: baseCurrency,
+        source: "other",
+        date: todayISO(),
+        schedule: "oneTime",
+        totalMonths: undefined,
+        note: "",
+        recurringLimit: "unlimited",
+      });
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "income" } }));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : tCommon("error");
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [baseCurrency, form, isSaving, load, modalMode, t, tCommon]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -301,7 +357,6 @@ export function IncomeManager() {
           </div>
         </div>
       ) : null}
-
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("table.title")}</CardTitle>
@@ -473,7 +528,26 @@ export function IncomeManager() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="i-amount">{t("form.amountLabel")}</Label>
-                  <Input id="i-amount" type="number" min={0} step="0.01" value={form.amount} onChange={(e) => onChange("amount", e.target.value)} />
+                  <Input 
+                    id="i-amount" 
+                    type="text" 
+                    inputMode="decimal"
+                    value={form.amount} 
+                    onChange={(e) => {
+                      // Allow only numbers, decimal point, and comma
+                      const value = e.target.value.replace(/[^\d.,]/g, '');
+                      // Remove existing commas for processing
+                      const numericValue = value.replace(/,/g, '');
+                      // Check if it's a valid number
+                      if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
+                        // Format with commas
+                        const parts = numericValue.split('.');
+                        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                        onChange("amount", parts.join('.'));
+                      }
+                    }} 
+                    placeholder="0"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="i-currency">{t("form.currencyLabel")}</Label>
@@ -517,7 +591,9 @@ export function IncomeManager() {
             </div>
             <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
               {modalMode === "edit" ? (
-                <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)}><Trash2 className="h-4 w-4" /> {tCommon("delete")}</Button>
+                <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
+                  <Trash2 className="h-4 w-4" /> {tCommon("delete")}
+                </Button>
               ) : null}
               <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
                 {tCommon("save")}

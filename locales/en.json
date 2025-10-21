@@ -155,6 +155,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "deleting": "Deleting...",
     "edit": "Edit",
     "close": "Close",
     "confirm": "Confirm",
@@ -351,6 +352,96 @@
         "ils": "Israeli Shekel (₪)",
         "usd": "US Dollar ($)"
       }
+    },
+    "monthSelector": {
+      "label": "Select month",
+      "beforeRegistration": "Before registration",
+      "noDataAvailable": "No data for this month",
+      "selectMonth": "Choose a month",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "yearSelector": {
+      "title": "Select year",
+      "selectYear": "Choose a year",
+      "close": "Close",
+      "previousYears": "Previous years",
+      "nextYears": "Next years"
+    },
+    "monthDetails": {
+      "title": "Details for {month}",
+      "tabs": {
+        "income": "Income details",
+        "donations": "Donation details"
+      },
+      "incomeBreakdown": {
+        "title": "Income breakdown",
+        "recurring": "Recurring income",
+        "variable": "Variable income",
+        "total": "Total income",
+        "noIncome": "No income recorded for this month"
+      },
+      "donationBreakdown": {
+        "title": "Donation breakdown",
+        "organization": "Organization",
+        "amount": "Amount",
+        "type": "Type",
+        "date": "Date",
+        "total": "Total donations",
+        "noDonations": "No donations recorded for this month"
+      },
+      "close": "Close"
+    },
+    "carryOver": {
+      "automaticCarry": {
+        "surplus": "Surplus of {amount} will be carried forward to next month",
+        "debt": "Debt of {amount} will be carried forward to next month"
+      },
+      "askMe": {
+        "title": "Carry forward balance?",
+        "message": "You have a surplus of {amount}. Would you like to carry it forward to next month?",
+        "yes": "Yes, carry forward",
+        "no": "No, reset",
+        "debt": "Debt of {amount} will automatically carry forward to next month"
+      },
+      "independent": {
+        "surplus": "You have a surplus of {amount}. To carry it forward, update your settings.",
+        "goToSettings": "Go to settings"
+      },
+      "yearEnd": {
+        "title": "Year completed!",
+        "message": "You've fulfilled your annual maaser obligation! You have a surplus of {amount}. Would you like to carry it forward to next year?",
+        "updateSettings": "Update in settings"
+      }
+    },
+    "monthlyView": {
+      "title": "Monthly overview",
+      "currentMonth": "Current month",
+      "stats": {
+        "income": "Income this month",
+        "recurringIncome": "Recurring income entries",
+        "variableIncome": "Variable income entries",
+        "obligation": "maaser obligation",
+        "donations": "Donations given",
+        "remaining": "Remaining to give",
+        "surplus": "Surplus given"
+      }
+    },
+    "yearlyView": {
+      "title": "Annual overview",
+      "currentYear": "Year {year}",
+      "stats": {
+        "annualIncome": "Annual income",
+        "recurringIncome": "Recurring income total",
+        "variableIncome": "Variable income total",
+        "estimatedObligation": "Estimated annual obligation",
+        "donationsGiven": "Donations given to date",
+        "fromRegistration": "Calculated from registration or start of civil year"
+      },
+      "monthlyBreakdown": {
+        "title": "Monthly breakdown",
+        "clickForDetails": "Click on any month to see details"
+      }
     }
   },
   "income": {
@@ -390,7 +481,11 @@
       "self": "Your monthly income",
       "spouse": "Spouse income",
       "includeSpouse": "Include spouse income",
-      "summary": "Total fixed monthly income"
+      "helper": "Add any salaried income that repeats every month. Set to 0 if you want to exclude it.",
+      "summary": "Total fixed monthly income: {amount}",
+      "save": "Save fixed income",
+      "reset": "Reset changes",
+      "updateSuccess": "Fixed income updated successfully."
     },
     "form": {
       "title": "Add variable income",
@@ -440,6 +535,7 @@
     "summary": {
       "monthlyIncome": "Total income for this month",
       "estimatedMaaser": "Estimated maaser obligation",
+      "fixedIncomeNotice": "Includes fixed monthly income: {amount}.",
       "conversionTotal": "",
       "noConversions": "",
       "helper": "The estimation combines fixed and variable income for the month."
@@ -812,13 +908,37 @@
     },
     "setupIncome": {
       "title": "Income Setup",
-      "subtitle": "Now let's set up your basic income.",
-      "monthlyIncome": "Monthly income",
-      "maaserAmount": "Monthly maaser"
+      "subtitle": "Choose your base currency and get a quick checklist for recording incomes.",
+      "guideTitle": "How to record incomes",
+      "guide": {
+        "recurring": {
+          "title": "Recurring salary or stipend",
+          "body": "Use the recurring option for anything that repeats every month. The dashboard will treat it as your base income."
+        },
+        "limited": {
+          "title": "Limited series (bonuses, projects)",
+          "body": "Pick \"Limited months\" when income only lasts for a few months so the system can stop counting it automatically."
+        },
+        "oneTime": {
+          "title": "One-time earnings",
+          "body": "Record occasional payments as one-time income to keep your monthly totals accurate."
+        }
+      },
+      "cta": {
+        "manage": "Open income workspace",
+        "helper": "(opens in a new tab so you can keep the guide visible)"
+      },
+      "panel": {
+        "title": "Why it matters",
+        "description": "Accurate income entries let the system calculate your maaser balance and carry-over automatically.",
+        "tipOne": "Adjust the tithe rate any time from settings.",
+        "tipTwo": "You can import additional entries later—it only takes a few seconds."
+      }
     },
     "setupDonations": {
       "title": "Add Donations",
-      "subtitle": "Let's add your recurring donations (optional)."
+      "subtitle": "Let's add your recurring donations (optional).",
+      "reminder": "You can always add or edit donations later. Start with the most important commitments so the dashboard is meaningful from day one."
     },
     "steps": {
       "welcome": "Welcome",

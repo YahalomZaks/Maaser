@@ -27,11 +27,6 @@ interface UpdatePayload {
   currency?: string;
   language?: string;
   tithePercent?: number;
-  fixedIncome?: {
-    personal?: number;
-    spouse?: number;
-    includeSpouse?: boolean;
-  };
   startingBalance?: number;
   carryStrategy?: string;
 }
@@ -41,7 +36,9 @@ function normalizeCurrency(value?: string) {
     return undefined;
   }
   const upper = value.toUpperCase();
-  return SUPPORTED_CURRENCIES.includes(upper as (typeof SUPPORTED_CURRENCIES)[number])
+  return SUPPORTED_CURRENCIES.includes(
+    upper as (typeof SUPPORTED_CURRENCIES)[number]
+  )
     ? (upper as (typeof SUPPORTED_CURRENCIES)[number])
     : undefined;
 }
@@ -51,7 +48,9 @@ function normalizeLanguage(value?: string) {
     return undefined;
   }
   const upper = value.toUpperCase();
-  return SUPPORTED_LANGUAGES.includes(upper as (typeof SUPPORTED_LANGUAGES)[number])
+  return SUPPORTED_LANGUAGES.includes(
+    upper as (typeof SUPPORTED_LANGUAGES)[number]
+  )
     ? (upper as (typeof SUPPORTED_LANGUAGES)[number])
     : undefined;
 }
@@ -61,7 +60,9 @@ function normalizeCarryStrategy(value?: string) {
     return undefined;
   }
   const upper = value.toUpperCase();
-  return SUPPORTED_CARRY_STRATEGIES.includes(upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
+  return SUPPORTED_CARRY_STRATEGIES.includes(
+    upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number]
+  )
     ? (upper as (typeof SUPPORTED_CARRY_STRATEGIES)[number])
     : undefined;
 }
@@ -88,23 +89,17 @@ export async function PATCH(request: NextRequest) {
       updates.language = language;
     }
 
-    if (typeof body.tithePercent === "number" && Number.isFinite(body.tithePercent)) {
+    if (
+      typeof body.tithePercent === "number" &&
+      Number.isFinite(body.tithePercent)
+    ) {
       updates.tithePercent = Math.max(0, body.tithePercent);
     }
 
-    if (body.fixedIncome) {
-      if (typeof body.fixedIncome.personal === "number" && Number.isFinite(body.fixedIncome.personal)) {
-        updates.fixedPersonalIncome = Math.max(0, body.fixedIncome.personal);
-      }
-      if (typeof body.fixedIncome.spouse === "number" && Number.isFinite(body.fixedIncome.spouse)) {
-        updates.fixedSpouseIncome = Math.max(0, body.fixedIncome.spouse);
-      }
-      if (typeof body.fixedIncome.includeSpouse === "boolean") {
-        updates.includeSpouseIncome = body.fixedIncome.includeSpouse;
-      }
-    }
-
-    if (typeof body.startingBalance === "number" && Number.isFinite(body.startingBalance)) {
+    if (
+      typeof body.startingBalance === "number" &&
+      Number.isFinite(body.startingBalance)
+    ) {
       updates.startingBalance = body.startingBalance;
     }
 
@@ -116,10 +111,18 @@ export async function PATCH(request: NextRequest) {
     const updated = await upsertUserSettings(session.user.id, updates);
 
     if (!updated) {
-      return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to update settings" },
+        { status: 500 }
+      );
     }
 
-    await logSettingsUpdate(session.user.id, "SETTINGS", "Updated financial preferences", request);
+    await logSettingsUpdate(
+      session.user.id,
+      "SETTINGS",
+      "Updated financial preferences",
+      request
+    );
 
     const settings = await getUserFinancialSettings(session.user.id);
     return NextResponse.json({ settings });

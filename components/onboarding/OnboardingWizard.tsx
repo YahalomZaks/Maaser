@@ -19,9 +19,6 @@ interface FormState {
   language: string;
   currency: CurrencyCode;
   tithePercent: number;
-  personalIncome: string;
-  spouseIncome: string;
-  includeSpouseIncome: boolean;
 }
 
 interface DonationDraft {
@@ -62,9 +59,6 @@ export function OnboardingWizard() {
     language: locale.toUpperCase(),
     currency: defaultCurrency,
     tithePercent: 10,
-    personalIncome: "0",
-    spouseIncome: "",
-    includeSpouseIncome: false,
   });
   const [donations, setDonations] = useState<DonationDraft[]>([]);
   const [donationDraft, setDonationDraft] = useState<DonationDraft>({
@@ -201,11 +195,6 @@ export function OnboardingWizard() {
             language: form.language,
             currency: form.currency,
             tithePercent: Number.isFinite(Number(form.tithePercent)) ? Number(form.tithePercent) : 10,
-            fixedIncome: {
-              personal: Number(form.personalIncome) || 0,
-              spouse: Number(form.spouseIncome) || 0,
-              includeSpouse: Boolean(form.includeSpouseIncome),
-            },
             donations: donationPayload,
           };
 
@@ -252,25 +241,6 @@ export function OnboardingWizard() {
     [tDonationTypes],
   );
 
-  const totalFixedIncome = useMemo(() => {
-    return (Number(form.personalIncome || 0) || 0) + (form.includeSpouseIncome ? Number(form.spouseIncome || 0) || 0 : 0);
-  }, [form.includeSpouseIncome, form.personalIncome, form.spouseIncome]);
-
-  const estimatedMaaser = useMemo(() => {
-    return Math.round(totalFixedIncome * ((Number(form.tithePercent) || 0) / 100));
-  }, [form.tithePercent, totalFixedIncome]);
-
-  const canProceedFromIncome = useMemo(() => {
-    if (form.personalIncome.trim().length === 0) {
-      return false;
-    }
-    if (form.includeSpouseIncome) {
-      return form.spouseIncome.trim().length > 0;
-    }
-    return true;
-  }, [form.includeSpouseIncome, form.personalIncome, form.spouseIncome]);
-
-  const canProceed = step === "setupIncome" ? canProceedFromIncome : true;
   const canAddDonation = useMemo(() => {
     if (donationDraft.organization.trim().length === 0) {
       return false;
@@ -620,7 +590,6 @@ export function OnboardingWizard() {
 
             {step === "setupIncome" && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Hero Section */}
                 <div className="mb-6 md:mb-8 text-center">
                   <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-3 md:mb-4">
                     {stepDetails[step].label}
@@ -630,10 +599,8 @@ export function OnboardingWizard() {
                   </p>
                 </div>
 
-                {/* Form Grid */}
                 <div className="grid gap-4 md:gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                  {/* Input Form */}
-                  <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 space-y-4 md:space-y-6">
+                  <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 space-y-5 md:space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="currency" className="text-slate-700 font-semibold">{tIncome("baseCurrency")}</Label>
                       <Select value={form.currency} onValueChange={(value) => handleChange("currency", value as CurrencyCode)}>
@@ -667,64 +634,70 @@ export function OnboardingWizard() {
                       <p className="text-xs text-slate-500">{tIncome("tithePercentHelper")}</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="personalIncome" className="text-slate-700 font-semibold">{t("income.yourIncome")}</Label>
-                      <Input
-                        id="personalIncome"
-                        type="number"
-                        min={0}
-                        value={form.personalIncome}
-                        onChange={(event) => handleChange("personalIncome", event.target.value)}
-                        placeholder="0"
-                        className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      />
-                      <p className="text-xs text-slate-500">{t("income.helperNote")}</p>
-                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-lg md:text-xl font-semibold text-slate-800">
+                        {t("setupIncome.guideTitle")}
+                      </h3>
+                      <ul className="space-y-4">
+                        <li className="flex gap-3">
+                          <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                            <Check className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-800">{t("setupIncome.guide.recurring.title")}</p>
+                            <p className="text-sm text-slate-600">{t("setupIncome.guide.recurring.body")}</p>
+                          </div>
+                        </li>
+                        <li className="flex gap-3">
+                          <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                            <Sparkles className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-800">{t("setupIncome.guide.limited.title")}</p>
+                            <p className="text-sm text-slate-600">{t("setupIncome.guide.limited.body")}</p>
+                          </div>
+                        </li>
+                        <li className="flex gap-3">
+                          <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                            <Wallet className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-800">{t("setupIncome.guide.oneTime.title")}</p>
+                            <p className="text-sm text-slate-600">{t("setupIncome.guide.oneTime.body")}</p>
+                          </div>
+                        </li>
+                      </ul>
 
-                    <div className="flex items-center gap-3 rounded-xl border-2 border-slate-200 bg-slate-50 p-4">
-                      <input
-                        id="includeSpouse"
-                        type="checkbox"
-                        checked={form.includeSpouseIncome}
-                        onChange={(event) => handleChange("includeSpouseIncome", event.target.checked)}
-                        className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                      />
-                      <Label htmlFor="includeSpouse" className="font-medium text-slate-700 cursor-pointer">
-                        {t("income.hasSpouse")}
-                      </Label>
-                    </div>
-
-                    {form.includeSpouseIncome && (
-                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <Label htmlFor="spouseIncome" className="text-slate-700 font-semibold">{t("income.spouseIncome")}</Label>
-                        <Input
-                          id="spouseIncome"
-                          type="number"
-                          min={0}
-                          value={form.spouseIncome}
-                          onChange={(event) => handleChange("spouseIncome", event.target.value)}
-                          placeholder="0"
-                          className="border-2 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                        />
+                      <div className="flex flex-wrap items-center gap-3 pt-4">
+                        <Button asChild>
+                          <a href={`/${locale}/dashboard/income`} target="_blank" rel="noopener noreferrer">
+                            {t("setupIncome.cta.manage")}
+                          </a>
+                        </Button>
+                        <p className="text-xs text-slate-500">
+                          {t("setupIncome.cta.helper")}
+                        </p>
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Summary Card */}
                   <div className="bg-blue-500 rounded-xl md:rounded-2xl shadow-lg p-5 md:p-8 text-white">
                     <div className="space-y-4 md:space-y-6">
                       <div>
-                        <p className="text-blue-100 text-xs md:text-sm font-medium mb-2">{t("setupIncome.monthlyIncome")}</p>
-                        <p className="text-2xl md:text-3xl lg:text-4xl font-bold">
-                          {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(totalFixedIncome || 0)}
+                        <p className="text-blue-100 text-xs md:text-sm font-medium mb-2">{t("setupIncome.panel.title")}</p>
+                        <p className="text-lg md:text-xl text-blue-50 leading-relaxed">
+                          {t("setupIncome.panel.description")}
                         </p>
                       </div>
-                      <div className="h-px bg-white/20" />
-                      <div>
-                        <p className="text-blue-100 text-xs md:text-sm font-medium mb-2">{t("setupIncome.maaserAmount")}</p>
-                        <p className="text-xl md:text-2xl lg:text-3xl font-bold">
-                          {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(estimatedMaaser || 0)}
-                        </p>
+                      <div className="rounded-lg bg-white/10 p-4 space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Gauge className="h-5 w-5 text-blue-100" />
+                          <span className="text-sm font-medium text-blue-100">{t("setupIncome.panel.tipOne")}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <HandCoins className="h-5 w-5 text-blue-100" />
+                          <span className="text-sm font-medium text-blue-100">{t("setupIncome.panel.tipTwo")}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -744,20 +717,8 @@ export function OnboardingWizard() {
                   </p>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid gap-3 md:gap-4 sm:grid-cols-2 mb-4 md:mb-6">
-                  <div className="bg-blue-500 rounded-lg md:rounded-xl shadow-md p-4 md:p-5 text-white">
-                    <p className="text-blue-100 text-xs md:text-sm font-medium mb-1">{t("setupIncome.monthlyIncome")}</p>
-                    <p className="text-xl md:text-2xl lg:text-3xl font-bold">
-                      {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(totalFixedIncome || 0)}
-                    </p>
-                  </div>
-                  <div className="bg-blue-600 rounded-lg md:rounded-xl shadow-md p-4 md:p-5 text-white">
-                    <p className="text-blue-100 text-xs md:text-sm font-medium mb-1">{t("setupIncome.maaserAmount")}</p>
-                    <p className="text-xl md:text-2xl lg:text-3xl font-bold">
-                      {new Intl.NumberFormat(locale, { style: "currency", currency: form.currency }).format(estimatedMaaser || 0)}
-                    </p>
-                  </div>
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 md:p-5 mb-4 md:mb-6 text-blue-700 text-sm md:text-base">
+                  {t("setupDonations.reminder")}
                 </div>
 
                 {/* Donation Form */}
@@ -943,7 +904,7 @@ export function OnboardingWizard() {
                   {step !== "setupDonations" ? (
                     <Button
                       type="button"
-                      disabled={!canProceed || isSubmitting}
+                      disabled={isSubmitting}
                       onClick={handleNext}
                       className="gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all min-w-[120px] md:min-w-[140px] text-base md:text-base h-12 md:h-11 px-5"
                     >

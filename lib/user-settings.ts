@@ -18,19 +18,10 @@ export const SUPPORTED_CARRY_STRATEGIES = [
 export type CarryStrategy = (typeof SUPPORTED_CARRY_STRATEGIES)[number];
 export const DEFAULT_CARRY_STRATEGY: CarryStrategy = "CARRY";
 
-export interface FixedIncomeSettings {
-  personal: number;
-  spouse: number;
-  includeSpouse: boolean;
-}
-
 export interface UserSettingsData {
   language: LanguageCode;
   currency: CurrencyCode;
   tithePercent: number;
-  fixedPersonalIncome: number;
-  fixedSpouseIncome: number;
-  includeSpouseIncome: boolean;
   startingBalance: number;
   carryStrategy: CarryStrategy;
   isFirstTimeSetupCompleted: boolean;
@@ -73,15 +64,6 @@ export async function upsertUserSettings(
     if (data.tithePercent !== undefined) {
       updateData.tithePercent = data.tithePercent;
     }
-    if (data.fixedPersonalIncome !== undefined) {
-      updateData.fixedPersonalIncome = data.fixedPersonalIncome;
-    }
-    if (data.fixedSpouseIncome !== undefined) {
-      updateData.fixedSpouseIncome = data.fixedSpouseIncome;
-    }
-    if (data.includeSpouseIncome !== undefined) {
-      updateData.includeSpouseIncome = data.includeSpouseIncome;
-    }
     if (data.startingBalance !== undefined) {
       updateData.startingBalance = data.startingBalance;
     }
@@ -97,9 +79,6 @@ export async function upsertUserSettings(
       language: data.language ?? DEFAULT_LANGUAGE,
       currency: data.currency ?? DEFAULT_CURRENCY,
       tithePercent: data.tithePercent ?? 10,
-      fixedPersonalIncome: data.fixedPersonalIncome ?? 0,
-      fixedSpouseIncome: data.fixedSpouseIncome ?? 0,
-      includeSpouseIncome: data.includeSpouseIncome ?? false,
       startingBalance: data.startingBalance ?? 0,
       carryStrategy: data.carryStrategy ?? DEFAULT_CARRY_STRATEGY,
       isFirstTimeSetupCompleted: data.isFirstTimeSetupCompleted ?? false,
@@ -156,23 +135,6 @@ export async function updateTithePercent(userId: string, tithePercent: number) {
     return settings;
   } catch (error) {
     console.error("Error updating tithe percent:", error);
-    return null;
-  }
-}
-
-export async function updateFixedIncome(
-  userId: string,
-  fixedIncome: FixedIncomeSettings
-) {
-  try {
-    const settings = await upsertUserSettings(userId, {
-      fixedPersonalIncome: fixedIncome.personal,
-      fixedSpouseIncome: fixedIncome.spouse,
-      includeSpouseIncome: fixedIncome.includeSpouse,
-    });
-    return settings;
-  } catch (error) {
-    console.error("Error updating fixed income:", error);
     return null;
   }
 }
