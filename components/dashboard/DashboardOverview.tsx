@@ -464,7 +464,8 @@ export function DashboardOverview() {
             className={`gap-2 rounded-md px-3 py-1.5 text-sm ${viewMode === "monthly" ? "bg-[rgba(59,130,246,0.12)] text-[oklch(0.45_0.17_264.4)] border border-[rgba(59,130,246,0.24)]" : ""}`}
           >
             <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("viewModes.monthly")}</span>
+            <span className="sm:hidden">{t("viewModes.monthlyShort")}</span>
+            <span className="hidden sm:inline">{t("viewModes.monthlyLong")}</span>
           </Button>
           <Button
             variant={viewMode === "yearly" ? "secondary" : "ghost"}
@@ -472,7 +473,8 @@ export function DashboardOverview() {
             className={`gap-2 rounded-md px-3 py-1.5 text-sm ${viewMode === "yearly" ? "bg-[rgba(59,130,246,0.12)] text-[oklch(0.45_0.17_264.4)] border border-[rgba(59,130,246,0.24)]" : ""}`}
           >
             <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("viewModes.yearly")}</span>
+            <span className="sm:hidden">{t("viewModes.yearlyShort")}</span>
+            <span className="hidden sm:inline">{t("viewModes.yearlyLong")}</span>
           </Button>
         </div>
       </div>
@@ -574,7 +576,7 @@ export function DashboardOverview() {
                       {progressRemaining > 0 ? (
                         <div className="flex items-center gap-1">
                           <span className="text-xs sm:text-sm text-destructive font-medium">
-                            נשאר {formatCurrency(progressRemaining, year.baseCurrency, locale)}
+                            {t("progress.remainingLabel", { amount: formatCurrency(progressRemaining, year.baseCurrency, locale) })}
                           </span>
                           {carryMsg ? (
                             <TooltipProvider>
@@ -592,7 +594,7 @@ export function DashboardOverview() {
                       ) : progressSurplus > 0 ? (
                         <div className="flex items-center gap-1">
                           <span className="text-xs sm:text-sm text-emerald-600 font-medium">
-                            עודף של {formatCurrency(progressSurplus, year.baseCurrency, locale)}
+                            {t("progress.surplusLabel", { amount: formatCurrency(progressSurplus, year.baseCurrency, locale) })}
                           </span>
                           {carryMsg ? (
                             <TooltipProvider>
@@ -609,7 +611,7 @@ export function DashboardOverview() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
-                          <span className="text-xs sm:text-sm text-emerald-600 font-medium">הושלם ✓</span>
+                          <span className="text-xs sm:text-sm text-emerald-600 font-medium">{t("progress.completed")}</span>
                           {carryMsg ? (
                             <TooltipProvider>
                               <Tooltip>
@@ -819,14 +821,14 @@ export function DashboardOverview() {
                     <span className="text-base sm:text-lg font-semibold">{progressPercent}%</span>
                     {progressPercent < 100 ? (
                       <span className="text-xs sm:text-sm text-destructive font-medium">
-                        נשאר {formatCurrency(progressTarget - progressActual, year.baseCurrency, locale)}
+                        {t("progress.remainingLabel", { amount: formatCurrency(progressTarget - progressActual, year.baseCurrency, locale) })}
                       </span>
                     ) : progressActual > progressTarget ? (
                       <span className="text-xs sm:text-sm text-emerald-600 font-medium">
-                        עודף של {formatCurrency(progressActual - progressTarget, year.baseCurrency, locale)}
+                        {t("progress.surplusLabel", { amount: formatCurrency(progressActual - progressTarget, year.baseCurrency, locale) })}
                       </span>
                     ) : (
-                      <span className="text-xs sm:text-sm text-emerald-600 font-medium">הושלם ✓</span>
+                      <span className="text-xs sm:text-sm text-emerald-600 font-medium">{t("progress.completed")}</span>
                     )}
                   </div>
                   <Progress value={progressPercent} className="h-2 sm:h-3" />
@@ -839,12 +841,12 @@ export function DashboardOverview() {
                 <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 space-y-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
-                    <CardTitle className="text-[11px] sm:text-xs font-medium">הכנסה שנתית</CardTitle>
+                    <CardTitle className="text-[11px] sm:text-xs font-medium">{t("yearlyView.stats.annualIncome")}</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3">
                   <div className="text-lg sm:text-xl font-bold leading-none mb-1">{formatCurrency(metrics.income, year.baseCurrency, locale)}</div>
-                  <p className="text-[10px] text-muted-foreground">כל ההכנסות שהוזנו השנה</p>
+                  <p className="text-[10px] text-muted-foreground">{t("yearlyView.stats.fromRegistration")}</p>
                 </CardContent>
               </Card>
 
@@ -852,12 +854,12 @@ export function DashboardOverview() {
                 <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 space-y-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <HandCoins className="h-3.5 w-3.5 text-muted-foreground" />
-                    <CardTitle className="text-[11px] sm:text-xs font-medium">סה״כ תרומות</CardTitle>
+                    <CardTitle className="text-[11px] sm:text-xs font-medium">{t("yearlyView.stats.donationsGiven")}</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3">
                   <div className="text-lg sm:text-xl font-bold leading-none mb-1">{formatCurrency(metrics.donations, year.baseCurrency, locale)}</div>
-                  <p className="text-[10px] text-muted-foreground">כל התרומות שהוזנו השנה</p>
+                  <p className="text-[10px] text-muted-foreground">{t("yearlyView.stats.fromRegistration")}</p>
                 </CardContent>
               </Card>
             </div>

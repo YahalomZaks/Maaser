@@ -65,6 +65,23 @@ const Navbar = () => {
 		setIsMounted(true);
 	}, []);
 
+	// Lock background scroll when mobile menu is open
+	useEffect(() => {
+		if (!isMounted) return;
+		const body = document.body;
+		if (isMobileMenuOpen) {
+			const prevOverflow = body.style.overflow;
+			const prevTouchAction = (body.style as any).touchAction;
+			body.style.overflow = "hidden";
+			// Prevent background touch scrolling on mobile
+			(body.style as any).touchAction = "none";
+			return () => {
+				body.style.overflow = prevOverflow;
+				(body.style as any).touchAction = prevTouchAction ?? "";
+			};
+		}
+	}, [isMounted, isMobileMenuOpen]);
+
 	useEffect(() => {
 		setIsMobileMenuOpen(false);
 	}, [pathname]);
@@ -257,10 +274,10 @@ const Navbar = () => {
 
 	// Language options and helpers (mirrors LanguageSwitcher behavior)
 	const languages = useMemo(
-		() => [
-			{ code: "he" as SupportedLanguage, label: tLang("hebrew"), flag: "🇮🇱" },
-			{ code: "en" as SupportedLanguage, label: tLang("english"), flag: "🇺🇸" },
-		],
+			() => [
+				{ code: "he" as SupportedLanguage, label: tLang("hebrew"), flagSrc: "/flags/il.svg" },
+				{ code: "en" as SupportedLanguage, label: tLang("english"), flagSrc: "/flags/us.svg" },
+			],
 		[tLang],
 	);
 
@@ -369,12 +386,12 @@ const Navbar = () => {
 							<div className="dropdown-menu-items">
 								<DropdownMenuSub>
 									<DropdownMenuSubTrigger className="dropdown-menu-link">
-										<span className="inline-flex items-center gap-2">
-											<span aria-hidden className="text-base" style={{ fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif' }}>
-												{locale === "he" ? "🇮🇱" : "🇺🇸"}
-											</span>
-											<span>{locale === "he" ? "שפה" : "Language"}</span>
-										</span>
+																			<span className="inline-flex items-center gap-2">
+																					<span aria-hidden className="text-base">
+																							<Image src={locale === "he" ? "/flags/il.svg" : "/flags/us.svg"} alt="" width={18} height={12} style={{ width: "auto", height: "auto" }} />
+																					</span>
+																					<span>{locale === "he" ? "שפה" : "Language"}</span>
+																			</span>
 									</DropdownMenuSubTrigger>
 									<DropdownMenuSubContent className="w-48" style={{ direction: isRTL ? "rtl" : "ltr" }}>
 										{languages.map((lng) => (
@@ -383,12 +400,12 @@ const Navbar = () => {
 												onClick={() => changeLanguage(lng.code)}
 												className={`dropdown-menu-link justify-between ${locale === lng.code ? "bg-blue-50 text-blue-700" : ""}`}
 											>
-												<span className="inline-flex items-center gap-2">
-													<span aria-hidden className="text-base" style={{ fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif' }}>
-														{lng.flag}
-													</span>
-													<span>{lng.label}</span>
-												</span>
+																					<span className="inline-flex items-center gap-2">
+																							<span aria-hidden className="text-base">
+																									<Image src={lng.flagSrc} alt="" width={18} height={12} style={{ width: "auto", height: "auto" }} />
+																							</span>
+																							<span>{lng.label}</span>
+																					</span>
 												{locale === lng.code ? (
 													<span className="text-blue-600 text-sm font-semibold">✓</span>
 												) : null}
@@ -443,7 +460,13 @@ const Navbar = () => {
 				</div>
 			</div>
 			{isMobileMenuOpen ? (
-				<div className="dashboard-mobile-menu">
+				<>
+					<div
+						className="dashboard-mobile-overlay"
+						aria-hidden
+						onClick={() => setIsMobileMenuOpen(false)}
+					/>
+					<div className="dashboard-mobile-menu" role="dialog" aria-modal="true">
 					<nav className="dashboard-mobile-links">
 						{authNavItems.map((item) => (
 							<Link
@@ -496,14 +519,17 @@ const Navbar = () => {
 						</Link>
 					</nav>
 					<div className="dashboard-mobile-profile">
-						<p className="dashboard-mobile-name">{userName}</p>
-						{userEmail ? <p className="dashboard-mobile-email">{userEmail}</p> : null}
+						<div className="dashboard-mobile-profile-info">
+							<p className="dashboard-mobile-name">{userName}</p>
+							{userEmail ? <p className="dashboard-mobile-email">{userEmail}</p> : null}
+						</div>
+						<button type="button" className="dashboard-mobile-logout-inline" onClick={handleLogout}>
+							{t("logout")}
+						</button>
 					</div>
 					<LanguageSwitcher variant="mobile" onLocaleChange={() => setIsMobileMenuOpen(false)} />
-					<button type="button" className="dashboard-mobile-logout" onClick={handleLogout}>
-						{t("logout")}
-					</button>
-				</div>
+					</div>
+				</>
 			) : null}
 		</nav>
 	);

@@ -297,7 +297,11 @@
     },
     "viewModes": {
       "monthly": "תצוגה חודשית",
-      "yearly": "סיכום שנתי"
+      "yearly": "סיכום שנתי",
+      "monthlyShort": "חודשי",
+      "yearlyShort": "שנתי",
+      "monthlyLong": "תצוגה חודשית",
+      "yearlyLong": "תצוגה שנתית"
     },
     "cards": {
       "income": {
@@ -325,7 +329,10 @@
       "label": "התקדמות",
       "actual": "תרומות עד כה",
       "target": "חובה עד כה",
-      "note": "החישוב מתבסס על הכנסות ותרומות שהומרו למטבע הבסיס."
+      "note": "החישוב מתבסס על הכנסות ותרומות שהומרו למטבע הבסיס.",
+      "remainingLabel": "נשאר {amount}",
+      "surplusLabel": "עודף של {amount}",
+      "completed": "הושלם ✓"
     },
     "table": {
       "title": "פירוט חודשי",
@@ -523,6 +530,10 @@
       },
       "totalMonthsLabel": "מספר החודשים",
       "noteLabel": "הערות (אופציונלי)",
+      "noteToggle": {
+        "add": "הוספת הערה",
+        "hide": "הסתר הערה"
+      },
       "submit": "הוסף הכנסה",
       "errors": {
         "descriptionRequired": "נא להוסיף תיאור למקור ההכנסה.",
@@ -592,7 +603,7 @@
         "usd": "דולר אמריקאי ($)"
       },
       "conversionHint": "שער ייחוס: 1$ ≈ {rate}₪.",
-      "total": "סה\"כ תרומות (לאחר המרה)",
+      "total": "סה\"כ תרומות",
       "active": "תרומות פעילות",
       "averageProgress": "ממוצע התקדמות התשלומים",
       "converted": "סכומים שהומרו",
@@ -642,7 +653,7 @@
       }
     },
     "table": {
-      "title": "רשומות תרומה",
+      "title": "פרטי תרומות",
       "description": "עקבו אחר כל התחייבות והתקדמותה עד להשלמה.",
       "columns": {
         "organization": "ארגון",

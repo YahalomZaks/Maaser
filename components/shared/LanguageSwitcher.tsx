@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Check, Languages } from "lucide-react";
+import { Languages, Check } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -12,9 +12,11 @@ import {
   useRef,
   useState,
   useTransition,
+  useId,
 } from "react";
 
 import { useSession } from "@/lib/auth-client";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 type SupportedLanguage = "he" | "en";
 
@@ -142,62 +144,42 @@ export function LanguageSwitcher({
     closeDropdown();
   }, [closeDropdown, pathname]);
 
-  // Mobile: show styled dropdown to match Sign In/Sign Up buttons
+  // Mobile: use shadcn Select popover for accessible, native-feel selection
   if (variant === "mobile") {
+    const current = languages.find((l) => l.code === (locale as SupportedLanguage));
+    const dir = (locale?.toLowerCase().startsWith("he") ? "rtl" : "ltr") as "rtl" | "ltr";
     return (
-      <div
-        ref={containerRef}
-        className={clsx("welcome-language-wrapper welcome-language-mobile", className, {
-          "is-open": isOpen,
-          "is-pending": isPending,
-        })}
+      <Select
+        defaultValue={locale as SupportedLanguage}
+        onValueChange={(val) => handleLanguageChange(val as SupportedLanguage)}
+        dir={dir}
       >
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className={clsx("welcome-language-mobile-trigger", { pending: isPending })}
-          aria-haspopup="listbox"
-          aria-expanded={isOpen}
-        >
-          <span className="welcome-language-label">{t("changeLabel")}</span>
-          <svg
-            width="12"
-            height="8"
-            viewBox="0 0 12 8"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={clsx("welcome-language-chevron", { "is-open": isOpen })}
-          >
-            <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-        {isOpen && (
-          <div className="welcome-language-dropdown" role="listbox">
-            {languages.map((language) => (
-              <button
-                key={language.code}
-                type="button"
-                onClick={() => handleLanguageChange(language.code)}
-                className={clsx("welcome-language-option", {
-                  active: locale === language.code,
-                })}
-                role="option"
-                aria-selected={locale === language.code}
-              >
-                <span className="welcome-language-option-flag" aria-hidden>
-                  {language.emoji}
-                </span>
-                <span className="welcome-language-option-label">
-                  {language.label}
-                </span>
-                {locale === language.code && (
-                  <Check className="welcome-language-option-check" size={14} />)
-                }
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+        <SelectTrigger className={clsx("welcome-language-mobile-trigger", className)} aria-label={t("changeLabel")} dir={dir}>
+          <span className="welcome-language-trigger-left">
+            <span className="welcome-language-trigger-title">{t("changeLabel")}</span>
+            <span className="welcome-language-trigger-current">
+              {current ? (
+                <>
+                  <span className="welcome-language-flag" aria-hidden>
+                    <Image src={current.flagSrc} alt="" width={18} height={12} style={{ width: "auto", height: "auto" }} />
+                  </span>
+                  <span className="welcome-language-current-label">{current.label}</span>
+                </>
+              ) : null}
+            </span>
+          </span>
+        </SelectTrigger>
+        <SelectContent position="popper" dir={dir}>
+          {languages.map((language) => (
+            <SelectItem key={language.code} value={language.code}>
+              <span className="inline-flex items-center gap-2">
+                <Image src={language.flagSrc} alt="" width={18} height={12} style={{ width: "auto", height: "auto" }} />
+                <span>{language.label}</span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     );
   }
 

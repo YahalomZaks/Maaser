@@ -598,9 +598,9 @@ select:disabled {
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.9rem;
-  border-radius: 8px; /* rectangle like welcome buttons */
-  background: white;
-  border: 1px solid var(--neutral-300);
+  border-radius: 999px; /* pill shape to match dashboard toggles */
+  background: rgba(255, 255, 255, 0.9); /* lighter look like yearly toggle */
+  border: 1px solid rgba(148, 163, 184, 0.35);
   color: var(--neutral-700);
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
@@ -608,7 +608,8 @@ select:disabled {
 
 .dashboard-user-trigger:hover,
 .dashboard-user-trigger:focus-visible {
-  border-color: var(--welcome-primary);
+  background: rgba(226, 232, 240, 0.9);
+  border-color: rgba(37, 99, 235, 0.25);
   color: var(--welcome-primary);
   box-shadow: var(--shadow-md);
 }
@@ -770,14 +771,20 @@ select:disabled {
   position: fixed;
   top: var(--navbar-height);
   inset-inline: 0;
+  bottom: 0;
+  height: calc(100dvh - var(--navbar-height));
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f8 100%);
   border-bottom: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: var(--shadow-lg);
-  padding: 1.5rem 1.25rem 2rem;
+  padding: 1.5rem 1.25rem calc(2rem + var(--safe-area-bottom));
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  z-index: 945;
+  z-index: 946; /* above overlay */
+  overflow-y: auto;
+  overscroll-behavior: contain; /* prevent scroll chaining to body */
+  -webkit-overflow-scrolling: touch; /* smooth iOS scrolling */
+  touch-action: pan-y;
 }
 
 .dashboard-mobile-links {
@@ -822,6 +829,16 @@ select:disabled {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.25);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* RTL: info on right, button on left */
+  gap: 0.75rem;
+}
+
+.dashboard-mobile-profile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .dashboard-mobile-name {
@@ -851,10 +868,43 @@ select:disabled {
   box-shadow: var(--shadow-md);
 }
 
+/* Inline red logout button inside profile card */
+.dashboard-mobile-logout-inline {
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px -4px rgba(220, 38, 38, 0.55);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-mobile-logout-inline:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -6px rgba(220, 38, 38, 0.6);
+}
+
+.dashboard-mobile-logout-inline:active {
+  transform: translateY(0);
+}
+
 @media (min-width: 768px) {
   .dashboard-mobile-menu {
     display: none;
   }
+}
+
+/* Backdrop overlay for mobile menu */
+.dashboard-mobile-overlay {
+  position: fixed;
+  inset: 0;
+  top: var(--navbar-height);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 945;
 }
 
 .dashboard-shell {
@@ -1297,20 +1347,21 @@ select:disabled {
 
 /* Mobile trigger button styled exactly like Sign In/Sign Up */
 .welcome-language-mobile-trigger {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.75rem 1.5rem;
-  background: transparent;
+  min-height: 56px; /* larger tap target */
+  padding: 0.75rem 1rem;
+  background: #ffffff;
   border: 1px solid var(--neutral-300);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--neutral-700);
+  color: var(--neutral-800);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   text-decoration: none;
 }
 
@@ -1322,6 +1373,12 @@ select:disabled {
 .welcome-language-mobile-trigger.pending {
   opacity: 0.6;
   cursor: wait;
+}
+
+.welcome-language-mobile-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 55%, transparent);
+  border-color: color-mix(in oklab, var(--ring) 45%, var(--neutral-400));
 }
 
 .welcome-language-chevron {
@@ -1338,11 +1395,57 @@ select:disabled {
   box-shadow: none;
   border: 1px solid var(--neutral-100);
   margin-top: 8px;
+  border-radius: 12px;
+  background: #fff;
 }
 
 .welcome-language-mobile .welcome-language-option {
   border-radius: 8px;
-  padding: 0.75rem 0.9rem;
+  padding: 0.9rem 1rem;
+  min-height: 48px; /* finger-friendly */
+  font-size: 1rem;
+}
+
+/* Trigger content layout */
+.welcome-language-trigger-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.welcome-language-trigger-title {
+  font-size: 0.8rem;
+  color: var(--neutral-600);
+  line-height: 1;
+}
+
+.welcome-language-trigger-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: var(--neutral-800);
+}
+
+.welcome-language-current-label {
+  font-size: 0.95rem;
+}
+
+/* RTL adjustments */
+.welcome-language-mobile-trigger[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+.welcome-language-mobile-trigger[dir="rtl"] .welcome-language-trigger-left {
+  align-items: flex-end;
+}
+
+.welcome-language-mobile-trigger[dir="rtl"] .welcome-language-trigger-title,
+.welcome-language-mobile-trigger[dir="rtl"] .welcome-language-trigger-current,
+.welcome-language-mobile-trigger[dir="rtl"] .welcome-language-current-label {
+  text-align: right;
 }
 
 /* Mobile native select styling for language switcher */
@@ -1924,4 +2027,38 @@ select:disabled {
   border-width: 1px !important;
   border-style: solid !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ===== Dialog: subtle internal scrollbar & stable gutter ===== */
+[data-slot="dialog-content"] {
+  /* Thin scrollbar for Firefox */
+  scrollbar-width: thin;
+  /* Keep layout stable when scrollbar appears */
+  scrollbar-gutter: stable both-edges;
+  /* Subtle color for Firefox */
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+.dark [data-slot="dialog-content"] {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* WebKit (Chrome/Edge/Safari) scrollbar styling */
+[data-slot="dialog-content"]::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-slot="dialog-content"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-slot="dialog-content"]::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 9999px;
+  border: 2px solid transparent; /* creates airy look */
+  background-clip: content-box;
+}
+
+.dark [data-slot="dialog-content"]::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
 }

@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/finance";
+import { cn } from "@/lib/utils";
 import type { CurrencyCode } from "@/types/finance";
 
 const MONTH_KEYS = [
@@ -102,8 +103,9 @@ export function MonthDetailsModal({
 											);
 										}
 										if (incomeEntries.length > 0) {
+											const isScrollable = incomeEntries.length > 4;
 											return (
-												<div className="rounded-xl border divide-y">
+												<div className={cn("rounded-xl border divide-y", isScrollable && "max-h-[45vh] overflow-y-auto overscroll-contain pr-1")}> 
 													{incomeEntries.map((entry) => (
 														<div key={entry.id} className="flex items-center justify-between px-4 py-3">
 															<span className="font-medium">{entry.description}</span>
@@ -130,22 +132,6 @@ export function MonthDetailsModal({
 								<span>{formatCurrency(totalIncome, currency, locale)}</span>
 							</div>
 						)}
-									{(recurringIncome > 0 || variableIncome > 0) && !isLoading ? (
-										<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-											{recurringIncome > 0 ? (
-												<div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm">
-													<span className="font-semibold block">{t("incomeBreakdown.recurring")}</span>
-													<span>{formatCurrency(recurringIncome, currency, locale)}</span>
-												</div>
-											) : null}
-											{variableIncome > 0 ? (
-												<div className="rounded-lg border border-secondary/30 bg-secondary/10 px-4 py-2 text-sm">
-													<span className="font-semibold block">{t("incomeBreakdown.variable")}</span>
-													<span>{formatCurrency(variableIncome, currency, locale)}</span>
-												</div>
-											) : null}
-										</div>
-									) : null}
 					</TabsContent>
 
 								<TabsContent value="donations" className="space-y-4 min-h-[260px] sm:min-h-[300px]">
@@ -163,8 +149,9 @@ export function MonthDetailsModal({
 											);
 										}
 										if (donationEntries.length > 0) {
+											const isScrollable = donationEntries.length > 4;
 											return (
-												<div className="rounded-xl border divide-y">
+												<div className={cn("rounded-xl border divide-y", isScrollable && "max-h-[45vh] overflow-y-auto overscroll-contain pr-1")}> 
 													{donationEntries.map((entry) => (
 														<div key={entry.id} className="flex items-center justify-between px-4 py-3">
 															<span className="font-medium">{entry.organization}</span>

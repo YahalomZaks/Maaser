@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import LoadingScreen from "@/components/shared/LoadingScreen";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -79,6 +80,7 @@ export function IncomeManager() {
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [form, setForm] = useState<FormState>(() => {
     const { year, month } = getCurrentMonthYear();
     return {
@@ -180,6 +182,7 @@ export function IncomeManager() {
       note: "",
       recurringLimit: "unlimited",
     });
+    setNoteOpen(false);
     setModalOpen(true);
   };
 
@@ -202,6 +205,7 @@ export function IncomeManager() {
       note: row.note ?? "",
       recurringLimit: row.schedule === "multiMonth" ? "months" : "unlimited",
     });
+    setNoteOpen(!!row.note);
     setModalOpen(true);
   };
 
@@ -688,11 +692,32 @@ export function IncomeManager() {
                 </div>
               </div>
             </div>
-            {/* Additional fields for limited recurring handled above */}
-            <div className="space-y-1">
-              <Label htmlFor="i-note">{t("form.noteLabel")}</Label>
-              <textarea id="i-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} />
-            </div>
+            {/* Notes (optional) - collapsible using shadcn Accordion */}
+            <Accordion
+              type="single"
+              collapsible
+              value={noteOpen ? "note" : ""}
+              onValueChange={(v) => setNoteOpen(v === "note")}
+            > 
+              <AccordionItem value="note" className="border-none">
+                <AccordionTrigger className="py-2 justify-start gap-2">
+                  <span className="text-sm font-medium">
+                    {noteOpen ? t("form.noteToggle.hide") : t("form.noteToggle.add")}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1">
+                    <Label htmlFor="i-note" className="sr-only">{t("form.noteLabel")}</Label>
+                    <textarea
+                      id="i-note"
+                      className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                      value={form.note ?? ""}
+                      onChange={(e) => onChange("note", e.target.value)}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
           <DialogFooter className="gap-2">
             {modalMode === "edit" ? (

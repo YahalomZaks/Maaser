@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/finance";
+import { cn } from "@/lib/utils";
 import type { CurrencyCode } from "@/types/finance";
 
 const MONTH_KEYS = [
@@ -80,8 +81,9 @@ export function MonthDonationsModal({
 							);
 						}
 						if (donationEntries.length > 0) {
-							return (
-								<div className="rounded-xl border divide-y">
+							const isScrollable = donationEntries.length > 4;
+								return (
+									<div className={cn("rounded-xl border divide-y", isScrollable && "max-h-[45vh] overflow-y-auto overscroll-contain pr-1")}> 
 									{donationEntries.map((entry) => (
 										<div key={entry.id} className="flex items-center justify-between px-4 py-3">
 											<span className="font-medium">{entry.organization}</span>

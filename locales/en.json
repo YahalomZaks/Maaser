@@ -280,7 +280,11 @@
     },
     "viewModes": {
       "monthly": "Monthly view",
-      "yearly": "Yearly totals"
+      "yearly": "Yearly totals",
+      "monthlyShort": "Monthly",
+      "yearlyShort": "Yearly",
+      "monthlyLong": "Monthly view",
+      "yearlyLong": "Yearly view"
     },
     "cards": {
       "income": {
@@ -308,7 +312,10 @@
       "label": "Progress",
       "actual": "Donations so far",
       "target": "Obligation to date",
-      "note": "Based on income and donation entries converted to the base currency."
+      "note": "Based on income and donation entries converted to the base currency.",
+      "remainingLabel": "Remaining {amount}",
+      "surplusLabel": "Surplus of {amount}",
+      "completed": "Completed ✓"
     },
     "table": {
       "title": "Monthly breakdown",
@@ -506,6 +513,10 @@
       },
       "totalMonthsLabel": "Number of months",
       "noteLabel": "Notes (optional)",
+      "noteToggle": {
+        "add": "Add a note",
+        "hide": "Hide note"
+      },
       "submit": "Add income",
       "errors": {
         "descriptionRequired": "Please describe the income source.",
