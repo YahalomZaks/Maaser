@@ -675,12 +675,12 @@ export function DashboardOverview() {
                 className="text-left"
               >
                 <Card className="h-full hover:bg-muted/50 transition-colors">
-                  <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2">
-                    <div className="flex items-center gap-1.5">
+                  <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
                       <CardTitle className="text-[11px] sm:text-xs font-medium">{t("monthlyView.stats.income")}</CardTitle>
                     </div>
-                    <div className="text-right text-lg sm:text-xl font-bold leading-none mt-1">
+                    <div className="text-center text-lg sm:text-xl font-bold leading-none mt-1">
                       {formatCurrency(metrics.income, year.baseCurrency, locale)}
                     </div>
                   </CardHeader>
@@ -731,12 +731,12 @@ export function DashboardOverview() {
                 className="text-left"
               >
                 <Card className="h-full hover:bg-muted/50 transition-colors">
-                  <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2">
-                    <div className="flex items-center gap-1.5">
+                  <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <HandCoins className="h-3.5 w-3.5 text-muted-foreground" />
                       <CardTitle className="text-[11px] sm:text-xs font-medium">{t("monthlyView.stats.donations")}</CardTitle>
                     </div>
-                    <div className="text-right text-lg sm:text-xl font-bold leading-none mt-1">
+                    <div className="text-center text-lg sm:text-xl font-bold leading-none mt-1">
                       {formatCurrency(metrics.donations, year.baseCurrency, locale)}
                     </div>
                   </CardHeader>
@@ -838,15 +838,15 @@ export function DashboardOverview() {
 
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <Card>
-                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 space-y-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
+                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 space-y-0 text-center">
+                  <div className="flex items-center justify-center gap-1.5 mb-0.5">
                     <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
                     <CardTitle className="text-[11px] sm:text-xs font-medium">{t("yearlyView.stats.annualIncome")}</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3">
-                  <div className="text-lg sm:text-xl font-bold leading-none mb-1">{formatCurrency(metrics.income, year.baseCurrency, locale)}</div>
-                  <p className="text-[10px] text-muted-foreground">{t("yearlyView.stats.fromRegistration")}</p>
+               <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col justify-end h-[calc(100%-2.5rem)]">
+                   <div className="text-center text-lg sm:text-xl font-bold leading-none mt-1">{formatCurrency(metrics.income, year.baseCurrency, locale)}</div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground w-full text-center mt-auto">{t("yearlyView.stats.fromRegistration")}</p>
                 </CardContent>
               </Card>
 

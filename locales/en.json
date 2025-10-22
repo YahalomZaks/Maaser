@@ -930,7 +930,7 @@
     "explainDashboard": {
       "title": "Home - Complete Overview",
       "subtitle": "Let's explore the home page—where you’ll see all the important information at a glance.",
-      "description": "The home page is your control center for maaser. Here you'll see your maaser balance, monthly and yearly progress, and the key information you need to manage donations wisely.",
+      "description": "The home page is your control center for maaser. Here you'll see your maaser balance, a friendly yearly view with a monthly breakdown, and the key information you need to manage donations wisely.",
       "features": {
         "overview": {
           "title": "Complete Overview",
@@ -945,8 +945,8 @@
           "description": "View details by month - what were the income, donations and balance each month."
         },
         "progress": {
-          "title": "Progress and Trends",
-          "description": "Charts and metrics showing your progress over time and identifying trends."
+          "title": "Annual tracking (monthly breakdown)",
+          "description": "A clear yearly view showing, for each month, your income and donations—presented in a simple, friendly way."
         }
       }
     },
@@ -988,7 +988,7 @@
         },
         "oneTime": {
           "title": "One-Time Donations",
-          "description": "Donations made once. Suitable for special donations or emergency situations."
+          "description": "Intended for donations that are not recurring, but made as a single payment"
         }
       }
     },
