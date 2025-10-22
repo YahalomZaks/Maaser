@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import LoadingScreen from "@/components/shared/LoadingScreen";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { convertCurrency, formatCurrency } from "@/lib/finance";
 import type { CurrencyCode, DonationEntry, DonationType } from "@/types/finance";
 
@@ -35,6 +37,13 @@ interface FormState {
   installmentsTotal?: string;
   installmentsPaid?: string;
   note?: string;
+}
+
+interface FormErrors {
+  organization?: string;
+  amount?: string;
+  type?: string;
+  installmentsTotal?: string;
 }
 
 const getCurrentMonthYear = () => {
@@ -72,6 +81,7 @@ export function DonationsManager() {
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [form, setForm] = useState<FormState>(() => {
     const { year, month } = getCurrentMonthYear();
     return {
@@ -115,6 +125,7 @@ export function DonationsManager() {
 
   const openCreate = () => {
     setModalMode("create");
+    setFormErrors({}); // Clear any previous errors
     const { year, month } = getCurrentMonthYear();
     setForm({
       organization: "",
@@ -132,6 +143,7 @@ export function DonationsManager() {
 
   const openEdit = (row: DonationEntry) => {
     setModalMode("edit");
+    setFormErrors({}); // Clear any previous errors
     // Format amount with commas for display
     const formattedAmount = String(row.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const { year, month } = parseISOToMonthYear(row.startDate);
@@ -150,8 +162,20 @@ export function DonationsManager() {
     setModalOpen(true);
   };
 
-  const onChange = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+  const onChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    clearFieldError(key);
+  };
+
+  const clearFieldError = (key: keyof FormState | keyof FormErrors) => {
+    if (formErrors[key as keyof FormErrors]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[key as keyof FormErrors];
+        return newErrors;
+      });
+    }
+  };
 
   const visible = useMemo(() => items.filter((i) => { const d = new Date(i.startDate); return d.getFullYear() === cursor.year && d.getMonth() + 1 === cursor.month; }), [items, cursor]);
 
@@ -194,11 +218,42 @@ export function DonationsManager() {
   const incYear = () => setCursor((c) => ({ ...c, year: c.year + 1 }));
 
   const submit = async () => {
-    // Remove commas before converting to number
+    if (isSaving) {
+      return;
+    }
+
+    // Clear previous errors
+    setFormErrors({});
+    const errors: FormErrors = {};
+
+    const trimmedOrganization = form.organization.trim();
     const amountNumber = Number(form.amount.replace(/,/g, ''));
-    if (!form.organization.trim() || !Number.isFinite(amountNumber) || amountNumber <= 0) { toast.error(t("form.errors.organizationRequired")); return; }
+
+    // Validate required fields
+    if (!trimmedOrganization) {
+      errors.organization = locale === "he" ? "נא להזין שם ארגון" : "Please enter organization name";
+    }
+
+    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+      errors.amount = locale === "he" ? "נא להזין סכום חיובי" : "Please enter a positive amount";
+    }
+
+    // Validate installments if type is installments
+    if (form.type === "installments") {
+      const installmentsNumber = Number(form.installmentsTotal);
+      if (!form.installmentsTotal || !Number.isFinite(installmentsNumber) || installmentsNumber < 1) {
+        errors.installmentsTotal = locale === "he" ? "נא להזין מספר תשלומים" : "Please enter number of installments";
+      }
+    }
+
+    // If there are errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
     const payload = {
-      organization: form.organization.trim(),
+      organization: trimmedOrganization,
       amount: amountNumber,
       currency: form.currency,
       type: form.type,
@@ -207,9 +262,10 @@ export function DonationsManager() {
       installmentsPaid: form.type === "installments" ? Number(form.installmentsPaid) || null : null,
       note: form.note?.trim() || null,
     };
+
     try {
       setIsSaving(true);
-      const res = await fetch(modalMode === "create" ? "/api/financial/donations" : `/api/financial/donations/${form.id}`,{ method: modalMode === "create" ? "POST" : "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch(modalMode === "create" ? "/api/financial/donations" : `/api/financial/donations/${form.id}`, { method: modalMode === "create" ? "POST" : "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) {
         throw new Error((await res.json())?.error || tCommon("error"));
       }
@@ -299,11 +355,10 @@ export function DonationsManager() {
                 <button
                   key={idx}
                   onClick={() => selectMonth(idx)}
-                  className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                    idx + 1 === cursor.month
-                      ? "border-primary text-primary bg-background"
-                      : "border-border bg-background hover:bg-muted"
-                  }`}
+                  className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${idx + 1 === cursor.month
+                    ? "border-primary text-primary bg-background"
+                    : "border-border bg-background hover:bg-muted"
+                    }`}
                 >
                   {label}
                 </button>
@@ -389,38 +444,64 @@ export function DonationsManager() {
       </Card>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+        <DialogContent
+          className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto"
+          dir={locale === "he" ? "rtl" : "ltr"}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <HandCoins className="h-5 w-5" />
               {modalMode === "create" ? t("form.title") : tCommon("edit")}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-4">
-            <div className="space-y-1"><Label htmlFor="d-org">{t("form.organizationLabel")}</Label><Input id="d-org" value={form.organization} onChange={(e) => onChange("organization", e.target.value)} /></div>
+          <form
+            className="space-y-4 py-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit();
+            }}
+          >
+            {/* Organization Name */}
+            <div className="space-y-1">
+              <Label htmlFor="d-org">{t("form.organizationLabel")}</Label>
+              <Input
+                id="d-org"
+                value={form.organization}
+                onChange={(e) => onChange("organization", e.target.value)}
+                onFocus={() => clearFieldError("organization")}
+                className={formErrors.organization ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
+              />
+              {formErrors.organization && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.organization}</p>
+              )}
+            </div>
+
+            {/* Amount & Currency */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="d-amount">{t("form.amountLabel")}</Label>
-                <Input 
-                  id="d-amount" 
-                  type="text" 
+                <Input
+                  id="d-amount"
+                  type="text"
                   inputMode="decimal"
-                  value={form.amount} 
+                  value={form.amount}
                   onChange={(e) => {
-                    // Allow only numbers, decimal point, and comma
                     const value = e.target.value.replace(/[^\d.,]/g, '');
-                    // Remove existing commas for processing
                     const numericValue = value.replace(/,/g, '');
-                    // Check if it's a valid number
                     if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
-                      // Format with commas
                       const parts = numericValue.split('.');
                       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                       onChange("amount", parts.join('.'));
                     }
-                  }} 
+                  }}
+                  onFocus={() => clearFieldError("amount")}
                   placeholder="0"
+                  className={formErrors.amount ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
                 />
+                {formErrors.amount && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.amount}</p>
+                )}
               </div>
               <div className="space-y-1">
                 <Label htmlFor="d-currency">{t("form.currencyLabel")}</Label>
@@ -499,26 +580,126 @@ export function DonationsManager() {
                   <Label htmlFor="d-total">{t("form.installmentsRemainingLabel")}</Label>
                   <Input
                     id="d-total"
-                    type="number"
-                    min={1}
+                    type="text"
+                    inputMode="numeric"
                     value={form.installmentsTotal ?? ""}
-                    onChange={(e) => onChange("installmentsTotal", e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, '');
+                      onChange("installmentsTotal", value);
+                    }}
+                    onFocus={() => clearFieldError("installmentsTotal")}
+                    placeholder="1"
+                    className={formErrors.installmentsTotal ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
                   />
+                  {formErrors.installmentsTotal && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.installmentsTotal}</p>
+                  )}
                 </div>
               </div>
             ) : null}
-            <div className="space-y-1"><Label htmlFor="d-note">{t("form.noteLabel")}</Label><textarea id="d-note" className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={form.note ?? ""} onChange={(e) => onChange("note", e.target.value)} /></div>
-          </div>
-          <DialogFooter className="gap-2">
-            {modalMode === "edit" ? (
-              <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
-                <Trash2 className="h-4 w-4" /> {tCommon("delete")}
-              </Button>
-            ) : null}
-            <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
-              {tCommon("save")}
-            </Button>
-          </DialogFooter>
+
+            {/* Add Note (collapsible) */}
+            <Accordion type="single" collapsible>
+              <AccordionItem value="note" className="border-none">
+                <AccordionTrigger className="py-2 hover:no-underline">
+                  <span className="text-sm text-muted-foreground">{locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}</span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Textarea
+                    id="d-note"
+                    value={form.note ?? ""}
+                    onChange={(e) => onChange("note", e.target.value)}
+                    className="resize-none mt-2"
+                    rows={3}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            <DialogFooter className="p-0">
+              <div
+                dir={locale === "he" ? "rtl" : "ltr"}
+                className="flex w-full items-stretch gap-2"
+              >
+                {/* במצב עריכה: שלושה כפתורים; במצב יצירה: שניים */}
+                {modalMode === "edit" ? (
+                  <div
+                    className="
+          flex w-full gap-2
+          flex-col sm:flex-row   /* במובייל עמודה; בדסקטופ שורה */
+          sm:ms-auto            /* בדסקטופ דחיפה לצד הנכון */
+        "
+                  >
+                    {/* שמירת שינויים */}
+                    <Button
+                      type="submit"
+                      disabled={isSaving}
+                      isLoading={isSaving}
+                      loadingText={tCommon("saving") as string}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === "he" ? "שמירת שינויים" : "Save Changes"}
+                    </Button>
+
+                    {/* מחיקה – פחות צועק */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => removeRow(form.id!)}
+                      isLoading={isDeleting}
+                      loadingText={tCommon("deleting") as string}
+                      className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {locale === "he" ? "מחיקה" : "Delete"}
+                    </Button>
+
+                    {/* ביטול */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setModalOpen(false)}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === "he" ? "ביטול" : "Cancel"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="
+          flex w-full gap-2
+          flex-col sm:flex-row
+          sm:ms-auto
+        "
+                  >
+                    {/* שמירת תרומה / הכנסה – אותו צבע כמו כפתור ה"תרומות" העליון (variant ברירת מחדל) */}
+                    <Button
+                      type="submit"
+                      disabled={isSaving}
+                      isLoading={isSaving}
+                      loadingText={tCommon("saving") as string}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === "he" ? "שמירת תרומה" : "Save Donation"}
+                      {/* בעמוד ההכנסות שנה לטקסט: "שמירת הכנסה" / "Save Income" */}
+                    </Button>
+
+                    {/* ביטול */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setModalOpen(false)}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === "he" ? "ביטול" : "Cancel"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogFooter>
+
+
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -1032,37 +1032,85 @@ export function IncomeManager() {
               </>
             )}
             <DialogFooter className="p-0">
-              {/* שורת כפתורים רספונסיבית לכיוון */}
-              <div className="flex w-full items-center justify-between gap-2">
-                {/* קבוצת שמירה/ביטול – מתהפכת לפי כיוון העמוד */}
-                <div className="flex gap-2 ltr:flex-row rtl:flex-row">
-                  <Button
-                    type="submit"
-                    disabled={isSaving}
-                    isLoading={isSaving}
-                    loadingText={tCommon("saving") as string}
-                  >
-                    {locale === "he" ? "שמירת הכנסה" : "Save Income"}
-                  </Button>
-                  <Button variant="outline" onClick={() => setModalOpen(false)}>
-                    {locale === "he" ? "ביטול" : "Cancel"}
-                  </Button>
-                </div>
+  <div
+    dir={locale === "he" ? "rtl" : "ltr"}
+    className="flex w-full items-stretch gap-2"
+  >
+    {modalMode === "edit" && form.id ? (
+      <div
+        className="
+          flex w-full gap-2
+          flex-col sm:flex-row
+          sm:ms-auto
+        "
+      >
+        {/* שמירת שינויים – כמו כפתור 'תרומות' בסרגל (ברירת מחדל) */}
+        <Button
+          type="submit"
+          disabled={isSaving}
+          isLoading={isSaving}
+          loadingText={tCommon('saving') as string}
+          className="w-full sm:w-auto sm:min-w-[140px]"
+        >
+          {locale === 'he' ? 'שמירת שינויים' : 'Save Changes'}
+        </Button>
 
-                {/* כפתור מחיקה – תמיד בקצה הנגדי (ימין ב-LTR, שמאל ב-RTL) */}
-                {modalMode === "edit" && form.id && (
-                  <Button
-                    variant="ghost"
-                    className="text-destructive"
-                    onClick={() => removeRow(form.id!)}
-                    isLoading={isDeleting}
-                    loadingText={tCommon("deleting") as string}
-                  >
-                    <Trash2 className="h-4 w-4" /> {tCommon("delete")}
-                  </Button>
-                )}
-              </div>
-            </DialogFooter>
+        {/* מחיקה – עדין (outline עם טקסט אדום) */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => removeRow(form.id!)}
+          isLoading={isDeleting}
+          loadingText={tCommon('deleting') as string}
+          className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
+        >
+          <Trash2 className="h-4 w-4" />
+          {tCommon('delete')}
+        </Button>
+
+        {/* ביטול */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setModalOpen(false)}
+          className="w-full sm:w-auto sm:min-w-[140px]"
+        >
+          {locale === 'he' ? 'ביטול' : 'Cancel'}
+        </Button>
+      </div>
+    ) : (
+      <div
+        className="
+          flex w-full gap-2
+          flex-col sm:flex-row
+          sm:ms-auto
+        "
+      >
+        {/* שמירת הכנסה */}
+        <Button
+          type="submit"
+          disabled={isSaving}
+          isLoading={isSaving}
+          loadingText={tCommon('saving') as string}
+          className="w-full sm:w-auto sm:min-w-[140px]"
+        >
+          {locale === 'he' ? 'שמירת הכנסה' : 'Save Income'}
+        </Button>
+
+        {/* ביטול */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setModalOpen(false)}
+          className="w-full sm:w-auto sm:min-w-[140px]"
+        >
+          {locale === 'he' ? 'ביטול' : 'Cancel'}
+        </Button>
+      </div>
+    )}
+  </div>
+</DialogFooter>
+
 
           </form>
         </DialogContent>
