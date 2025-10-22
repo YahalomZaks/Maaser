@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import { logIncomeActivity } from "@/lib/activity-logger";
 import { auth } from "@/lib/auth";
 import { createVariableIncomeEntry, getUserFinancialSettings, listVariableIncomes } from "@/lib/financial-data";
-import type { CurrencyCode, IncomeSchedule, IncomeSource } from "@/types/finance";
+import type { CurrencyCode, IncomeSchedule } from "@/types/finance";
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { description, amount, currency, source, date, schedule, totalMonths, note } = body ?? {};
+  const { description, amount, currency, date, schedule, totalMonths, note } = body ?? {};
 
     if (!description || typeof description !== "string") {
       return NextResponse.json({ error: "Description required" }, { status: 400 });
@@ -42,8 +42,6 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedCurrency: CurrencyCode = currency === "USD" ? "USD" : "ILS";
-    const normalizedSource: IncomeSource =
-      source === "spouse" || source === "other" ? source : "self";
     const normalizedSchedule: IncomeSchedule =
       schedule === "recurring" || schedule === "multiMonth" ? schedule : "oneTime";
 
@@ -51,7 +49,6 @@ export async function POST(request: NextRequest) {
       description: description.trim(),
       amount: amountNumber,
       currency: normalizedCurrency,
-      source: normalizedSource,
       date: typeof date === "string" ? date : new Date().toISOString().slice(0, 10),
       schedule: normalizedSchedule,
       totalMonths: normalizedSchedule === "multiMonth" ? Number(totalMonths) || null : null,

@@ -461,6 +461,9 @@ select:disabled {
   box-shadow: 0 6px 20px -14px rgba(15, 23, 42, 0.22);
   z-index: 950;
   transition: box-shadow 0.2s ease;
+  /* Prevent any horizontal overflow/1px rounding artifacts on some devices */
+  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .dashboard-navbar.menu-open {
@@ -469,11 +472,13 @@ select:disabled {
 
 .dashboard-nav-container {
   max-width: 1280px;
+  width: min(1280px, 100%);
   margin: 0 auto;
   padding: 0.75rem 2rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Rely on auto inline-start margin on actions to push them to the far edge */
+  justify-content: flex-start;
   gap: 1.5rem;
   flex-wrap: wrap;
 }

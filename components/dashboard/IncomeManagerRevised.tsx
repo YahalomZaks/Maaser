@@ -12,14 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertCurrency, formatCurrency } from "@/lib/finance";
-import type { CurrencyCode, IncomeSchedule, IncomeSource, VariableIncome } from "@/types/finance";
+import type { CurrencyCode, IncomeSchedule, VariableIncome } from "@/types/finance";
 
 type ModalMode = "create" | "edit";
 
 const MONTH_FORMAT = (date: Date, locale: string) =>
   date.toLocaleDateString(locale === "he" ? "he-IL" : "en-US", { year: "numeric", month: "long" });
 
-const sourceOptions: IncomeSource[] = ["self", "spouse", "other"];
 const scheduleOptions: IncomeSchedule[] = ["oneTime", "recurring", "multiMonth"];
 
 interface FormState {
@@ -27,7 +26,6 @@ interface FormState {
   description: string;
   amount: string;
   currency: CurrencyCode;
-  source: IncomeSource;
   date: string;
   schedule: IncomeSchedule;
   totalMonths?: string;
@@ -52,7 +50,6 @@ export function IncomeManagerRevised() {
     description: "",
     amount: "",
     currency: "ILS",
-    source: "other",
     date: todayISO(),
     schedule: "oneTime",
     totalMonths: undefined,
@@ -92,7 +89,7 @@ export function IncomeManagerRevised() {
 
   const openCreate = () => {
     setModalMode("create");
-    setForm({ description: "", amount: "", currency: baseCurrency, source: "other", date: todayISO(), schedule: "oneTime", totalMonths: undefined, note: "" });
+    setForm({ description: "", amount: "", currency: baseCurrency, date: todayISO(), schedule: "oneTime", totalMonths: undefined, note: "" });
     setModalOpen(true);
   };
 
@@ -103,7 +100,6 @@ export function IncomeManagerRevised() {
       description: row.description,
       amount: String(row.amount),
       currency: row.currency,
-      source: row.source,
       date: row.date,
       schedule: row.schedule,
       totalMonths: row.totalMonths ? String(row.totalMonths) : undefined,
@@ -143,7 +139,6 @@ export function IncomeManagerRevised() {
       description: form.description.trim(),
       amount: amountNumber,
       currency: form.currency,
-      source: form.source,
       date: form.date,
       schedule: form.schedule,
       totalMonths: form.schedule === "multiMonth" ? Number(form.totalMonths) || null : null,
@@ -230,7 +225,6 @@ export function IncomeManagerRevised() {
                 <tr>
                   <th className="px-4 py-3 text-left">{t("table.columns.description")}</th>
                   <th className="px-4 py-3 text-left">{t("table.columns.amount")}</th>
-                  <th className="px-4 py-3 text-left">{t("table.columns.source")}</th>
                   <th className="px-4 py-3 text-left">{t("table.columns.date")}</th>
                   <th className="px-4 py-3 text-left">{t("table.columns.schedule")}</th>
                   <th className="px-4 py-3 text-left">{t("table.columns.baseAmount")}</th>
@@ -239,7 +233,7 @@ export function IncomeManagerRevised() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {visible.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">{t("table.empty")}</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">{t("table.empty")}</td></tr>
                 ) : (
                   visible.map((row) => {
                     const converted = convertCurrency(row.amount, row.currency, baseCurrency);
@@ -250,7 +244,6 @@ export function IncomeManagerRevised() {
                           {row.note ? <p className="text-xs text-muted-foreground">{row.note}</p> : null}
                         </td>
                         <td className="px-4 py-3">{formatCurrency(row.amount, row.currency, locale)}</td>
-                        <td className="px-4 py-3 capitalize">{t(`sources.${row.source}`)}</td>
                         <td className="px-4 py-3">{new Date(row.date).toLocaleDateString(locale === "he" ? "he-IL" : "en-US")}</td>
                         <td className="px-4 py-3">{t(`form.scheduleOptions.${row.schedule}`)}</td>
                         <td className="px-4 py-3 font-medium">{formatCurrency(converted, baseCurrency, locale)}</td>
@@ -324,26 +317,9 @@ export function IncomeManagerRevised() {
                   </Select>
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label htmlFor="i-source">{t("form.sourceLabel")}</Label>
-                  <Select value={form.source} onValueChange={(value) => onChange("source", value)}>
-                    <SelectTrigger id="i-source" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sourceOptions.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {t(`sources.${s}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="i-date">{t("form.dateLabel")}</Label>
-                  <Input id="i-date" type="date" value={form.date} onChange={(e) => onChange("date", e.target.value)} />
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="i-date">{t("form.dateLabel")}</Label>
+                <Input id="i-date" type="date" value={form.date} onChange={(e) => onChange("date", e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="i-schedule">{t("form.scheduleLabel")}</Label>

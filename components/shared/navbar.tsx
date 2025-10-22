@@ -67,17 +67,23 @@ const Navbar = () => {
 
 	// Lock background scroll when mobile menu is open
 	useEffect(() => {
-		if (!isMounted) return;
+		if (!isMounted) {
+			return;
+		}
 		const body = document.body;
 		if (isMobileMenuOpen) {
 			const prevOverflow = body.style.overflow;
-			const prevTouchAction = (body.style as any).touchAction;
+			const prevTouchAction = body.style.getPropertyValue("touch-action");
 			body.style.overflow = "hidden";
 			// Prevent background touch scrolling on mobile
-			(body.style as any).touchAction = "none";
+			body.style.setProperty("touch-action", "none");
 			return () => {
 				body.style.overflow = prevOverflow;
-				(body.style as any).touchAction = prevTouchAction ?? "";
+				if (prevTouchAction) {
+					body.style.setProperty("touch-action", prevTouchAction);
+				} else {
+					body.style.removeProperty("touch-action");
+				}
 			};
 		}
 	}, [isMounted, isMobileMenuOpen]);

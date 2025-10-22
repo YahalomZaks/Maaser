@@ -57,7 +57,6 @@ export async function PATCH(
       description,
       amount,
       currency,
-      source,
       date,
       schedule,
       totalMonths,
@@ -73,7 +72,6 @@ export async function PATCH(
       description: String(description),
       amount: amountNumber,
       currency: currency === "USD" ? "USD" : "ILS",
-      source: source === "spouse" || source === "other" ? source : "self",
       date:
         typeof date === "string" ? date : new Date().toISOString().slice(0, 10),
       schedule:

@@ -501,6 +501,10 @@ export function OnboardingWizard() {
                 {/* Description Card */}
                 <div className="bg-white rounded-xl md:rounded-2xl shadow-md border border-slate-200 p-5 md:p-8 mb-4 md:mb-6 max-w-4xl mx-auto">
                   <p className="text-slate-700 text-center mb-6 md:mb-8 text-sm md:text-base">{t("explainIncome.description")}</p>
+                  <div className="mb-6 md:mb-8 rounded-xl border border-blue-200 bg-blue-50/70 px-4 py-4 text-sm md:text-base text-slate-700 shadow-sm">
+                    <h3 className="font-semibold text-slate-800 mb-1 md:mb-2">{t("explainIncome.householdNote.title")}</h3>
+                    <p>{t("explainIncome.householdNote.description")}</p>
+                  </div>
 
                   {/* Steps List */}
                   <div className="space-y-3 md:space-y-4">
@@ -912,7 +916,7 @@ export function OnboardingWizard() {
           <div className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-[0_-6px_12px_-6px_rgba(15,23,42,0.12)]">
             <div className="mx-auto w-full max-w-full px-3 md:px-6 py-3 md:py-4">
               <div className="flex items-center justify-between gap-3 md:gap-4">
-                {/* Left Side Buttons */}
+                {/* Left: Previous */}
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -921,10 +925,13 @@ export function OnboardingWizard() {
                     onClick={handlePrevious}
                     className="gap-2 hover:bg-slate-100 text-slate-600 text-base md:text-base px-3 md:px-4 h-12 md:h-11"
                   >
-                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                     <span className="hidden sm:inline">{t("navigation.previous")}</span>
                   </Button>
+                </div>
 
+                {/* Right: Skip + Next / Finish */}
+                <div className="flex items-center gap-2">
                   {step !== "setupDonations" && (
                     <Button
                       type="button"
@@ -938,10 +945,7 @@ export function OnboardingWizard() {
                       {t("navigation.skip")}
                     </Button>
                   )}
-                </div>
 
-                {/* Right Side Button */}
-                <div>
                   {step !== "setupDonations" ? (
                     <Button
                       type="button"
@@ -950,7 +954,7 @@ export function OnboardingWizard() {
                       className="gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all min-w-[120px] md:min-w-[140px] text-base md:text-base h-12 md:h-11 px-5"
                     >
                       <span>{t("navigation.next")}</span>
-                      <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                      <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
                   ) : (
                     <Button

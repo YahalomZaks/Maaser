@@ -1,7 +1,5 @@
 export type CurrencyCode = "ILS" | "USD";
 
-export type IncomeSource = "self" | "spouse" | "other";
-
 export type IncomeSchedule = "oneTime" | "recurring" | "multiMonth";
 
 export type DonationType = "oneTime" | "recurring" | "installments";
@@ -13,7 +11,6 @@ export interface VariableIncome {
   description: string;
   amount: number;
   currency: CurrencyCode;
-  source: IncomeSource;
   date: string;
   schedule: IncomeSchedule;
   totalMonths?: number;

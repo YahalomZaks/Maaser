@@ -12,11 +12,10 @@ import {
   useRef,
   useState,
   useTransition,
-  useId,
 } from "react";
 
-import { useSession } from "@/lib/auth-client";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { useSession } from "@/lib/auth-client";
 
 type SupportedLanguage = "he" | "en";
 

@@ -3,7 +3,6 @@ import type {
   Donation as DonationRecord,
   DonationType as DonationTypeDb,
   IncomeSchedule as IncomeScheduleDb,
-  IncomeSource as IncomeSourceDb,
   UserSettings as UserSettingsRecord,
   VariableIncome as VariableIncomeRecord,
 } from "@prisma/client";
@@ -37,18 +36,6 @@ const scheduleFromDb: Record<IncomeScheduleDb, VariableIncome["schedule"]> = {
   ONE_TIME: "oneTime",
   RECURRING: "recurring",
   MULTI_MONTH: "multiMonth",
-};
-
-const sourceToDb: Record<VariableIncome["source"], IncomeSourceDb> = {
-  self: "SELF",
-  spouse: "SPOUSE",
-  other: "OTHER",
-};
-
-const sourceFromDb: Record<IncomeSourceDb, VariableIncome["source"]> = {
-  SELF: "self",
-  SPOUSE: "spouse",
-  OTHER: "other",
 };
 
 const donationTypeToDb: Record<DonationEntry["type"], DonationTypeDb> = {
@@ -139,7 +126,6 @@ export interface UpsertVariableIncomePayload {
   description: string;
   amount: number;
   currency: CurrencyCode;
-  source: VariableIncome["source"];
   date: string;
   schedule: VariableIncome["schedule"];
   totalMonths?: number | null;
@@ -152,7 +138,6 @@ function mapVariableIncome(row: VariableIncomeRecord): VariableIncome {
     description: row.description,
     amount: row.amount,
     currency: normalizeCurrency(row.currency),
-    source: sourceFromDb[row.source] ?? "other",
     date: row.date.toISOString().slice(0, 10),
     schedule: scheduleFromDb[row.schedule] ?? "oneTime",
     totalMonths: row.totalMonths ?? undefined,
@@ -181,7 +166,6 @@ export async function createVariableIncomeEntry(
       description: payload.description,
       amount: payload.amount,
       currency: payload.currency,
-      source: sourceToDb[payload.source],
       date: new Date(payload.date),
       schedule: scheduleToDb[payload.schedule],
       totalMonths: payload.totalMonths ?? null,
@@ -209,7 +193,6 @@ export async function updateVariableIncomeEntry(
       description: payload.description,
       amount: payload.amount,
       currency: payload.currency,
-      source: sourceToDb[payload.source],
       date: new Date(payload.date),
       schedule: scheduleToDb[payload.schedule],
       totalMonths: payload.totalMonths ?? null,

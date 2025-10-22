@@ -90,7 +90,7 @@
   
   "navigation": {
     "appName": "Maasroti",
-    "dashboard": "Main",
+    "dashboard": "Home",
     "notifications": "Notifications",
     "income": "Income",
     "donations": "Donations",
@@ -154,6 +154,7 @@
     "loading": "Loading...",
     "pageLoading": "Please wait...",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
     "deleting": "Deleting...",
@@ -503,7 +504,6 @@
       "descriptionLabel": "Description",
       "amountLabel": "Amount",
       "currencyLabel": "Currency",
-      "sourceLabel": "Income source",
       "dateLabel": "Date",
       "scheduleLabel": "Schedule",
       "scheduleOptions": {
@@ -519,16 +519,11 @@
       },
       "submit": "Add income",
       "errors": {
-        "descriptionRequired": "Please describe the income source.",
+        "descriptionRequired": "Please add a description for this income.",
         "amountPositive": "Amount must be greater than zero.",
         "monthsRequired": "Provide the number of months for multi-month income."
       },
       "success": "Income added successfully."
-    },
-    "sources": {
-      "self": "Self",
-      "spouse": "Spouse",
-      "other": "Other"
     },
     "table": {
       "title": "Income details",
@@ -536,9 +531,9 @@
       "columns": {
         "description": "Description",
         "amount": "Amount",
-        "source": "Source",
         "date": "Date",
-        "schedule": "Type"
+        "schedule": "Type",
+        "baseAmount": "Converted"
       },
       "convertedFlag": "",
       "monthCount": "{count} months",
@@ -933,9 +928,9 @@
       "note": "All of the answers can be updated later—this is just a quick start so you're never looking at an empty screen."
     },
     "explainDashboard": {
-      "title": "Dashboard - Complete Overview",
-      "subtitle": "Let's explore the dashboard - where you'll see all important information at a glance.",
-      "description": "The dashboard is your control center for maaser. Here you'll see your maaser balance, monthly and yearly progress, and all the important information you need to manage your donations wisely.",
+      "title": "Home - Complete Overview",
+      "subtitle": "Let's explore the home page—where you’ll see all the important information at a glance.",
+      "description": "The home page is your control center for maaser. Here you'll see your maaser balance, monthly and yearly progress, and the key information you need to manage donations wisely.",
       "features": {
         "overview": {
           "title": "Complete Overview",
@@ -956,21 +951,25 @@
       }
     },
     "explainIncome": {
-      "title": "Income Page - Track Income",
-      "subtitle": "Learn how to manage and track all your income.",
-      "description": "The income page allows you to record and track all your income sources - salary, self-employment, investments and more. The system automatically calculates how much maaser to give from each income.",
+      "title": "Income Page – Organize Every Earning",
+      "subtitle": "Learn how to track each income and keep your maaser simple.",
+      "description": "Use the income page to record every salary, bonus, or side project so the system can calculate your maaser accurately.",
+      "householdNote": {
+        "title": "Tip for households",
+        "description": "When you add income, write in the description whose salary it is—yours or your spouse's. This keeps the entire family's maaser organized without extra source fields."
+      },
       "features": {
         "sources": {
-          "title": "Track Income Sources",
-          "description": "You can record income from all sources - work, business, investments and more. The system tracks each source separately."
+          "title": "Describe who's getting paid",
+          "description": "Use clear descriptions such as \"My salary\" or \"Spouse salary\" to keep track of household entries at a glance."
         },
         "types": {
-          "title": "Different Income Types",
-          "description": "Fixed income (monthly), one-time income, or income over several months. Each type is handled appropriately."
+          "title": "Different income patterns",
+          "description": "Record one-time bonuses, recurring pay, or income spread across several months—the system handles each schedule automatically."
         },
         "tracking": {
-          "title": "Automatic Maaser Calculation",
-          "description": "The system automatically calculates 10% (or another percentage you set) from each income, and updates your maaser balance."
+          "title": "Automatic maaser calculation",
+          "description": "Maasroti applies your chosen percentage to every income so you always know how much to set aside."
         }
       }
     },
@@ -1035,7 +1034,7 @@
     },
     "steps": {
       "welcome": "Welcome",
-      "explainDashboard": "Dashboard",
+      "explainDashboard": "Home",
       "explainIncome": "Income Page",
       "explainDonations": "Donations Page",
       "explainFeedback": "Feedback Page",
@@ -1075,7 +1074,7 @@
       "note": "Need to tweak something? You can revisit all of these preferences from the income and donations pages at any time."
     },
     "navigation": {
-      "skip": "Skip this step",
+      "skip": "Skip",
       "next": "Next",
       "previous": "Previous",
       "finish": "Start using the system"

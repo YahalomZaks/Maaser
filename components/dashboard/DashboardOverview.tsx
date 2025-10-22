@@ -970,8 +970,6 @@ export function DashboardOverview() {
           totalDonations={
             monthDetailsTotals?.donations ?? months[detailsMonthIndex]?.donationsBase ?? 0
           }
-          recurringIncome={months[detailsMonthIndex]?.recurringIncomeBase ?? 0}
-          variableIncome={months[detailsMonthIndex]?.variableIncomeBase ?? 0}
         />
       )}
 

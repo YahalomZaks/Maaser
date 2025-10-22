@@ -118,7 +118,6 @@ model VariableIncome {
   description String
   amount      Float
   currency    Currency       @default(ILS)
-  source      IncomeSource   @default(SELF)
   date        DateTime
   schedule    IncomeSchedule @default(ONE_TIME)
   totalMonths Int?
@@ -238,12 +237,6 @@ enum IncomeSchedule {
   ONE_TIME
   RECURRING
   MULTI_MONTH
-}
-
-enum IncomeSource {
-  SELF
-  SPOUSE
-  OTHER
 }
 
 enum CarryStrategy {

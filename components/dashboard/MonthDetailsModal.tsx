@@ -35,8 +35,6 @@ interface MonthDetailsModalProps {
 	isLoading?: boolean;
 	incomeEntries?: IncomeEntry[];
 	donationEntries?: DonationEntry[];
-	recurringIncome?: number;
-	variableIncome?: number;
 	totalIncome?: number;
 	totalDonations?: number;
 	currency: CurrencyCode;
@@ -50,8 +48,6 @@ export function MonthDetailsModal({
 		incomeEntries = [],
 		donationEntries = [],
 		isLoading = false,
-		recurringIncome = 0,
-		variableIncome = 0,
 	totalIncome = 0,
 	totalDonations = 0,
 	currency,

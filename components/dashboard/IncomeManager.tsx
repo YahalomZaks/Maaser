@@ -6,8 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import LoadingScreen from "@/components/shared/LoadingScreen";
-import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -19,32 +19,41 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { convertCurrency, formatCurrency } from "@/lib/finance";
-import type { CurrencyCode, IncomeSchedule, IncomeSource, VariableIncome } from "@/types/finance";
+import type { CurrencyCode, IncomeSchedule, VariableIncome } from "@/types/finance";
 
 type ModalMode = "create" | "edit";
 
 const MONTH_FORMAT = (date: Date, locale: string) =>
   date.toLocaleDateString(locale === "he" ? "he-IL" : "en-US", { year: "numeric", month: "long" });
 
-const sourceOptions: IncomeSource[] = ["self", "spouse", "other"];
-// UI shows two types; limited-month handled as recurring with a limit
-// const scheduleOptions: IncomeSchedule[] = ["oneTime", "recurring"]; // not used
-
-type RecurringLimit = "unlimited" | "months";
+type IncomeType = "oneTime" | "recurring";
+type RecurringEndType = "unlimited" | "limitedMonths" | "endDate";
 
 interface FormState {
   id?: string;
   description: string;
   amount: string;
   currency: CurrencyCode;
-  source: IncomeSource;
-  startYear: number;
+  incomeType?: IncomeType; // Now optional - empty until user selects
+  receiptMonth: number;
+  receiptYear: number;
   startMonth: number;
-  schedule: IncomeSchedule;
+  startYear: number;
+  recurringEndType?: RecurringEndType; // Optional for recurring
   totalMonths?: string;
+  endMonth?: number;
+  endYear?: number;
   note?: string;
-  recurringLimit?: RecurringLimit;
+}
+
+interface FormErrors {
+  description?: string;
+  amount?: string;
+  incomeType?: string;
+  totalMonths?: string;
+  endDate?: string;
 }
 
 const getCurrentMonthYear = () => {
@@ -80,20 +89,23 @@ export function IncomeManager() {
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [noteOpen, setNoteOpen] = useState(false);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [form, setForm] = useState<FormState>(() => {
     const { year, month } = getCurrentMonthYear();
     return {
       description: "",
       amount: "",
       currency: "ILS",
-      source: "other",
-      startYear: year,
+      incomeType: undefined, // Empty until selected
+      receiptMonth: month,
+      receiptYear: year,
       startMonth: month,
-      schedule: "oneTime",
+      startYear: year,
+      recurringEndType: undefined,
       totalMonths: undefined,
+      endMonth: undefined,
+      endYear: undefined,
       note: "",
-      recurringLimit: "unlimited",
     };
   });
 
@@ -129,6 +141,20 @@ export function IncomeManager() {
     const end = 2100;
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, []);
+
+  // Derived options and guards for end date when using "endDate"
+  const endYearOptions = useMemo(() => {
+    return yearOptions.filter((yr) => yr >= form.startYear);
+  }, [yearOptions, form.startYear]);
+
+  const endMonthOptions = useMemo(() => {
+    const targetYear = form.endYear ?? form.startYear;
+    // If the selected end year equals the start year, only allow months after the start month
+    if (targetYear === form.startYear) {
+      return gridMonths.filter(({ idx }) => idx + 1 > form.startMonth);
+    }
+    return gridMonths;
+  }, [gridMonths, form.endYear, form.startYear, form.startMonth]);
 
   const selectMonth = useCallback((idx: number) => {
     setCursor((prev) => ({ ...prev, month: idx + 1 }));
@@ -169,50 +195,84 @@ export function IncomeManager() {
 
   const openCreate = () => {
     setModalMode("create");
+    setFormErrors({}); // Clear any previous errors
     const { year, month } = getCurrentMonthYear();
     setForm({
       description: "",
       amount: "",
       currency: baseCurrency,
-      source: "other",
-      startYear: year,
+      incomeType: undefined, // No selection initially
+      receiptMonth: month,
+      receiptYear: year,
       startMonth: month,
-      schedule: "oneTime",
+      startYear: year,
+      recurringEndType: undefined,
       totalMonths: undefined,
+      endMonth: undefined,
+      endYear: undefined,
       note: "",
-      recurringLimit: "unlimited",
     });
-    setNoteOpen(false);
     setModalOpen(true);
   };
 
   const openEdit = (row: VariableIncome) => {
     setModalMode("edit");
+    setFormErrors({}); // Clear any previous errors
     // Format amount with commas for display
     const formattedAmount = String(row.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const { year, month } = parseISOToMonthYear(row.date);
+
+    const incomeType: IncomeType = row.schedule === "oneTime" ? "oneTime" : "recurring";
+    let recurringEndType: RecurringEndType = "unlimited";
+    if (row.schedule === "multiMonth") {
+      recurringEndType = "limitedMonths";
+    } else if (row.schedule === "recurring") {
+      recurringEndType = "unlimited";
+    }
+
     setForm({
       id: row.id,
       description: row.description,
       amount: formattedAmount,
       currency: row.currency,
-      source: row.source,
-      startYear: year,
+      incomeType,
+      receiptMonth: month,
+      receiptYear: year,
       startMonth: month,
-      // Show multiMonth as recurring with a limit in the UI
-      schedule: row.schedule === "multiMonth" ? "recurring" : row.schedule,
+      startYear: year,
+      recurringEndType,
       totalMonths: row.totalMonths ? String(row.totalMonths) : undefined,
+      endMonth: undefined,
+      endYear: undefined,
       note: row.note ?? "",
-      recurringLimit: row.schedule === "multiMonth" ? "months" : "unlimited",
     });
-    setNoteOpen(!!row.note);
     setModalOpen(true);
   };
 
-  const onChange = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+  const onChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    clearFieldError(key);
+  };
 
-  const visible = useMemo(() => {
+  const clearFieldError = (key: keyof FormState | keyof FormErrors) => {
+    // Clear the error for this field
+    if (formErrors[key as keyof FormErrors]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[key as keyof FormErrors];
+        return newErrors;
+      });
+    }
+    
+    // Also clear endDate error when changing endMonth or endYear
+    if ((key === "endMonth" || key === "endYear") && formErrors.endDate) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.endDate;
+        return newErrors;
+      });
+    }
+  };  const visible = useMemo(() => {
     return items.filter((i) => {
       const d = new Date(i.date);
       return d.getFullYear() === cursor.year && d.getMonth() + 1 === cursor.month;
@@ -266,40 +326,78 @@ export function IncomeManager() {
       return;
     }
 
+    // Clear previous errors
+    setFormErrors({});
+    const errors: FormErrors = {};
+
     const trimmedDescription = form.description.trim();
     // Remove commas before converting to number
     const amountNumber = Number(form.amount.replace(/,/g, ''));
 
     if (!trimmedDescription) {
-      toast.error(t("form.errors.descriptionRequired"));
-      return;
+      errors.description = locale === "he" ? "נא להזין תיאור הכנסה" : "Please enter income description";
     }
 
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-      toast.error(t("form.errors.amountPositive"));
+      errors.amount = locale === "he" ? "נא להזין סכום חיובי" : "Please enter a positive amount";
+    }
+
+    if (!form.incomeType) {
+      errors.incomeType = locale === "he" ? "נא לבחור תדירות הכנסה" : "Please select income frequency";
+    }
+
+    // If there are basic errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
 
     let schedule: IncomeSchedule;
-    if (form.schedule === "recurring") {
-      schedule = form.recurringLimit === "months" ? "multiMonth" : "recurring";
-    } else {
-      schedule = "oneTime";
-    }
-
     let totalMonthsValue: number | null = null;
+    let dateToUse: string;
 
-    if (schedule === "multiMonth") {
-      const totalMonthsNumber = Math.floor(Number(form.totalMonths));
-      if (!form.totalMonths || form.totalMonths.trim() === '') {
-        toast.error(locale === "he" ? "יש להזין מספר חודשים" : "Please enter number of months");
-        return;
+    if (form.incomeType === "oneTime") {
+      schedule = "oneTime";
+      dateToUse = toMonthStartISO(form.receiptYear, form.receiptMonth);
+    } else {
+      // recurring
+      dateToUse = toMonthStartISO(form.startYear, form.startMonth);
+
+      if (form.recurringEndType === "unlimited") {
+        schedule = "recurring";
+      } else if (form.recurringEndType === "limitedMonths") {
+        schedule = "multiMonth";
+        const totalMonthsNumber = Math.floor(Number(form.totalMonths));
+        if (!form.totalMonths || form.totalMonths.trim() === '') {
+          errors.totalMonths = locale === "he" ? "נא להזין מספר חודשים" : "Please enter number of months";
+          setFormErrors(errors);
+          return;
+        }
+        if (!Number.isFinite(totalMonthsNumber) || totalMonthsNumber < 1) {
+          errors.totalMonths = locale === "he" ? "מספר החודשים חייב להיות 1 או יותר" : "Number of months must be 1 or more";
+          setFormErrors(errors);
+          return;
+        }
+        totalMonthsValue = totalMonthsNumber;
+      } else {
+        // endDate selected
+        schedule = "recurring";
+        // Validate end date is strictly after start date
+        const endY = form.endYear;
+        const endM = form.endMonth;
+        if (!endY || !endM) {
+          errors.endDate = locale === "he" ? "נא לבחור תאריך סיום" : "Please choose an end date";
+          setFormErrors(errors);
+          return;
+        }
+        const startIndex = form.startYear * 12 + form.startMonth;
+        const endIndex = endY * 12 + endM;
+        if (endIndex <= startIndex) {
+          errors.endDate = locale === "he" ? "תאריך הסיום חייב להיות אחרי תאריך ההתחלה" : "End date must be after start date";
+          setFormErrors(errors);
+          return;
+        }
       }
-      if (!Number.isFinite(totalMonthsNumber) || totalMonthsNumber < 1) {
-        toast.error(locale === "he" ? "מספר החודשים חייב להיות 1 או יותר" : "Number of months must be 1 or more");
-        return;
-      }
-      totalMonthsValue = totalMonthsNumber;
     }
 
     const trimmedNote = form.note?.trim();
@@ -308,8 +406,7 @@ export function IncomeManager() {
       description: trimmedDescription,
       amount: amountNumber,
       currency: form.currency,
-      source: form.source,
-      date: toMonthStartISO(form.startYear, form.startMonth),
+      date: dateToUse,
       schedule,
       totalMonths: totalMonthsValue,
       note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : null,
@@ -334,22 +431,71 @@ export function IncomeManager() {
         throw new Error((data as { error?: string })?.error || tCommon("error"));
       }
 
-      await load();
+      // Update UI without refetching the whole list
+      try {
+        type MaybeRecord = Record<string, unknown>;
+        const base: MaybeRecord = (data as MaybeRecord) ?? {};
+        const raw = (base.variableIncome ?? base.income ?? base.item ?? (data as unknown)) as unknown;
+        const returned = typeof raw === "object" && raw !== null ? (raw as Partial<VariableIncome> & { id?: string }) : undefined;
 
-  toast.success(modalMode === "create" ? t("form.success") : tCommon("success"));
+        if (modalMode === "edit" && form.id) {
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === form.id
+                ? {
+                  ...it,
+                  ...(returned && typeof returned === "object" ? returned : {}),
+                  description: trimmedDescription,
+                  amount: amountNumber,
+                  currency: form.currency,
+                  date: dateToUse,
+                  schedule,
+                  totalMonths: totalMonthsValue ?? undefined,
+                  note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined,
+                }
+                : it
+            )
+          );
+        } else {
+          // create
+          if (returned && typeof returned.id === "string") {
+            const newItem: VariableIncome = {
+              id: returned.id,
+              description: returned.description ?? trimmedDescription,
+              amount: returned.amount ?? amountNumber,
+              currency: (returned.currency as CurrencyCode) ?? form.currency,
+              date: returned.date ?? dateToUse,
+              schedule: (returned.schedule as IncomeSchedule) ?? schedule,
+              totalMonths: returned.totalMonths ?? (totalMonthsValue ?? undefined),
+              note: (returned.note as string | undefined) ?? (trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined),
+            };
+            setItems((prev) => [newItem, ...prev]);
+          } else {
+            // Fallback only if API didn't return the created record
+            // await load(); // intentionally avoided to reduce full refresh
+          }
+        }
+      } catch {
+        // Silent UI update failure should not block the success flow
+      }
+
+      toast.success(modalMode === "create" ? t("form.success") : tCommon("success"));
       setModalOpen(false);
       const { year, month } = getCurrentMonthYear();
       setForm({
         description: "",
         amount: "",
         currency: baseCurrency,
-        source: "other",
-        startYear: year,
+        incomeType: undefined,
+        receiptMonth: month,
+        receiptYear: year,
         startMonth: month,
-        schedule: "oneTime",
+        startYear: year,
+        recurringEndType: undefined,
         totalMonths: undefined,
+        endMonth: undefined,
+        endYear: undefined,
         note: "",
-        recurringLimit: "unlimited",
       });
 
       if (typeof window !== "undefined") {
@@ -361,7 +507,7 @@ export function IncomeManager() {
     } finally {
       setIsSaving(false);
     }
-  }, [baseCurrency, form, isSaving, load, locale, modalMode, t, tCommon]);
+  }, [baseCurrency, form, isSaving, locale, modalMode, t, tCommon]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -404,11 +550,10 @@ export function IncomeManager() {
                 <button
                   key={idx}
                   onClick={() => selectMonth(idx)}
-                  className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                    idx + 1 === cursor.month
+                  className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${idx + 1 === cursor.month
                       ? "border-primary text-primary bg-background"
                       : "border-border bg-background hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>
@@ -421,7 +566,7 @@ export function IncomeManager() {
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("table.title")}</CardTitle>
           <div className="text-sm text-muted-foreground">
-            <span className="font-normal">{t("summary.monthlyIncome")}:</span>
+            <span className="font-normal">{t("summary.monthlyIncome")}: </span>
             <span className="ml-2 font-semibold">{formatCurrency(totals.sum, baseCurrency, locale)}</span>
           </div>
         </CardHeader>
@@ -433,7 +578,6 @@ export function IncomeManager() {
                 <tr>
                   <th className="px-4 py-3 text-center">{t("table.columns.description")}</th>
                   <th className="px-4 py-3 text-center">{t("table.columns.amount")}</th>
-                  <th className="px-4 py-3 text-center">{t("table.columns.source")}</th>
                   <th className="px-4 py-3 text-center">{t("table.columns.date")}</th>
                   <th className="px-4 py-3 text-center">{locale === "he" ? "סוג הכנסה" : t("table.columns.schedule")}</th>
                   <th className="px-4 py-3 text-center"><span className="sr-only">{tCommon("actions")}</span></th>
@@ -441,7 +585,7 @@ export function IncomeManager() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {visible.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">{t("table.empty")}</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">{t("table.empty")}</td></tr>
                 ) : (
                   visible.map((row) => {
                     const converted = convertCurrency(row.amount, row.currency, baseCurrency);
@@ -458,7 +602,6 @@ export function IncomeManager() {
                             <span className="ml-1 text-xs text-muted-foreground">({formatCurrency(converted, baseCurrency, locale)})</span>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 capitalize text-center">{t(`sources.${row.source}`)}</td>
                         <td className="px-4 py-3 text-center">{new Date(row.date).toLocaleDateString(locale === "he" ? "he-IL" : "en-US")}</td>
                         <td className="px-4 py-3 text-center">
                           {/* Avoid nested ternaries for clarity and lint compliance */}
@@ -526,100 +669,70 @@ export function IncomeManager() {
       </Card>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+        <DialogContent
+          className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto"
+          dir={locale === "he" ? "rtl" : "ltr"}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5" />
               {(() => {
                 if (modalMode === "create") {
-                  return locale === "he" ? "הוספת הכנסה" : "Add income";
+                  return locale === "he" ? "הוספת הכנסה" : "Add Income";
                 }
                 return tCommon("edit");
               })()}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {/* Type selector */}
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => onChange("schedule", "recurring")}
-                className={`rounded-full border px-4 py-2 text-sm ${form.schedule === "recurring" ? "border-primary text-primary" : "border-border"}`}
-              >
-                {locale === "he" ? "קבועה חודשית" : "Monthly recurring"}
-              </button>
-              <button
-                type="button"
-                onClick={() => onChange("schedule", "oneTime")}
-                className={`rounded-full border px-4 py-2 text-sm ${form.schedule === "oneTime" ? "border-primary text-primary" : "border-border"}`}
-              >
-                {locale === "he" ? "חד פעמית" : "One-time"}
-              </button>
-            </div>
-            {form.schedule === "recurring" && (
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setForm((p) => ({ ...p, recurringLimit: "unlimited", totalMonths: undefined }))}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${form.recurringLimit !== "months" ? "border-primary text-primary" : "border-border"}`}
-                >
-                  {locale === "he" ? "ללא הגבלה" : "Unlimited"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm((p) => ({ ...p, recurringLimit: "months" }))}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${form.recurringLimit === "months" ? "border-primary text-primary" : "border-border"}`}
-                >
-                  {locale === "he" ? "מוגבל" : "Limited"}
-                </button>
-              </div>
-            )}
-            {/* If limited recurring, show months first */}
-            {form.schedule === "recurring" && form.recurringLimit === "months" && (
-              <div className="space-y-1">
-                <Label htmlFor="i-months">{t("form.totalMonthsLabel")}</Label>
-                <Input 
-                  id="i-months" 
-                  type="text" 
-                  inputMode="numeric"
-                  value={form.totalMonths ?? ""} 
-                  onChange={(e) => {
-                    // Allow only numbers
-                    const value = e.target.value.replace(/[^\d]/g, '');
-                    onChange("totalMonths", value);
-                  }}
-                  placeholder="1"
-                />
-              </div>
-            )}
-            {/* Common fields */}
+          <form
+            className="space-y-5 py-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit();
+            }}
+          >
+            {/* Description */}
             <div className="space-y-1">
-              <Label htmlFor="i-desc">{t("form.descriptionLabel")}</Label>
-              <Input id="i-desc" value={form.description} onChange={(e) => onChange("description", e.target.value)} />
+              <Label htmlFor="i-desc">{locale === "he" ? "תיאור ההכנסה" : "Income Description"}</Label>
+              <Input
+                id="i-desc"
+                value={form.description}
+                onChange={(e) => onChange("description", e.target.value)}
+                onFocus={() => clearFieldError("description")}
+                placeholder={locale === "he" ? "לדוגמה: משכורת, מלגה, עבודה זמנית" : "e.g., Salary, scholarship, temp job"}
+                className={formErrors.description ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
+              />
+              {formErrors.description && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.description}</p>
+              )}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+
+            {/* Amount & Currency in one row */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="i-amount">{t("form.amountLabel")}</Label>
-                <Input 
-                  id="i-amount" 
-                  type="text" 
+                <Input
+                  id="i-amount"
+                  type="text"
                   inputMode="decimal"
-                  value={form.amount} 
+                  value={form.amount}
                   onChange={(e) => {
-                    // Allow only numbers, decimal point, and comma
                     const value = e.target.value.replace(/[^\d.,]/g, '');
-                    // Remove existing commas for processing
                     const numericValue = value.replace(/,/g, '');
-                    // Check if it's a valid number
                     if (numericValue === '' || !isNaN(parseFloat(numericValue))) {
-                      // Format with commas
                       const parts = numericValue.split('.');
                       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                       onChange("amount", parts.join('.'));
                     }
-                  }} 
+                  }}
+                  onFocus={() => clearFieldError("amount")}
                   placeholder="0"
+                  className={formErrors.amount ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
                 />
+                {formErrors.amount && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.amount}</p>
+                )}
               </div>
               <div className="space-y-1">
                 <Label htmlFor="i-currency">{t("form.currencyLabel")}</Label>
@@ -630,105 +743,328 @@ export function IncomeManager() {
                   <SelectTrigger id="i-currency" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
                     <SelectItem value="ILS">ILS</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="i-source">{t("form.sourceLabel")}</Label>
-                <Select
-                  value={form.source}
-                  onValueChange={(value) => onChange("source", value as IncomeSource)}
-                >
-                  <SelectTrigger id="i-source" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sourceOptions.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {t(`sources.${s}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="i-date-month">{t("form.dateLabel")}</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Select
-                    value={String(form.startMonth)}
-                    onValueChange={(value) => onChange("startMonth", Number(value))}
-                  >
-                    <SelectTrigger id="i-date-month" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gridMonths.map(({ idx, label }) => (
-                        <SelectItem key={idx} value={String(idx + 1)}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={String(form.startYear)}
-                    onValueChange={(value) => onChange("startYear", Number(value))}
-                  >
-                    <SelectTrigger id="i-date-year" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[360px] overflow-y-auto">
-                      {yearOptions.map((yr) => (
-                        <SelectItem key={yr} value={String(yr)}>
-                          {yr}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+
+            {/* Income Frequency Selector */}
+            <div className="space-y-1">
+              <Label htmlFor="i-frequency">{locale === "he" ? "בחר תדירות הכנסה" : "Choose Income Frequency"}</Label>
+              <Select
+                value={form.incomeType ?? ""}
+                onValueChange={(value) => {
+                  if (value) {
+                    onChange("incomeType", value as IncomeType);
+                    // Set default recurringEndType when switching to recurring
+                    if (value === "recurring" && !form.recurringEndType) {
+                      onChange("recurringEndType", "unlimited");
+                    }
+                  }
+                }}
+                onOpenChange={(open) => {
+                  if (open) {
+                    clearFieldError("incomeType");
+                  }
+                }}
+              >
+                <SelectTrigger id="i-frequency" className={`w-full ${formErrors.incomeType ? "border-red-500 border-2" : ""}`}>
+                  <SelectValue placeholder={locale === "he" ? "בחר תדירות" : "Select frequency"} />
+                </SelectTrigger>
+                <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                  <SelectItem value="oneTime">{locale === "he" ? "חד פעמית" : "One-time"}</SelectItem>
+                  <SelectItem value="recurring">{locale === "he" ? "חודשית" : "Monthly"}</SelectItem>
+                </SelectContent>
+              </Select>
+              {formErrors.incomeType && (
+                <p className="text-sm text-red-500 mt-1">{formErrors.incomeType}</p>
+              )}
             </div>
-            {/* Notes (optional) - collapsible using shadcn Accordion */}
-            <Accordion
-              type="single"
-              collapsible
-              value={noteOpen ? "note" : ""}
-              onValueChange={(v) => setNoteOpen(v === "note")}
-            > 
-              <AccordionItem value="note" className="border-none">
-                <AccordionTrigger className="py-2 justify-start gap-2">
-                  <span className="text-sm font-medium">
-                    {noteOpen ? t("form.noteToggle.hide") : t("form.noteToggle.add")}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-1">
-                    <Label htmlFor="i-note" className="sr-only">{t("form.noteLabel")}</Label>
-                    <textarea
-                      id="i-note"
-                      className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                      value={form.note ?? ""}
-                      onChange={(e) => onChange("note", e.target.value)}
-                    />
+
+            {/* Conditional fields based on income type */}
+            {form.incomeType === "oneTime" && (
+              <>
+                {/* Receipt date for one-time income */}
+                <div className="space-y-1">
+                  <Label htmlFor="receipt-month">{locale === "he" ? "תאריך קבלת ההכנסה" : "Receipt Date"}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      value={String(form.receiptMonth)}
+                      onValueChange={(value) => onChange("receiptMonth", Number(value))}
+                    >
+                      <SelectTrigger id="receipt-month">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                        {gridMonths.map(({ idx, label }) => (
+                          <SelectItem key={idx} value={String(idx + 1)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(form.receiptYear)}
+                      onValueChange={(value) => onChange("receiptYear", Number(value))}
+                    >
+                      <SelectTrigger id="receipt-year">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[360px] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+                        {yearOptions.map((yr) => (
+                          <SelectItem key={yr} value={String(yr)}>
+                            {yr}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-          <DialogFooter className="gap-2">
-            {modalMode === "edit" ? (
-              <Button variant="ghost" className="text-destructive" onClick={() => form.id && removeRow(form.id)} isLoading={isDeleting} loadingText={tCommon("deleting") as string}>
-                <Trash2 className="h-4 w-4" /> {tCommon("delete")}
-              </Button>
-            ) : null}
-            <Button onClick={submit} disabled={isSaving} className="gap-2" isLoading={isSaving} loadingText={tCommon("save") as string}>
-              {tCommon("save")}
-            </Button>
-          </DialogFooter>
+                </div>
+
+                {/* Add Note (collapsible) */}
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="note" className="border-none">
+                    <AccordionTrigger className="py-2 hover:no-underline">
+                      <span className="text-sm text-muted-foreground">{locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <Textarea
+                        id="i-note"
+                        value={form.note ?? ""}
+                        onChange={(e) => onChange("note", e.target.value)}
+                        className="resize-none mt-2"
+                        rows={3}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </>
+            )}
+
+            {form.incomeType === "recurring" && (
+              <>
+                {/* Start date for recurring income */}
+                <div className="space-y-1">
+                  <Label htmlFor="start-month">{locale === "he" ? "תאריך התחלה" : "Start Date"}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select
+                      value={String(form.startMonth)}
+                      onValueChange={(value) => {
+                        const v = Number(value);
+                        onChange("startMonth", v);
+                      }}
+                    >
+                      <SelectTrigger id="start-month">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                        {gridMonths.map(({ idx, label }) => (
+                          <SelectItem key={idx} value={String(idx + 1)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={String(form.startYear)}
+                      onValueChange={(value) => {
+                        const v = Number(value);
+                        onChange("startYear", v);
+                      }}
+                    >
+                      <SelectTrigger id="start-year">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[360px] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+                        {yearOptions.map((yr) => (
+                          <SelectItem key={yr} value={String(yr)}>
+                            {yr}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* End date options */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="end-type">{locale === "he" ? "בחר תאריך סיום הכנסה" : "Choose End Date"}</Label>
+                    <Select
+                      value={form.recurringEndType ?? ""}
+                      onValueChange={(value) => {
+                        onChange("recurringEndType", value as RecurringEndType);
+                        if (value === "endDate") {
+                          // Initialize end date to the first valid month after start
+                          const nextMonth = form.startMonth === 12 ? 1 : form.startMonth + 1;
+                          const nextYear = form.startMonth === 12 ? form.startYear + 1 : form.startYear;
+                          onChange("endYear", form.endYear ?? nextYear);
+                          onChange("endMonth", form.endMonth ?? nextMonth);
+                        }
+                      }}
+                    >
+                      <SelectTrigger id="end-type" className="w-full">
+                        <SelectValue placeholder={locale === "he" ? "בחר אפשרות" : "Select option"} />
+                      </SelectTrigger>
+                      <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                        <SelectItem value="unlimited">{locale === "he" ? "ללא הגבלת זמן" : "Unlimited"}</SelectItem>
+                        <SelectItem value="limitedMonths">{locale === "he" ? "לאחר מספר חודשים" : "After X months"}</SelectItem>
+                        <SelectItem value="endDate">{locale === "he" ? "בחירת תאריך סיום" : "Choose end date"}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Conditional field in the second half based on end type */}
+                  {form.recurringEndType === "limitedMonths" && (
+                    <div className="space-y-1">
+                      <Label htmlFor="i-months">{locale === "he" ? "מספר חודשים" : "Number of months"}</Label>
+                      <Input
+                        id="i-months"
+                        type="text"
+                        inputMode="numeric"
+                        value={form.totalMonths ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^\d]/g, '');
+                          onChange("totalMonths", value);
+                        }}
+                        onFocus={() => clearFieldError("totalMonths")}
+                        placeholder="1"
+                        className={formErrors.totalMonths ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
+                      />
+                      {formErrors.totalMonths && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.totalMonths}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {form.recurringEndType === "endDate" && (
+                    <div className="space-y-1">
+                      <Label htmlFor="end-month">{locale === "he" ? "תאריך סיום" : "End date"}</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select
+                          value={String(form.endMonth ?? (form.startMonth === 12 && (form.endYear ?? form.startYear) === form.startYear ? 1 : Math.min(Math.max((form.endMonth ?? 1), 1), 12)))}
+                          onValueChange={(value) => {
+                            const v = Number(value);
+                            // Guard: if endYear equals startYear, month must be > startMonth
+                            if ((form.endYear ?? form.startYear) === form.startYear && v <= form.startMonth) {
+                              return; // ignore invalid selection
+                            }
+                            onChange("endMonth", v);
+                          }}
+                          onOpenChange={(open) => {
+                            if (open) {
+                              clearFieldError("endDate");
+                            }
+                          }}
+                        >
+                          <SelectTrigger id="end-month" className={formErrors.endDate ? "border-red-500 border-2" : ""}>
+                            <SelectValue placeholder={locale === "he" ? "חודש" : "Month"} />
+                          </SelectTrigger>
+                          <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                            {endMonthOptions.map(({ idx, label }) => (
+                              <SelectItem key={idx} value={String(idx + 1)}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={String(form.endYear ?? Math.max(form.startYear, new Date().getFullYear()))}
+                          onValueChange={(value) => {
+                            const v = Number(value);
+                            // Enforce endYear >= startYear
+                            const safeYear = Math.max(v, form.startYear);
+                            onChange("endYear", safeYear);
+                            // If same year and current endMonth is invalid, bump it to next valid month
+                            if (safeYear === form.startYear && (form.endMonth ?? 0) <= form.startMonth) {
+                              const nextMonth = form.startMonth === 12 ? 1 : form.startMonth + 1;
+                              onChange("endMonth", nextMonth);
+                              if (form.startMonth === 12) {
+                                onChange("endYear", form.startYear + 1);
+                              }
+                            }
+                          }}
+                          onOpenChange={(open) => {
+                            if (open) {
+                              clearFieldError("endDate");
+                            }
+                          }}
+                        >
+                          <SelectTrigger id="end-year" className={formErrors.endDate ? "border-red-500 border-2" : ""}>
+                            <SelectValue placeholder={locale === "he" ? "שנה" : "Year"} />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[360px] overflow-y-auto" dir={locale === "he" ? "rtl" : "ltr"}>
+                            {endYearOptions.map((yr) => (
+                              <SelectItem key={yr} value={String(yr)}>
+                                {yr}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {formErrors.endDate && (
+                        <p className="text-sm text-red-500 mt-1">{formErrors.endDate}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Note (collapsible) */}
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="note" className="border-none">
+                    <AccordionTrigger className="py-2 hover:no-underline">
+                      <span className="text-sm text-muted-foreground">{locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <Textarea
+                        id="i-note"
+                        value={form.note ?? ""}
+                        onChange={(e) => onChange("note", e.target.value)}
+                        className="resize-none mt-2"
+                        rows={3}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </>
+            )}
+            <DialogFooter className="p-0">
+              {/* שורת כפתורים רספונסיבית לכיוון */}
+              <div className="flex w-full items-center justify-between gap-2">
+                {/* קבוצת שמירה/ביטול – מתהפכת לפי כיוון העמוד */}
+                <div className="flex gap-2 ltr:flex-row rtl:flex-row">
+                  <Button
+                    type="submit"
+                    disabled={isSaving}
+                    isLoading={isSaving}
+                    loadingText={tCommon("saving") as string}
+                  >
+                    {locale === "he" ? "שמירת הכנסה" : "Save Income"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setModalOpen(false)}>
+                    {locale === "he" ? "ביטול" : "Cancel"}
+                  </Button>
+                </div>
+
+                {/* כפתור מחיקה – תמיד בקצה הנגדי (ימין ב-LTR, שמאל ב-RTL) */}
+                {modalMode === "edit" && form.id && (
+                  <Button
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => removeRow(form.id!)}
+                    isLoading={isDeleting}
+                    loadingText={tCommon("deleting") as string}
+                  >
+                    <Trash2 className="h-4 w-4" /> {tCommon("delete")}
+                  </Button>
+                )}
+              </div>
+            </DialogFooter>
+
+          </form>
         </DialogContent>
       </Dialog>
     </div>

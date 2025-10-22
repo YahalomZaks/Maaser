@@ -24,14 +24,12 @@ import type {
   CurrencyCode,
   DonationType,
   IncomeSchedule,
-  IncomeSource,
 } from "@/types/finance";
 
 interface OnboardingIncomeInput {
   description: string;
   amount: number;
   currency: CurrencyCode;
-  source: IncomeSource;
   date: string;
   schedule: IncomeSchedule;
   totalMonths?: number | null;
@@ -115,10 +113,6 @@ function sanitizeIncome(input: OnboardingIncomeInput): OnboardingIncomeInput {
     description: input.description.trim(),
     amount: Math.max(0, Number(input.amount) || 0),
     currency: normalizeCurrency(input.currency),
-    source:
-      input.source === "spouse" || input.source === "other"
-        ? input.source
-        : "self",
     date: input.date || new Date().toISOString().slice(0, 10),
     schedule:
       input.schedule === "recurring" || input.schedule === "multiMonth"
