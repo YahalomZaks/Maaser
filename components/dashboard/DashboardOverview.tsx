@@ -220,6 +220,42 @@ export function DashboardOverview() {
     return found ?? months[0];
   }, [computedYear, months, selectedMonthId]);
 
+  const handleShowMonthDetails = useCallback(
+    (monthIndex: number) => {
+      setDetailsMonthIndex(monthIndex);
+      setMonthIncomeEntries(null);
+      setMonthDonationEntries(null);
+      setMonthDetailsTotals(null);
+      setIsMonthDetailsLoading(true);
+      setIsMonthDetailsOpen(true);
+      const y = selectedYear;
+      fetch(`/api/dashboard/month-details?year=${y}&month=${monthIndex}`)
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`Failed to load month details: ${res.status}`);
+          return res.json();
+        })
+        .then((data: {
+          currency: string;
+          incomes: Array<{ id: string; description: string; amountBase: number }>;
+          donations: Array<{ id: string; organization: string; amountBase: number }>;
+          totals: { income: number; donations: number };
+        }) => {
+          setMonthIncomeEntries(data.incomes.map((i) => ({ id: i.id, description: i.description, amount: i.amountBase })));
+          setMonthDonationEntries(data.donations.map((d) => ({ id: d.id, organization: d.organization, amount: d.amountBase })));
+          setMonthDetailsTotals(data.totals);
+          setIsMonthDetailsLoading(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          setMonthIncomeEntries([]);
+          setMonthDonationEntries([]);
+          setMonthDetailsTotals({ income: 0, donations: 0 });
+          setIsMonthDetailsLoading(false);
+        });
+    },
+    [selectedYear],
+  );
+
   // earliest data date
   const registrationDate = useMemo(() => {
     if (snapshots.length === 0) {
@@ -336,53 +372,12 @@ export function DashboardOverview() {
     }
   };
 
-  // details modal
-  const handleShowMonthDetails = (monthIndex: number) => {
-    setDetailsMonthIndex(monthIndex);
-    // Reset previous data and open modal
-    setMonthIncomeEntries(null);
-    setMonthDonationEntries(null);
-    setMonthDetailsTotals(null);
-    setIsMonthDetailsLoading(true);
-    setIsMonthDetailsOpen(true);
-    // Fetch details for the selected year+month
-    const y = selectedYear;
-    fetch(`/api/dashboard/month-details?year=${y}&month=${monthIndex}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Failed to load month details: ${res.status}`);
-        return res.json();
-      })
-      .then((data: {
-        currency: string;
-        incomes: Array<{ id: string; description: string; amountBase: number }>;
-        donations: Array<{ id: string; organization: string; amountBase: number }>;
-        totals: { income: number; donations: number };
-      }) => {
-        setMonthIncomeEntries(data.incomes.map((i) => ({ id: i.id, description: i.description, amount: i.amountBase })));
-        setMonthDonationEntries(
-          data.donations.map((d) => ({ id: d.id, organization: d.organization, amount: d.amountBase }))
-        );
-        setMonthDetailsTotals(data.totals);
-        setIsMonthDetailsLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setMonthIncomeEntries([]);
-        setMonthDonationEntries([]);
-        setMonthDetailsTotals({ income: 0, donations: 0 });
-        setIsMonthDetailsLoading(false);
-      });
-  };
-
   // carry strategy
-
-  // Prefer explicit month carry strategy from settings; fallback to a reasonable mapping if missing
   let monthCarryStrategy: "CARRY_FORWARD" | "INDEPENDENT" | "ASK_ME" = settings?.monthCarryStrategy ?? "CARRY_FORWARD";
   if (!settings?.monthCarryStrategy) {
     if (settings?.carryStrategy === "RESET") monthCarryStrategy = "INDEPENDENT";
     else if (settings?.carryStrategy === "CARRY_POSITIVE_ONLY") monthCarryStrategy = "CARRY_FORWARD";
   }
-  // Coerce deprecated ASK_ME to CARRY_FORWARD for simplified UX
   if (monthCarryStrategy === "ASK_ME") monthCarryStrategy = "CARRY_FORWARD";
 
   if (isLoading) return <LoadingScreen />;
@@ -634,122 +629,129 @@ export function DashboardOverview() {
             </CardContent>
           </Card>
 
-            {/* Two small cards */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedMonth) {
-                    setDetailsMonthIndex(selectedMonth.monthIndex);
-                    setMonthIncomeEntries(null);
-                    setMonthDonationEntries(null);
-                    setMonthDetailsTotals(null);
-                    setIsMonthDetailsLoading(true);
-                    setIsIncomeModalOpen(true);
-                    const y = selectedYear;
-                    fetch(`/api/dashboard/month-details?year=${y}&month=${selectedMonth.monthIndex}`)
-                      .then(async (res) => {
-                        if (!res.ok) throw new Error(`Failed to load month details: ${res.status}`);
-                        return res.json();
-                      })
-                      .then((data: {
-                        currency: string;
-                        incomes: Array<{ id: string; description: string; amountBase: number }>;
-                        donations: Array<{ id: string; organization: string; amountBase: number }>;
-                        totals: { income: number; donations: number };
-                      }) => {
-                        setMonthIncomeEntries(data.incomes.map((i) => ({ id: i.id, description: i.description, amount: i.amountBase })));
-                        setMonthDonationEntries(data.donations.map((d) => ({ id: d.id, organization: d.organization, amount: d.amountBase })));
-                        setMonthDetailsTotals(data.totals);
-                        setIsMonthDetailsLoading(false);
-                      })
-                      .catch((err) => {
-                        console.error(err);
-                        setMonthIncomeEntries([]);
-                        setMonthDonationEntries([]);
-                        setMonthDetailsTotals({ income: 0, donations: 0 });
-                        setIsMonthDetailsLoading(false);
-                      });
-                  }
-                }}
-                className="text-left"
-              >
-                <Card className="h-full hover:bg-muted/50 transition-colors">
-                  <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
-                      <CardTitle className="text-[11px] sm:text-xs font-medium">{t("monthlyView.stats.income")}</CardTitle>
-                    </div>
-                    <div className="text-center text-lg sm:text-xl font-bold leading-none mt-1">
+          {/* Two small cards */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            {/* הכנסה חודשית */}
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedMonth) {
+                  setDetailsMonthIndex(selectedMonth.monthIndex);
+                  setMonthIncomeEntries(null);
+                  setMonthDonationEntries(null);
+                  setMonthDetailsTotals(null);
+                  setIsMonthDetailsLoading(true);
+                  setIsIncomeModalOpen(true);
+                  const y = selectedYear;
+                  fetch(`/api/dashboard/month-details?year=${y}&month=${selectedMonth.monthIndex}`)
+                    .then(async (res) => {
+                      if (!res.ok) throw new Error(`Failed to load month details: ${res.status}`);
+                      return res.json();
+                    })
+                    .then((data: {
+                      currency: string;
+                      incomes: Array<{ id: string; description: string; amountBase: number }>;
+                      donations: Array<{ id: string; organization: string; amountBase: number }>;
+                      totals: { income: number; donations: number };
+                    }) => {
+                      setMonthIncomeEntries(data.incomes.map((i) => ({ id: i.id, description: i.description, amount: i.amountBase })));
+                      setMonthDonationEntries(data.donations.map((d) => ({ id: d.id, organization: d.organization, amount: d.amountBase })));
+                      setMonthDetailsTotals(data.totals);
+                      setIsMonthDetailsLoading(false);
+                    })
+                    .catch((err) => {
+                      console.error(err);
+                      setMonthIncomeEntries([]);
+                      setMonthDonationEntries([]);
+                      setMonthDetailsTotals({ income: 0, donations: 0 });
+                      setIsMonthDetailsLoading(false);
+                    });
+                }
+              }}
+              className="text-left"
+            >
+              <Card className="h-full hover:bg-muted/50 transition-colors">
+                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                    <CardTitle className="text-[11px] sm:text-xs font-medium">{t("monthlyView.stats.income")}</CardTitle>
+                  </div>
+                </CardHeader>
+                {/* מרכזת את המספר בדיוק באמצע בין הכותרת לטקסט התחתון */}
+                <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col h=[calc(100%-2.5rem)] h-[calc(100%-2.5rem)]">
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-lg sm:text-xl font-bold leading-none">
                       {formatCurrency(metrics.income, year.baseCurrency, locale)}
                     </div>
-                  </CardHeader>
-                  <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col justify-end h-[calc(100%-2.5rem)]">
-                    <div className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center mt-auto">
-                      {t("monthlyView.stats.clickForDetails")}
-                    </div>
-                  </CardContent>
-                </Card>
-              </button>
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center">
+                    {t("monthlyView.stats.clickForDetails")}
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedMonth) {
-                    setDetailsMonthIndex(selectedMonth.monthIndex);
-                    setMonthIncomeEntries(null);
-                    setMonthDonationEntries(null);
-                    setMonthDetailsTotals(null);
-                    setIsMonthDetailsLoading(true);
-                    setIsDonationsModalOpen(true);
-                    const y = selectedYear;
-                    fetch(`/api/dashboard/month-details?year=${y}&month=${selectedMonth.monthIndex}`)
-                      .then(async (res) => {
-                        if (!res.ok) throw new Error(`Failed to load month details: ${res.status}`);
-                        return res.json();
-                      })
-                      .then((data: {
-                        currency: string;
-                        incomes: Array<{ id: string; description: string; amountBase: number }>;
-                        donations: Array<{ id: string; organization: string; amountBase: number }>;
-                        totals: { income: number; donations: number };
-                      }) => {
-                        setMonthIncomeEntries(data.incomes.map((i) => ({ id: i.id, description: i.description, amount: i.amountBase })));
-                        setMonthDonationEntries(data.donations.map((d) => ({ id: d.id, organization: d.organization, amount: d.amountBase })));
-                        setMonthDetailsTotals(data.totals);
-                        setIsMonthDetailsLoading(false);
-                      })
-                      .catch((err) => {
-                        console.error(err);
-                        setMonthIncomeEntries([]);
-                        setMonthDonationEntries([]);
-                        setMonthDetailsTotals({ income: 0, donations: 0 });
-                        setIsMonthDetailsLoading(false);
-                      });
-                  }
-                }}
-                className="text-left"
-              >
-                <Card className="h-full hover:bg-muted/50 transition-colors">
-                  <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <HandCoins className="h-3.5 w-3.5 text-muted-foreground" />
-                      <CardTitle className="text-[11px] sm:text-xs font-medium">{t("monthlyView.stats.donations")}</CardTitle>
-                    </div>
-                    <div className="text-center text-lg sm:text-xl font-bold leading-none mt-1">
+            {/* תרומות חודשיות */}
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedMonth) {
+                  setDetailsMonthIndex(selectedMonth.monthIndex);
+                  setMonthIncomeEntries(null);
+                  setMonthDonationEntries(null);
+                  setMonthDetailsTotals(null);
+                  setIsMonthDetailsLoading(true);
+                  setIsDonationsModalOpen(true);
+                  const y = selectedYear;
+                  fetch(`/api/dashboard/month-details?year=${y}&month=${selectedMonth.monthIndex}`)
+                    .then(async (res) => {
+                      if (!res.ok) throw new Error(`Failed to load month details: ${res.status}`);
+                      return res.json();
+                    })
+                    .then((data: {
+                      currency: string;
+                      incomes: Array<{ id: string; description: string; amountBase: number }>;
+                      donations: Array<{ id: string; organization: string; amountBase: number }>;
+                      totals: { income: number; donations: number };
+                    }) => {
+                      setMonthIncomeEntries(data.incomes.map((i) => ({ id: i.id, description: i.description, amount: i.amountBase })));
+                      setMonthDonationEntries(data.donations.map((d) => ({ id: d.id, organization: d.organization, amount: d.amountBase })));
+                      setMonthDetailsTotals(data.totals);
+                      setIsMonthDetailsLoading(false);
+                    })
+                    .catch((err) => {
+                      console.error(err);
+                      setMonthIncomeEntries([]);
+                      setMonthDonationEntries([]);
+                      setMonthDetailsTotals({ income: 0, donations: 0 });
+                      setIsMonthDetailsLoading(false);
+                    });
+                }
+              }}
+              className="text-left"
+            >
+              <Card className="h-full hover:bg-muted/50 transition-colors">
+                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <HandCoins className="h-3.5 w-3.5 text-muted-foreground" />
+                    <CardTitle className="text-[11px] sm:text-xs font-medium">{t("monthlyView.stats.donations")}</CardTitle>
+                  </div>
+                </CardHeader>
+                {/* מספר באמצע */}
+                <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col h=[calc(100%-2.5rem)] h-[calc(100%-2.5rem)]">
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-lg sm:text-xl font-bold leading-none">
                       {formatCurrency(metrics.donations, year.baseCurrency, locale)}
                     </div>
-                  </CardHeader>
-                  <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col justify-end h-[calc(100%-2.5rem)]">
-                    <div className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center mt-auto">
-                      {t("monthlyView.stats.clickForDetails")}
-                    </div>
-                  </CardContent>
-                </Card>
-              </button>
-            </div>
-
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center">
+                    {t("monthlyView.stats.clickForDetails")}
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
           </div>
+        </div>
       )}
 
       {/* YEARLY VIEW */}
@@ -837,29 +839,45 @@ export function DashboardOverview() {
             </Card>
 
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <Card>
-                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 space-y-0 text-center">
-                  <div className="flex items-center justify-center gap-1.5 mb-0.5">
+              {/* הכנסה שנתית */}
+              <Card className="h-full hover:bg-muted/50 transition-colors">
+                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5">
                     <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
                     <CardTitle className="text-[11px] sm:text-xs font-medium">{t("yearlyView.stats.annualIncome")}</CardTitle>
                   </div>
                 </CardHeader>
-               <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col justify-end h-[calc(100%-2.5rem)]">
-                   <div className="text-center text-lg sm:text-xl font-bold leading-none mt-1">{formatCurrency(metrics.income, year.baseCurrency, locale)}</div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground w-full text-center mt-auto">{t("yearlyView.stats.fromRegistration")}</p>
+                {/* מספר באמצע בין הכותרת לטקסט */}
+                <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col h=[calc(100%-2.5rem)] h-[calc(100%-2.5rem)]">
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-lg sm:text-xl font-bold leading-none">
+                      {formatCurrency(metrics.income, year.baseCurrency, locale)}
+                    </div>
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground w-full text-center">
+                    {t("yearlyView.stats.fromRegistration")}
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 space-y-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
+              {/* תרומות שנתיות */}
+              <Card className="h-full hover:bg-muted/50 transition-colors">
+                <CardHeader className="px-3 py-1.5 sm:px-6 sm:py-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5">
                     <HandCoins className="h-3.5 w-3.5 text-muted-foreground" />
                     <CardTitle className="text-[11px] sm:text-xs font-medium">{t("yearlyView.stats.donationsGiven")}</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3">
-                  <div className="text-lg sm:text-xl font-bold leading-none mb-1">{formatCurrency(metrics.donations, year.baseCurrency, locale)}</div>
-                  <p className="text-[10px] text-muted-foreground">{t("yearlyView.stats.fromRegistration")}</p>
+                {/* מספר באמצע בין הכותרת לטקסט */}
+                <CardContent className="px-3 pt-0 pb-3 sm:px-6 sm:pb-3 flex flex-col h=[calc(100%-2.5rem)] h-[calc(100%-2.5rem)]">
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-lg sm:text-xl font-bold leading-none">
+                      {formatCurrency(metrics.donations, year.baseCurrency, locale)}
+                    </div>
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground w-full text-center">
+                    {t("yearlyView.stats.fromRegistration")}
+                  </p>
                 </CardContent>
               </Card>
             </div>

@@ -52,15 +52,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
 type NotificationSeverity = "info" | "warning" | "critical";
 
 type NotificationItem = {
@@ -250,7 +241,7 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
     setSelectedIds((current) => (current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]));
   };
 
-  const handleMarkRead = async (ids: string[], isRead: boolean) => {
+  const handleMarkRead = async (ids: string[], isRead: boolean, silent: boolean = false) => {
     try {
       setIsRefreshing(true);
       const response = await fetch("/api/notifications", {
@@ -266,12 +257,16 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
         throw new Error("Failed to update notifications");
       }
 
-      toast.success(t("toast.updated"));
+      if (!silent) {
+        toast.success(t("toast.updated"));
+      }
       setSelectedIds([]);
       await fetchNotifications();
     } catch (error) {
       console.error(error);
-      toast.error(t("error"));
+      if (!silent) {
+        toast.error(t("error"));
+      }
       setIsRefreshing(false);
     }
   };
@@ -307,16 +302,9 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
 
   const handleNotificationClick = async (item: NotificationItem) => {
     if (!item.isRead) {
-      await handleMarkRead([item.id], true);
+      await handleMarkRead([item.id], true, true); // Silent update
     }
     setSelectedNotification(item);
-  };
-
-  const getTruncatedMessage = (message: string, maxLength: number = 60) => {
-    if (message.length <= maxLength) {
-      return message;
-    }
-    return message.substring(0, maxLength) + "...";
   };
 
   const getSeverityIcon = (severity: NotificationSeverity) => {
@@ -340,7 +328,7 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
 
         {/* Search and Filter Bar */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={locale === "he" ? "חפש התראות..." : "Search notifications..."}
@@ -361,107 +349,119 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
           </Select>
         </div>
 
-        {/* Data Table - Fixed height with min-height for large screens */}
+        {/* Data Table - Gmail-style layout */}
         <div className="rounded-lg border bg-card overflow-hidden">
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b bg-muted/50">
-                  <TableHead className="w-[50px] text-center">
-                    <button
-                      type="button"
-                      onClick={toggleSelectAll}
-                      className="flex h-5 w-5 items-center justify-center mx-auto"
-                      disabled={paginatedItems.length === 0}
-                      aria-label={locale === "he" ? "בחר הכל" : "Select all"}
-                    >
-                      {allSelected && paginatedItems.length > 0 ? (
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </button>
-                  </TableHead>
-                  <TableHead className="font-semibold">{locale === "he" ? "נושא" : "Subject"}</TableHead>
-                  <TableHead className="font-semibold">{locale === "he" ? "תוכן" : "Content"}</TableHead>
-                  <TableHead className="font-semibold text-right">{locale === "he" ? "תאריך" : "Date"}</TableHead>
-                  <TableHead className="w-[50px]">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedItems.length === 0 ? (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={5} className="h-[450px]">
-                      <div className="flex flex-col items-center justify-center h-full gap-3">
-                        <BellRing className="h-16 w-16 text-muted-foreground/50" />
-                        <p className="text-base text-muted-foreground text-center px-4">
-                          {(() => {
-                            if (searchQuery || filterMode === "unread") {
-                              return locale === "he" ? "לא נמצאו התראות" : "No notifications found";
-                            }
-                            return t("empty.title");
-                          })()}
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+          {/* Desktop Gmail-style List View */}
+          <div className="hidden md:block">
+            {/* Header */}
+            <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-4">
+              <button
+                type="button"
+                onClick={toggleSelectAll}
+                className="flex h-5 w-5 items-center justify-center flex-shrink-0"
+                disabled={paginatedItems.length === 0}
+                aria-label={locale === "he" ? "בחר הכל" : "Select all"}
+              >
+                {allSelected && paginatedItems.length > 0 ? (
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
                 ) : (
-                  paginatedItems.map((item) => {
-                    const metadata = item.metadata;
-                    const severity: NotificationSeverity = metadata?.severity ?? "info";
-                    const title = translateIfPossible(metadata?.titleKey, item.title, metadata?.params ?? undefined);
-                    const message = translateIfPossible(metadata?.messageKey, item.message, metadata?.params ?? undefined);
-                    const isSelected = selectedIds.includes(item.id);
+                  <Circle className="h-5 w-5 text-muted-foreground" />
+                )}
+              </button>
+              <span className="text-sm font-semibold text-muted-foreground">
+                {(() => {
+                  if (paginatedItems.length > 0) {
+                    return locale === "he"
+                      ? `${filteredItems.length} התראות`
+                      : `${filteredItems.length} notifications`;
+                  }
+                  return locale === "he" ? "אין התראות" : "No notifications";
+                })()}
+              </span>
+            </div>
 
-                    return (
-                      <TableRow
-                        key={item.id}
-                        className={`
-                          ${!item.isRead ? "bg-blue-50/50 dark:bg-blue-950/20" : "bg-background"}
-                          ${isSelected ? "bg-blue-100/50 dark:bg-blue-900/30" : ""}
-                          hover:bg-muted/50 transition-colors
-                        `}
-                      >
-                        <TableCell className="text-center">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSelect(item.id);
-                            }}
-                            className="flex h-5 w-5 items-center justify-center mx-auto"
-                            aria-label={locale === "he" ? "בחר שורה" : "Select row"}
-                          >
-                            {isSelected ? (
-                              <CheckCircle2 className="h-5 w-5 text-primary" />
-                            ) : (
-                              <Circle className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-                            )}
-                          </button>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {getSeverityIcon(severity)}
-                            <span className={`${!item.isRead ? "font-semibold" : ""} line-clamp-1`}>
-                              {title}
+            {paginatedItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[450px] gap-3 px-4">
+                <BellRing className="h-16 w-16 text-muted-foreground/50" />
+                <p className="text-base text-muted-foreground text-center">
+                  {(() => {
+                    if (searchQuery || filterMode === "unread") {
+                      return locale === "he" ? "לא נמצאו התראות" : "No notifications found";
+                    }
+                    return t("empty.title");
+                  })()}
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y max-h-[450px] overflow-y-auto">
+                {paginatedItems.map((item) => {
+                  const metadata = item.metadata;
+                  const severity: NotificationSeverity = metadata?.severity ?? "info";
+                  const title = translateIfPossible(metadata?.titleKey, item.title, metadata?.params ?? undefined);
+                  const message = translateIfPossible(metadata?.messageKey, item.message, metadata?.params ?? undefined);
+                  const isSelected = selectedIds.includes(item.id);
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`
+                        ${!item.isRead ? "bg-blue-50/50 dark:bg-blue-950/20" : "bg-background"}
+                        ${isSelected ? "bg-blue-100/50 dark:bg-blue-900/30" : ""}
+                        hover:bg-muted/50 transition-colors
+                      `}
+                    >
+                      <div className="flex gap-4 px-4 py-3">
+                        {/* Checkbox */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSelect(item.id);
+                          }}
+                          className="flex h-5 w-5 items-center justify-center flex-shrink-0 mt-0.5"
+                          aria-label={locale === "he" ? "בחר שורה" : "Select row"}
+                        >
+                          {isSelected ? (
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+                          )}
+                        </button>
+
+                        {/* Severity Icon */}
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getSeverityIcon(severity)}
+                        </div>
+
+                        {/* Main Content - Clickable */}
+                        <button
+                          type="button"
+                          onClick={() => void handleNotificationClick(item)}
+                          className="flex-1 min-w-0 text-right"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            {/* Title and Message */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`${!item.isRead ? "font-bold" : "font-semibold"} text-sm`}>
+                                  {title}
+                                </span>
+                                {!item.isRead && <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />}
+                              </div>
+                              <p className="text-sm text-muted-foreground text-right line-clamp-1">
+                                {message}
+                              </p>
+                            </div>
+
+                            {/* Date */}
+                            <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                              {formatDateTime(item.createdAt, locale)}
                             </span>
-                            {!item.isRead && <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground line-clamp-1">
-                            {getTruncatedMessage(message, 80)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          <span className="text-sm text-muted-foreground">
-                            {formatDateTime(item.createdAt, locale)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center">
+                        </button>
+
+                        {/* Actions Menu */}
+                        <div className="flex-shrink-0">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -499,13 +499,13 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Mobile Gmail-style List View */}
