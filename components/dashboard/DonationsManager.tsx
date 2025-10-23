@@ -2,7 +2,7 @@
 
 import { Calendar, ChevronLeft, ChevronRight, Edit2, HandCoins, Plus, Save, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import LoadingScreen from "@/components/shared/LoadingScreen";
@@ -46,6 +46,7 @@ interface FormErrors {
   installmentsTotal?: string;
 }
 
+type UpdateScopeMode = "all" | "forward" | "single";
 type DeleteScopeMode = "forward" | "all" | "range";
 
 interface ScopedDeletePayload {
@@ -66,6 +67,33 @@ interface DeleteDialogState {
   rangeStartMonth: number;
   rangeEndYear: number;
   rangeEndMonth: number;
+  error: string | null;
+}
+
+interface PendingDonationPayload {
+  organization: string;
+  amount: number;
+  currency: CurrencyCode;
+  type: DonationType;
+  startDate: string;
+  installmentsTotal: number | null;
+  installmentsPaid: number | null;
+  note: string | null;
+}
+
+interface UpdateScopePayload {
+  mode: UpdateScopeMode;
+  cursorYear?: number;
+  cursorMonth?: number;
+  singleYear?: number;
+  singleMonth?: number;
+}
+
+interface UpdateDialogState {
+  open: boolean;
+  target: DonationEntry | null;
+  payload: PendingDonationPayload | null;
+  mode: UpdateScopeMode;
   error: string | null;
 }
 
@@ -137,6 +165,14 @@ export function DonationsManager() {
       error: null,
     };
   });
+  const [updateDialog, setUpdateDialog] = useState<UpdateDialogState>({
+    open: false,
+    target: null,
+    payload: null,
+    mode: "forward",
+    error: null,
+  });
+  const shouldRestoreEditorRef = useRef(false);
   const monthLabel = useMemo(() => MONTH_FORMAT(new Date(cursor.year, cursor.month - 1, 1), locale), [cursor, locale]);
 
   const load = useCallback(async () => {
@@ -170,9 +206,11 @@ export function DonationsManager() {
     }));
   }, []);
 
-  const openCreate = () => {
-    setModalMode("create");
-    setFormErrors({}); // Clear any previous errors
+  const closeUpdateDialog = useCallback(() => {
+    setUpdateDialog({ open: false, target: null, payload: null, mode: "forward", error: null });
+  }, []);
+
+  const resetFormState = useCallback(() => {
     const { year, month } = getCurrentMonthYear();
     setForm({
       organization: "",
@@ -185,6 +223,12 @@ export function DonationsManager() {
       installmentsPaid: "0",
       note: "",
     });
+  }, [baseCurrency]);
+
+  const openCreate = () => {
+    setModalMode("create");
+    setFormErrors({}); // Clear any previous errors
+    resetFormState();
     setModalOpen(true);
   };
 
@@ -308,14 +352,12 @@ export function DonationsManager() {
       return;
     }
 
-    // Clear previous errors
     setFormErrors({});
     const errors: FormErrors = {};
 
     const trimmedOrganization = form.organization.trim();
     const amountNumber = Number(form.amount.replace(/,/g, ''));
 
-    // Validate required fields
     if (!trimmedOrganization) {
       errors.organization = locale === "he" ? "נא להזין שם ארגון" : "Please enter organization name";
     }
@@ -324,7 +366,6 @@ export function DonationsManager() {
       errors.amount = locale === "he" ? "נא להזין סכום חיובי" : "Please enter a positive amount";
     }
 
-    // Validate installments if type is installments
     if (form.type === "installments") {
       const installmentsNumber = Number(form.installmentsTotal);
       if (!form.installmentsTotal || !Number.isFinite(installmentsNumber) || installmentsNumber < 1) {
@@ -332,13 +373,12 @@ export function DonationsManager() {
       }
     }
 
-    // If there are errors, show them and stop
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
-    const payload = {
+    const pendingPayload: PendingDonationPayload = {
       organization: trimmedOrganization,
       amount: amountNumber,
       currency: form.currency,
@@ -346,43 +386,44 @@ export function DonationsManager() {
       startDate: toMonthStartISO(form.startYear, form.startMonth),
       installmentsTotal: form.type === "installments" ? Number(form.installmentsTotal) || null : null,
       installmentsPaid: form.type === "installments" ? Number(form.installmentsPaid) || null : null,
-      note: form.note?.trim() || null,
+      note: form.note?.trim() ? form.note.trim() : null,
     };
 
-    try {
-      setIsSaving(true);
-      const res = await fetch(modalMode === "create" ? "/api/financial/donations" : `/api/financial/donations/${form.id}`, { 
-        method: modalMode === "create" ? "POST" : "PATCH", 
-        credentials: "include", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(payload) 
-      });
-      if (!res.ok) {
-        throw new Error((await res.json())?.error || tCommon("error"));
+    const isEdit = modalMode === "edit" && Boolean(form.id);
+    if (!isEdit) {
+      try {
+        await sendDonationRequest(pendingPayload);
+      } catch {
+        // Error surfaced via toast in helper
       }
-      const data = await res.json();
-      if (data?.donation) {
-        setItems((prev) => { const others = prev.filter((x) => x.id !== data.donation.id); return [data.donation as DonationEntry, ...others].sort((a, b) => b.startDate.localeCompare(a.startDate)); });
-      }
+      return;
+    }
+
+    const target = form.id ? items.find((x) => x.id === form.id) : null;
+    if (!target) {
+      toast.error(tCommon("error"));
+      return;
+    }
+
+    const shouldScopeUpdate = target.type === "recurring" && pendingPayload.type === "recurring";
+    if (shouldScopeUpdate) {
+      shouldRestoreEditorRef.current = true;
       setModalOpen(false);
-      toast.success(t("form.success"));
-      const { year, month } = getCurrentMonthYear();
-      setForm({
-        organization: "",
-        amount: "",
-        currency: baseCurrency,
-        type: "recurring",
-        startYear: year,
-        startMonth: month,
-        installmentsTotal: undefined,
-        installmentsPaid: "0",
-        note: "",
+      setUpdateDialog({
+        open: true,
+        target,
+        payload: pendingPayload,
+        mode: "forward",
+        error: null,
       });
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "donations" } }));
-      }
-    } catch (e) { toast.error(e instanceof Error ? e.message : tCommon("error")); }
-    finally { setIsSaving(false); }
+      return;
+    }
+
+    try {
+      await sendDonationRequest(pendingPayload);
+    } catch {
+      // handled by helper
+    }
   };
 
   const removeRow = async (id: string, payload?: ScopedDeletePayload) => {
@@ -530,8 +571,94 @@ export function DonationsManager() {
       toast.error(tCommon("error"));
       return;
     }
+    // If deleting a recurring donation from within the editor,
+    // hide the editor first and mark for potential restoration on cancel
+    if (target.type === "recurring") {
+      shouldRestoreEditorRef.current = true;
+      setModalOpen(false);
+    }
     initiateDelete(target);
   }, [form.id, items, initiateDelete, tCommon]);
+
+  const sendDonationRequest = useCallback(
+    async (payload: PendingDonationPayload, scope?: UpdateScopePayload) => {
+      try {
+        setIsSaving(true);
+
+        const isEdit = modalMode === "edit" && Boolean(form.id);
+        const endpoint = isEdit && form.id ? `/api/financial/donations/${form.id}` : "/api/financial/donations";
+        const method = isEdit ? "PATCH" : "POST";
+
+        const body: Record<string, unknown> = { ...payload };
+        if (scope && isEdit) {
+          body.scope = scope;
+        }
+
+        const response = await fetch(endpoint, {
+          method,
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error((data as { error?: string })?.error || tCommon("error"));
+        }
+
+        await load();
+
+        toast.success(isEdit ? t("update.success") : t("form.success"));
+        closeUpdateDialog();
+        setModalOpen(false);
+        resetFormState();
+        setFormErrors({});
+
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "donations" } }));
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : tCommon("error");
+        if (scope) {
+          setUpdateDialog((prev) => ({ ...prev, error: message }));
+        }
+        toast.error(message);
+        throw error;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [closeUpdateDialog, form.id, load, modalMode, resetFormState, t, tCommon]
+  );
+
+  const handleUpdateModeChange = useCallback((mode: UpdateScopeMode) => {
+    setUpdateDialog((prev) => ({ ...prev, mode, error: null }));
+  }, []);
+
+  const handleUpdateConfirm = useCallback(async () => {
+    if (!updateDialog.payload) {
+      return;
+    }
+
+    if (isSaving) {
+      return;
+    }
+
+    let scope: UpdateScopePayload | undefined;
+    if (updateDialog.mode === "forward") {
+      scope = { mode: "forward", cursorYear: cursor.year, cursorMonth: cursor.month };
+    } else if (updateDialog.mode === "single") {
+      scope = { mode: "single", singleYear: cursor.year, singleMonth: cursor.month };
+    }
+
+    try {
+      await sendDonationRequest(updateDialog.payload, scope);
+      shouldRestoreEditorRef.current = false;
+    } catch {
+      shouldRestoreEditorRef.current = true;
+      // Already handled via toast and dialog state
+    }
+  }, [cursor.month, cursor.year, isSaving, sendDonationRequest, updateDialog.mode, updateDialog.payload]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -610,11 +737,11 @@ export function DonationsManager() {
                         <td className="px-4 py-3 text-center">{formatCurrency(row.amount, row.currency, locale)}<div className="text-xs text-muted-foreground">{formatCurrency(converted, baseCurrency, locale)}</div></td>
                         <td className="px-4 py-3 text-center">
                           {(() => {
-                            if (total != null) {
-                              return <span className="inline-block min-w-[2ch]">{remaining ?? total}</span>;
-                            }
                             if (row.type === "recurring") {
                               return <span className="inline-block text-muted-foreground">{locale === "he" ? "ללא הגבלה" : "Unlimited"}</span>;
+                            }
+                            if (total != null) {
+                              return <span className="inline-block min-w-[2ch]">{remaining ?? total}</span>;
                             }
                             return <span className="inline-block">-</span>;
                           })()}
@@ -920,10 +1047,94 @@ export function DonationsManager() {
       </Dialog>
 
       <Dialog
+        open={updateDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeUpdateDialog();
+            if (shouldRestoreEditorRef.current) {
+              setModalOpen(true);
+              shouldRestoreEditorRef.current = false;
+            }
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-lg w-[min(520px,96vw)]"
+          dir={locale === "he" ? "rtl" : "ltr"}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-start">{t("update.dialog.title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">{t("update.dialog.description")}</p>
+            <Select value={updateDialog.mode} onValueChange={(value) => handleUpdateModeChange(value as UpdateScopeMode)}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("update.dialog.placeholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="forward">{t("update.options.forward", { month: monthLabel })}</SelectItem>
+                <SelectItem value="all">{t("update.options.all")}</SelectItem>
+                <SelectItem value="single">{t("update.options.single", { month: monthLabel })}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {updateDialog.mode === "forward" && (
+              <p className="text-xs text-muted-foreground pt-2">{t("update.descriptions.forward", { month: monthLabel })}</p>
+            )}
+
+            {updateDialog.mode === "all" && (
+              <p className="text-xs text-muted-foreground pt-2">{t("update.descriptions.all")}</p>
+            )}
+
+            {updateDialog.mode === "single" && (
+              <p className="text-xs text-muted-foreground pt-2">{t("update.descriptions.single", { month: monthLabel })}</p>
+            )}
+
+            {updateDialog.error ? (
+              <p className="text-sm text-red-500">{updateDialog.error}</p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                closeUpdateDialog();
+                if (shouldRestoreEditorRef.current) {
+                  setModalOpen(true);
+                  shouldRestoreEditorRef.current = false;
+                }
+              }}
+              disabled={isSaving}
+              className="w-full sm:w-auto sm:min-w-[140px]"
+            >
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleUpdateConfirm()}
+              disabled={isSaving || !updateDialog.payload}
+              isLoading={isSaving}
+              loadingText={tCommon("saving") as string}
+              className="w-full sm:w-auto sm:min-w-[140px]"
+            >
+              {t("update.confirmButton")}
+              <Save className="h-4 w-4 ms-2" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={deleteDialog.open}
         onOpenChange={(open) => {
           if (!open) {
             closeDeleteDialog();
+            if (shouldRestoreEditorRef.current) {
+              setModalOpen(true);
+              shouldRestoreEditorRef.current = false;
+            }
           }
         }}
       >
@@ -1043,7 +1254,13 @@ export function DonationsManager() {
             ) : null}
           </div>
           <DialogFooter className="gap-3 sm:gap-2">
-            <Button type="button" variant="outline" onClick={closeDeleteDialog} disabled={isDeleting} className="w-full sm:w-auto sm:min-w-[140px]">
+            <Button type="button" variant="outline" onClick={() => {
+              closeDeleteDialog();
+              if (shouldRestoreEditorRef.current) {
+                setModalOpen(true);
+                shouldRestoreEditorRef.current = false;
+              }
+            }} disabled={isDeleting} className="w-full sm:w-auto sm:min-w-[140px]">
               {tCommon("cancel")}
             </Button>
             <Button

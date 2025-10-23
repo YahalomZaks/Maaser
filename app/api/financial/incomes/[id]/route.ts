@@ -7,6 +7,7 @@ import {
   deleteVariableIncomeEntry,
   updateVariableIncomeEntry,
   type ScopedDeleteOptions,
+  type ScopedUpdateOptions,
 } from "@/lib/financial-data";
 
 export async function DELETE(
@@ -91,6 +92,7 @@ export async function PATCH(
       schedule,
       totalMonths,
       note,
+      scope,
     } = body ?? {};
 
     const amountNumber = Number(amount);
@@ -98,21 +100,31 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const entry = await updateVariableIncomeEntry(session.user.id, id, {
-      description: String(description),
-      amount: amountNumber,
-      currency: currency === "USD" ? "USD" : "ILS",
-      date:
-        typeof date === "string" ? date : new Date().toISOString().slice(0, 10),
-      schedule:
-        schedule === "recurring" || schedule === "multiMonth"
-          ? schedule
-          : "oneTime",
-      totalMonths:
-        schedule === "multiMonth" ? Number(totalMonths) || null : null,
-      note:
-        typeof note === "string" && note.trim().length > 0 ? note.trim() : null,
-    });
+    const scopePayload =
+      scope && typeof scope === "object"
+        ? (scope as ScopedUpdateOptions)
+        : undefined;
+
+    const entry = await updateVariableIncomeEntry(
+      session.user.id,
+      id,
+      {
+        description: String(description),
+        amount: amountNumber,
+        currency: currency === "USD" ? "USD" : "ILS",
+        date:
+          typeof date === "string" ? date : new Date().toISOString().slice(0, 10),
+        schedule:
+          schedule === "recurring" || schedule === "multiMonth"
+            ? schedule
+            : "oneTime",
+        totalMonths:
+          schedule === "multiMonth" ? Number(totalMonths) || null : null,
+        note:
+          typeof note === "string" && note.trim().length > 0 ? note.trim() : null,
+      },
+      scopePayload
+    );
 
     await logIncomeActivity(
       session.user.id,

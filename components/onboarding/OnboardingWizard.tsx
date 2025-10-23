@@ -860,8 +860,8 @@ export function OnboardingWizard() {
                     onClick={handleAddDonation}
                     className="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all"
                   >
-                    <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                     {t("donations.addButton")}
+                    <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                   </Button>
                   {/* Donations List */}
                   <div className="space-y-3 md:space-y-4">

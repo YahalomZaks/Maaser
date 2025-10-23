@@ -7,6 +7,7 @@ import {
   deleteDonationEntry,
   updateDonationEntry,
   type ScopedDeleteOptions,
+  type ScopedUpdateOptions,
 } from "@/lib/financial-data";
 
 export async function DELETE(
@@ -92,6 +93,7 @@ export async function PATCH(
       installmentsTotal,
       installmentsPaid,
       note,
+      scope,
     } = body ?? {};
 
     const amountNumber = Number(amount);
@@ -99,22 +101,32 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const entry = await updateDonationEntry(session.user.id, id, {
-      organization: String(organization),
-      amount: amountNumber,
-      currency: currency === "USD" ? "USD" : "ILS",
-      type: type === "installments" || type === "oneTime" ? type : "recurring",
-      startDate:
-        typeof startDate === "string"
-          ? startDate
-          : new Date().toISOString().slice(0, 10),
-      installmentsTotal:
-        type === "installments" ? Number(installmentsTotal) || null : null,
-      installmentsPaid:
-        type === "installments" ? Number(installmentsPaid) || null : null,
-      note:
-        typeof note === "string" && note.trim().length > 0 ? note.trim() : null,
-    });
+    const scopePayload =
+      scope && typeof scope === "object"
+        ? (scope as ScopedUpdateOptions)
+        : undefined;
+
+    const entry = await updateDonationEntry(
+      session.user.id,
+      id,
+      {
+        organization: String(organization),
+        amount: amountNumber,
+        currency: currency === "USD" ? "USD" : "ILS",
+        type: type === "installments" || type === "oneTime" ? type : "recurring",
+        startDate:
+          typeof startDate === "string"
+            ? startDate
+            : new Date().toISOString().slice(0, 10),
+        installmentsTotal:
+          type === "installments" ? Number(installmentsTotal) || null : null,
+        installmentsPaid:
+          type === "installments" ? Number(installmentsPaid) || null : null,
+        note:
+          typeof note === "string" && note.trim().length > 0 ? note.trim() : null,
+      },
+      scopePayload
+    );
 
     await logDonationActivity(
       session.user.id,

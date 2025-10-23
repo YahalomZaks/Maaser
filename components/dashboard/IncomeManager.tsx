@@ -2,7 +2,7 @@
 
 import { Calendar, ChevronLeft, ChevronRight, Coins, Edit2, Plus, Save, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import LoadingScreen from "@/components/shared/LoadingScreen";
@@ -31,6 +31,7 @@ const MONTH_FORMAT = (date: Date, locale: string) =>
 type IncomeType = "oneTime" | "recurring";
 type RecurringEndType = "unlimited" | "limitedMonths" | "endDate";
 type DeleteScopeMode = "forward" | "all" | "range";
+type UpdateScopeMode = "all" | "forward" | "single";
 
 interface ScopedDeletePayload {
   mode: DeleteScopeMode;
@@ -51,6 +52,32 @@ interface DeleteDialogState {
   rangeEndYear: number;
   rangeEndMonth: number;
   error: string | null;
+}
+
+interface PendingIncomePayload {
+  description: string;
+  amount: number;
+  currency: CurrencyCode;
+  date: string;
+  schedule: IncomeSchedule;
+  totalMonths?: number | null;
+  note?: string | null;
+}
+
+interface UpdateDialogState {
+  open: boolean;
+  target: VariableIncome | null;
+  payload: PendingIncomePayload | null;
+  mode: UpdateScopeMode;
+  error: string | null;
+}
+
+interface UpdateScopePayload {
+  mode: UpdateScopeMode;
+  cursorYear?: number;
+  cursorMonth?: number;
+  singleYear?: number;
+  singleMonth?: number;
 }
 
 interface FormState {
@@ -151,6 +178,14 @@ export function IncomeManager() {
       error: null,
     };
   });
+  const [updateDialog, setUpdateDialog] = useState<UpdateDialogState>({
+    open: false,
+    target: null,
+    payload: null,
+    mode: "forward",
+    error: null,
+  });
+  const shouldRestoreEditorRef = useRef(false);
 
   const monthLabel = useMemo(() => MONTH_FORMAT(new Date(cursor.year, cursor.month - 1, 1), locale), [cursor, locale]);
 
@@ -238,6 +273,29 @@ export function IncomeManager() {
       error: null,
     }));
   }, []);
+
+  const closeUpdateDialog = useCallback(() => {
+    setUpdateDialog({ open: false, target: null, payload: null, mode: "forward", error: null });
+  }, []);
+
+  const resetFormState = useCallback(() => {
+    const { year, month } = getCurrentMonthYear();
+    setForm({
+      description: "",
+      amount: "",
+      currency: baseCurrency,
+      incomeType: undefined,
+      receiptMonth: month,
+      receiptYear: year,
+      startMonth: month,
+      startYear: year,
+      recurringEndType: undefined,
+      totalMonths: undefined,
+      endMonth: undefined,
+      endYear: undefined,
+      note: "",
+    });
+  }, [baseCurrency]);
 
   const openCreate = () => {
     setModalMode("create");
@@ -508,8 +566,94 @@ export function IncomeManager() {
       toast.error(tCommon("error"));
       return;
     }
+    // If deleting a recurring income from the editor, hide the editor first
+    if (target.schedule === "recurring") {
+      shouldRestoreEditorRef.current = true;
+      setModalOpen(false);
+    }
     initiateDelete(target);
   }, [form.id, items, initiateDelete, tCommon]);
+
+  const handleUpdateModeChange = useCallback((mode: UpdateScopeMode) => {
+    setUpdateDialog((prev) => ({ ...prev, mode, error: null }));
+  }, []);
+
+
+  const sendIncomeRequest = useCallback(
+    async (payload: PendingIncomePayload, scope?: UpdateScopePayload) => {
+      try {
+        setIsSaving(true);
+
+        const isEdit = modalMode === "edit" && Boolean(form.id);
+        const endpoint = isEdit && form.id ? `/api/financial/incomes/${form.id}` : "/api/financial/incomes";
+        const method = isEdit ? "PATCH" : "POST";
+
+        const body: Record<string, unknown> = { ...payload };
+        if (scope && isEdit) {
+          body.scope = scope;
+        }
+
+        const response = await fetch(endpoint, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error((data as { error?: string })?.error || tCommon("error"));
+        }
+
+        // Refresh to ensure scoped updates create the right segments
+        await load();
+
+        toast.success(isEdit ? t("update.success") : t("form.success"));
+        closeUpdateDialog();
+        setModalOpen(false);
+        resetFormState();
+
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "income" } }));
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : tCommon("error");
+        if (scope) {
+          setUpdateDialog((prev) => ({ ...prev, error: message }));
+        }
+        toast.error(message);
+        throw error;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [closeUpdateDialog, form.id, load, modalMode, resetFormState, t, tCommon]
+  );
+
+  const handleUpdateConfirm = useCallback(async () => {
+    if (!updateDialog.payload) {
+      return;
+    }
+
+    if (isSaving) {
+      return;
+    }
+
+    let scope: UpdateScopePayload | undefined;
+    if (updateDialog.mode === "forward") {
+      scope = { mode: "forward", cursorYear: cursor.year, cursorMonth: cursor.month };
+    } else if (updateDialog.mode === "single") {
+      scope = { mode: "single", singleYear: cursor.year, singleMonth: cursor.month };
+    }
+
+    try {
+      await sendIncomeRequest(updateDialog.payload, scope);
+      shouldRestoreEditorRef.current = false;
+    } catch {
+      shouldRestoreEditorRef.current = true;
+      // Error already surfaced in helper via toast and dialog state
+    }
+  }, [cursor.month, cursor.year, isSaving, sendIncomeRequest, updateDialog.mode, updateDialog.payload]);
 
   const submit = useCallback(async () => {
     if (isSaving) {
@@ -592,7 +736,7 @@ export function IncomeManager() {
 
     const trimmedNote = form.note?.trim();
 
-    const payload = {
+    const pendingPayload: PendingIncomePayload = {
       description: trimmedDescription,
       amount: amountNumber,
       currency: form.currency,
@@ -602,102 +746,42 @@ export function IncomeManager() {
       note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : null,
     };
 
-    try {
-      setIsSaving(true);
-
-      const endpoint = modalMode === "edit" && form.id ? `/api/financial/incomes/${form.id}` : "/api/financial/incomes";
-      const method = modalMode === "edit" && form.id ? "PATCH" : "POST";
-
-      const response = await fetch(endpoint, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error((data as { error?: string })?.error || tCommon("error"));
-      }
-
-      // Update UI without refetching the whole list
+    const isEdit = modalMode === "edit" && Boolean(form.id);
+    if (!isEdit) {
       try {
-        type MaybeRecord = Record<string, unknown>;
-        const base: MaybeRecord = (data as MaybeRecord) ?? {};
-        const raw = (base.variableIncome ?? base.income ?? base.item ?? (data as unknown)) as unknown;
-        const returned = typeof raw === "object" && raw !== null ? (raw as Partial<VariableIncome> & { id?: string }) : undefined;
-
-        if (returned && typeof returned.id === "string" && modalMode === "edit" && form.id) {
-          setItems((prev) =>
-            prev.map((it) =>
-              it.id === form.id
-                ? {
-                    ...it,
-                    ...(returned && typeof returned === "object" ? returned : {}),
-                    description: trimmedDescription,
-                    amount: amountNumber,
-                    currency: form.currency,
-                    date: dateToUse,
-                    schedule,
-                    totalMonths: totalMonthsValue ?? undefined,
-                    note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined,
-                  }
-                : it
-            )
-          );
-        } else {
-          // create
-          if (returned && typeof returned.id === "string") {
-            const newItem: VariableIncome = {
-              id: returned.id,
-              description: returned.description ?? trimmedDescription,
-              amount: returned.amount ?? amountNumber,
-              currency: (returned.currency as CurrencyCode) ?? form.currency,
-              date: returned.date ?? dateToUse,
-              schedule: (returned.schedule as IncomeSchedule) ?? schedule,
-              totalMonths: returned.totalMonths ?? (totalMonthsValue ?? undefined),
-              note: (returned.note as string | undefined) ?? (trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined),
-            };
-            setItems((prev) => [newItem, ...prev]);
-          } else {
-            // Fallback only if API didn't return the created record
-            // await load(); // intentionally avoided to reduce full refresh
-          }
-        }
+        await sendIncomeRequest(pendingPayload);
       } catch {
-        // Silent UI update failure should not block the success flow
+        // error already surfaced via toast
       }
-
-      toast.success(modalMode === "create" ? t("form.success") : tCommon("success"));
-      setModalOpen(false);
-      const { year, month } = getCurrentMonthYear();
-      setForm({
-        description: "",
-        amount: "",
-        currency: baseCurrency,
-        incomeType: undefined,
-        receiptMonth: month,
-        receiptYear: year,
-        startMonth: month,
-        startYear: year,
-        recurringEndType: undefined,
-        totalMonths: undefined,
-        endMonth: undefined,
-        endYear: undefined,
-        note: "",
-      });
-
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "income" } }));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : tCommon("error");
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
+      return;
     }
-  }, [baseCurrency, form, isSaving, locale, modalMode, t, tCommon]);
+
+    const target = form.id ? items.find((x) => x.id === form.id) : null;
+    if (!target) {
+      toast.error(tCommon("error"));
+      return;
+    }
+
+    const shouldScopeUpdate = target.schedule === "recurring" && pendingPayload.schedule !== "oneTime";
+    if (shouldScopeUpdate) {
+      shouldRestoreEditorRef.current = true;
+      setModalOpen(false);
+      setUpdateDialog({
+        open: true,
+        target,
+        payload: pendingPayload,
+        mode: "forward",
+        error: null,
+      });
+      return;
+    }
+
+    try {
+      await sendIncomeRequest(pendingPayload, { mode: "all" });
+    } catch {
+      // handled in helper
+    }
+  }, [form, isSaving, locale, modalMode, sendIncomeRequest, items, t, tCommon, setUpdateDialog]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -1365,10 +1449,94 @@ export function IncomeManager() {
       </Dialog>
 
       <Dialog
+        open={updateDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeUpdateDialog();
+            if (shouldRestoreEditorRef.current) {
+              setModalOpen(true);
+              shouldRestoreEditorRef.current = false;
+            }
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-lg w-[min(520px,96vw)]"
+          dir={locale === "he" ? "rtl" : "ltr"}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-start">{t("update.dialog.title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">{t("update.dialog.description")}</p>
+            <Select value={updateDialog.mode} onValueChange={(value) => handleUpdateModeChange(value as UpdateScopeMode)}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("update.dialog.placeholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="forward">{t("update.options.forward", { month: monthLabel })}</SelectItem>
+                <SelectItem value="all">{t("update.options.all")}</SelectItem>
+                <SelectItem value="single">{t("update.options.single", { month: monthLabel })}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {updateDialog.mode === "forward" && (
+              <p className="text-xs text-muted-foreground pt-2">{t("update.descriptions.forward", { month: monthLabel })}</p>
+            )}
+
+            {updateDialog.mode === "all" && (
+              <p className="text-xs text-muted-foreground pt-2">{t("update.descriptions.all")}</p>
+            )}
+
+            {updateDialog.mode === "single" && (
+              <p className="text-xs text-muted-foreground pt-2">{t("update.descriptions.single", { month: monthLabel })}</p>
+            )}
+
+            {updateDialog.error ? (
+              <p className="text-sm text-red-500">{updateDialog.error}</p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                closeUpdateDialog();
+                if (shouldRestoreEditorRef.current) {
+                  setModalOpen(true);
+                  shouldRestoreEditorRef.current = false;
+                }
+              }}
+              disabled={isSaving}
+              className="w-full sm:w-auto sm:min-w-[140px]"
+            >
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleUpdateConfirm()}
+              disabled={isSaving || !updateDialog.payload}
+              isLoading={isSaving}
+              loadingText={tCommon("saving") as string}
+              className="w-full sm:w-auto sm:min-w-[140px]"
+            >
+              {t("update.confirmButton")}
+              <Save className="h-4 w-4 ms-2" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={deleteDialog.open}
         onOpenChange={(open) => {
           if (!open) {
             closeDeleteDialog();
+            if (shouldRestoreEditorRef.current) {
+              setModalOpen(true);
+              shouldRestoreEditorRef.current = false;
+            }
           }
         }}
       >
@@ -1488,7 +1656,13 @@ export function IncomeManager() {
             ) : null}
           </div>
           <DialogFooter className="gap-3 sm:gap-2">
-            <Button type="button" variant="outline" onClick={closeDeleteDialog} disabled={isDeleting} className="w-full sm:w-auto sm:min-w-[140px]">
+            <Button type="button" variant="outline" onClick={() => {
+              closeDeleteDialog();
+              if (shouldRestoreEditorRef.current) {
+                setModalOpen(true);
+                shouldRestoreEditorRef.current = false;
+              }
+            }} disabled={isDeleting} className="w-full sm:w-auto sm:min-w-[140px]">
               {tCommon("cancel")}
             </Button>
             <Button

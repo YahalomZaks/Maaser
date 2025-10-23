@@ -52,6 +52,7 @@ const donationTypeFromDb: Record<DonationTypeDb, DonationEntry["type"]> = {
 };
 
 export type DeleteScopeMode = "forward" | "all" | "range";
+export type UpdateScopeMode = "all" | "forward" | "single";
 
 export interface ScopedDeleteOptions {
   mode: DeleteScopeMode;
@@ -63,7 +64,28 @@ export interface ScopedDeleteOptions {
   rangeEndMonth?: number;
 }
 
+export interface ScopedUpdateOptions {
+  mode: UpdateScopeMode;
+  cursorYear?: number;
+  cursorMonth?: number;
+  singleYear?: number;
+  singleMonth?: number;
+}
+
 const toMonthIndex = (year: number, month: number) => year * 12 + (month - 1);
+
+const fromMonthIndex = (index: number) => {
+  const year = Math.floor(index / 12);
+  const month = (index % 12) + 1;
+  return { year, month };
+};
+
+const addMonths = (year: number, month: number, delta: number) => {
+  const nextIndex = toMonthIndex(year, month) + delta;
+  return fromMonthIndex(nextIndex);
+};
+
+const toUTCDate = (year: number, month: number) => new Date(Date.UTC(year, month - 1, 1));
 
 function normalizeCurrency(
   value: CurrencyCode | CurrencyDb | null | undefined
@@ -296,29 +318,165 @@ export async function deleteVariableIncomeEntry(
 export async function updateVariableIncomeEntry(
   userId: string,
   id: string,
-  payload: UpsertVariableIncomePayload
+  payload: UpsertVariableIncomePayload,
+  options?: ScopedUpdateOptions
 ) {
-  await prisma.variableIncome.updateMany({
-    where: { id, userId },
-    data: {
-      description: payload.description,
-      amount: payload.amount,
-      currency: payload.currency,
-      date: new Date(payload.date),
-      schedule: scheduleToDb[payload.schedule],
-      totalMonths: payload.totalMonths ?? null,
-      note: payload.note ?? null,
-    },
-  });
+  const entry = await prisma.variableIncome.findFirst({ where: { id, userId } });
 
-  // updateMany returns count; fetch updated row for mapping
-  const updated = await prisma.variableIncome.findFirst({
-    where: { id, userId },
-  });
-  if (!updated) {
-    throw new Error("Income not found after update");
+  if (!entry) {
+    throw new Error("Income not found");
   }
-  return mapVariableIncome(updated);
+
+  const mode: UpdateScopeMode = options?.mode ?? "all";
+
+  const applyDirectUpdate = async () => {
+    await prisma.variableIncome.updateMany({
+      where: { id, userId },
+      data: {
+        description: payload.description,
+        amount: payload.amount,
+        currency: payload.currency,
+        date: new Date(payload.date),
+        schedule: scheduleToDb[payload.schedule],
+        totalMonths: payload.totalMonths ?? null,
+        note: payload.note ?? null,
+      },
+    });
+
+    const updated = await prisma.variableIncome.findFirst({ where: { id, userId } });
+    if (!updated) {
+      throw new Error("Income not found after update");
+    }
+    return mapVariableIncome(updated);
+  };
+
+  if (mode === "all" || entry.schedule !== "RECURRING") {
+    return applyDirectUpdate();
+  }
+
+  if (mode === "forward") {
+    const cursorYear = options?.cursorYear;
+    const cursorMonth = options?.cursorMonth;
+
+    if (!cursorYear || !cursorMonth) {
+      throw new Error("INVALID_UPDATE_SCOPE");
+    }
+
+    const startYear = entry.date.getFullYear();
+    const startMonth = entry.date.getMonth() + 1;
+    const startIndex = toMonthIndex(startYear, startMonth);
+    const cursorIndex = toMonthIndex(cursorYear, cursorMonth);
+
+    if (cursorIndex <= startIndex) {
+      return applyDirectUpdate();
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const monthsToKeep = cursorIndex - startIndex;
+
+      if (monthsToKeep <= 0) {
+        await tx.variableIncome.delete({ where: { id } });
+      } else {
+        const limitedSchedule = monthsToKeep === 1 ? "ONE_TIME" : "MULTI_MONTH";
+        await tx.variableIncome.update({
+          where: { id },
+          data: {
+            schedule: limitedSchedule,
+            totalMonths: limitedSchedule === "MULTI_MONTH" ? monthsToKeep : null,
+          },
+        });
+      }
+
+      const futureDate = toUTCDate(cursorYear, cursorMonth);
+      const created = await tx.variableIncome.create({
+        data: {
+          userId,
+          description: payload.description,
+          amount: payload.amount,
+          currency: payload.currency,
+          date: futureDate,
+          schedule: scheduleToDb[payload.schedule],
+          totalMonths: payload.schedule === "multiMonth" ? payload.totalMonths ?? null : null,
+          note: payload.note ?? null,
+        },
+      });
+
+      return mapVariableIncome(created);
+    });
+  }
+
+  if (mode === "single") {
+    const singleYear = options?.singleYear;
+    const singleMonth = options?.singleMonth;
+
+    if (!singleYear || !singleMonth) {
+      throw new Error("INVALID_UPDATE_SCOPE");
+    }
+
+    const startYear = entry.date.getFullYear();
+    const startMonth = entry.date.getMonth() + 1;
+    const startIndex = toMonthIndex(startYear, startMonth);
+    const singleIndex = toMonthIndex(singleYear, singleMonth);
+
+    if (singleIndex < startIndex) {
+      throw new Error("SINGLE_BEFORE_START");
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const monthsBefore = singleIndex - startIndex;
+      const { year: nextYear, month: nextMonth } = addMonths(singleYear, singleMonth, 1);
+      const nextDate = toUTCDate(nextYear, nextMonth);
+
+      if (monthsBefore === 0) {
+        await tx.variableIncome.update({
+          where: { id },
+          data: {
+            date: nextDate,
+          },
+        });
+      } else {
+        const previousSchedule = monthsBefore === 1 ? "ONE_TIME" : "MULTI_MONTH";
+        await tx.variableIncome.update({
+          where: { id },
+          data: {
+            schedule: previousSchedule,
+            totalMonths: previousSchedule === "MULTI_MONTH" ? monthsBefore : null,
+          },
+        });
+
+        await tx.variableIncome.create({
+          data: {
+            userId,
+            description: entry.description,
+            amount: entry.amount,
+            currency: entry.currency,
+            date: nextDate,
+            schedule: "RECURRING",
+            totalMonths: null,
+            note: entry.note ?? null,
+          },
+        });
+      }
+
+      const singleDate = toUTCDate(singleYear, singleMonth);
+      const singleEntry = await tx.variableIncome.create({
+        data: {
+          userId,
+          description: payload.description,
+          amount: payload.amount,
+          currency: payload.currency,
+          date: singleDate,
+          schedule: "ONE_TIME",
+          totalMonths: null,
+          note: payload.note ?? null,
+        },
+      });
+
+      return mapVariableIncome(singleEntry);
+    });
+  }
+
+  throw new Error("UNSUPPORTED_UPDATE_MODE");
 }
 
 export interface UpsertDonationPayload {
@@ -504,37 +662,199 @@ export async function deleteDonationEntry(
 export async function updateDonationEntry(
   userId: string,
   id: string,
-  payload: UpsertDonationPayload
+  payload: UpsertDonationPayload,
+  options?: ScopedUpdateOptions
 ) {
-  const date = new Date(payload.startDate);
-  await prisma.donation.updateMany({
-    where: { id, userId },
-    data: {
-      organizationName: payload.organization,
-      amount: payload.amount,
-      currency: payload.currency,
-      donationType: donationTypeToDb[payload.type],
-      startDate: date,
-      month: date.getMonth() + 1,
-      year: date.getFullYear(),
-      installmentsTotal:
-        payload.type === "installments"
-          ? payload.installmentsTotal ?? null
-          : null,
-      installmentsPaid:
-        payload.type === "installments"
-          ? payload.installmentsPaid ?? null
-          : null,
-      isActive: payload.type !== "oneTime" ? true : false,
-      note: payload.note ?? null,
-    },
-  });
+  const entry = await prisma.donation.findFirst({ where: { id, userId } });
 
-  const updated = await prisma.donation.findFirst({ where: { id, userId } });
-  if (!updated) {
-    throw new Error("Donation not found after update");
+  if (!entry) {
+    throw new Error("Donation not found");
   }
-  return mapDonation(updated);
+
+  const mode: UpdateScopeMode = options?.mode ?? "all";
+  const date = new Date(payload.startDate);
+
+  const applyDirectUpdate = async () => {
+    await prisma.donation.updateMany({
+      where: { id, userId },
+      data: {
+        organizationName: payload.organization,
+        amount: payload.amount,
+        currency: payload.currency,
+        donationType: donationTypeToDb[payload.type],
+        startDate: date,
+        month: date.getMonth() + 1,
+        year: date.getFullYear(),
+        installmentsTotal:
+          payload.type === "installments"
+            ? payload.installmentsTotal ?? null
+            : null,
+        installmentsPaid:
+          payload.type === "installments"
+            ? payload.installmentsPaid ?? null
+            : null,
+        isActive: payload.type !== "oneTime",
+        note: payload.note ?? null,
+      },
+    });
+
+    const updated = await prisma.donation.findFirst({ where: { id, userId } });
+    if (!updated) {
+      throw new Error("Donation not found after update");
+    }
+    return mapDonation(updated);
+  };
+
+  const isUnlimitedRecurring =
+    entry.donationType === "RECURRING" && (!entry.installmentsTotal || entry.installmentsTotal <= 0);
+
+  if (mode === "all" || !isUnlimitedRecurring) {
+    return applyDirectUpdate();
+  }
+
+  const startYear = entry.startDate.getFullYear();
+  const startMonth = entry.startDate.getMonth() + 1;
+  const startIndex = toMonthIndex(startYear, startMonth);
+
+  if (mode === "forward") {
+    const cursorYear = options?.cursorYear;
+    const cursorMonth = options?.cursorMonth;
+
+    if (!cursorYear || !cursorMonth) {
+      throw new Error("INVALID_UPDATE_SCOPE");
+    }
+
+    const cursorIndex = toMonthIndex(cursorYear, cursorMonth);
+    if (cursorIndex <= startIndex) {
+      return applyDirectUpdate();
+    }
+
+    const now = new Date();
+    const nowIndex = toMonthIndex(now.getFullYear(), now.getMonth() + 1);
+
+    return prisma.$transaction(async (tx) => {
+      const monthsToKeep = cursorIndex - startIndex;
+
+      if (monthsToKeep <= 0) {
+        await tx.donation.delete({ where: { id } });
+      } else {
+        const endIndex = startIndex + monthsToKeep - 1;
+        await tx.donation.update({
+          where: { id },
+          data: {
+            installmentsTotal: monthsToKeep,
+            installmentsPaid: null,
+            isActive: endIndex >= nowIndex,
+          },
+        });
+      }
+
+      const futureDate = toUTCDate(cursorYear, cursorMonth);
+      const created = await tx.donation.create({
+        data: {
+          userId,
+          organizationName: payload.organization,
+          amount: payload.amount,
+          currency: payload.currency,
+          donationType: donationTypeToDb[payload.type],
+          startDate: futureDate,
+          month: cursorMonth,
+          year: cursorYear,
+          installmentsTotal:
+            payload.type === "installments" ? payload.installmentsTotal ?? null : null,
+          installmentsPaid:
+            payload.type === "installments" ? payload.installmentsPaid ?? null : null,
+          isActive: payload.type !== "oneTime",
+          note: payload.note ?? null,
+        },
+      });
+
+      return mapDonation(created);
+    });
+  }
+
+  if (mode === "single") {
+    const singleYear = options?.singleYear;
+    const singleMonth = options?.singleMonth;
+
+    if (!singleYear || !singleMonth) {
+      throw new Error("INVALID_UPDATE_SCOPE");
+    }
+
+    const singleIndex = toMonthIndex(singleYear, singleMonth);
+    if (singleIndex < startIndex) {
+      throw new Error("SINGLE_BEFORE_START");
+    }
+
+    const { year: nextYear, month: nextMonth } = addMonths(singleYear, singleMonth, 1);
+    const nextDate = toUTCDate(nextYear, nextMonth);
+    const now = new Date();
+    const nowIndex = toMonthIndex(now.getFullYear(), now.getMonth() + 1);
+
+    return prisma.$transaction(async (tx) => {
+      const monthsBefore = singleIndex - startIndex;
+
+      if (monthsBefore === 0) {
+        await tx.donation.update({
+          where: { id },
+          data: {
+            startDate: nextDate,
+            month: nextMonth,
+            year: nextYear,
+          },
+        });
+      } else {
+        const endIndex = startIndex + monthsBefore - 1;
+        await tx.donation.update({
+          where: { id },
+          data: {
+            installmentsTotal: monthsBefore,
+            installmentsPaid: null,
+            isActive: endIndex >= nowIndex,
+          },
+        });
+
+        await tx.donation.create({
+          data: {
+            userId,
+            organizationName: entry.organizationName,
+            amount: entry.amount,
+            currency: entry.currency,
+            donationType: entry.donationType,
+            startDate: nextDate,
+            month: nextMonth,
+            year: nextYear,
+            installmentsTotal: null,
+            installmentsPaid: null,
+            isActive: entry.isActive ?? true,
+            note: entry.note ?? null,
+          },
+        });
+      }
+
+      const singleDate = toUTCDate(singleYear, singleMonth);
+      const singleEntry = await tx.donation.create({
+        data: {
+          userId,
+          organizationName: payload.organization,
+          amount: payload.amount,
+          currency: payload.currency,
+          donationType: donationTypeToDb[payload.type],
+          startDate: singleDate,
+          month: singleMonth,
+          year: singleYear,
+          installmentsTotal: 1,
+          installmentsPaid: null,
+          isActive: false,
+          note: payload.note ?? null,
+        },
+      });
+
+      return mapDonation(singleEntry);
+    });
+  }
+
+  throw new Error("UNSUPPORTED_UPDATE_MODE");
 }
 
 interface AggregatedMonth {

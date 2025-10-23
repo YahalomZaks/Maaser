@@ -575,6 +575,25 @@
       "successForward": "Recurring income trimmed successfully.",
       "successRange": "Income was limited to the selected range.",
       "successAll": "Income deleted successfully."
+    },
+    "update": {
+      "dialog": {
+        "title": "Apply recurring income changes",
+        "description": "Choose how you'd like to apply these changes to the recurring income.",
+        "placeholder": "Select how to apply the update"
+      },
+      "options": {
+        "forward": "Update from {month} onward",
+        "all": "Update every occurrence",
+        "single": "Update only {month}"
+      },
+      "descriptions": {
+        "forward": "Months before {month} keep the previous values. Updates start from that month forward.",
+        "all": "Every month that contains this income will be updated, including history.",
+        "single": "Only the selected month changes. Earlier and future months stay the same."
+      },
+      "confirmButton": "Apply changes",
+      "success": "Income updated successfully."
     }
   },
   "donations": {
@@ -711,6 +730,25 @@
       "successForward": "Recurring donation trimmed successfully.",
       "successRange": "Donation was limited to the selected range.",
       "successAll": "Donation deleted successfully."
+    },
+    "update": {
+      "dialog": {
+        "title": "Apply recurring donation changes",
+        "description": "Decide how this update should affect the recurring donation record.",
+        "placeholder": "Select how to apply the update"
+      },
+      "options": {
+        "forward": "Update from {month} onward",
+        "all": "Update every occurrence",
+        "single": "Update only {month}"
+      },
+      "descriptions": {
+        "forward": "All months before {month} stay as they were. Changes start from that month onward.",
+        "all": "Every occurrence of this donation will use the new values, past and future.",
+        "single": "Only the chosen month is updated. The rest keep their original details."
+      },
+      "confirmButton": "Apply changes",
+      "success": "Donation updated successfully."
     }
   },
   "settings": {
