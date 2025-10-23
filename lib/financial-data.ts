@@ -24,6 +24,7 @@ import type {
 } from "@/types/finance";
 
 const DEFAULT_STRATEGY = DEFAULT_CARRY_STRATEGY;
+const FUTURE_PROJECTION_YEARS = 5;
 const prisma = prismaClient;
 
 const scheduleToDb: Record<VariableIncome["schedule"], IncomeScheduleDb> = {
@@ -399,6 +400,10 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
       maxMonthIndex = Math.max(maxMonthIndex, nowIndex);
     }
   });
+
+  const projectionMaxMonthIndex =
+    (now.getFullYear() + FUTURE_PROJECTION_YEARS) * 12 + 11;
+  maxMonthIndex = Math.max(maxMonthIndex, projectionMaxMonthIndex);
 
   const addIncomeToMonth = (
     year: number,

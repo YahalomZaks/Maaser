@@ -164,7 +164,7 @@ export function DashboardOverview() {
   const orderedSnapshots = useMemo(() => snapshots.slice().sort((a, b) => b.year - a.year), [snapshots]);
   const yearOptions = useMemo(() => orderedSnapshots.map((s) => s.year), [orderedSnapshots]);
 
-  const [selectedYear, setSelectedYear] = useState<number>(() => yearOptions[0] ?? new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
   const [viewMode, setViewMode] = useState<ViewMode>("monthly");
   const [selectedMonthId, setSelectedMonthId] = useState<string | null>(null);
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
@@ -179,9 +179,18 @@ export function DashboardOverview() {
   const [isMonthDetailsLoading, setIsMonthDetailsLoading] = useState(false);
 
   useEffect(() => {
-    if (yearOptions.length > 0 && !yearOptions.includes(selectedYear)) {
-      setSelectedYear(yearOptions[0]);
+    if (yearOptions.length === 0) {
+      return;
     }
+    if (yearOptions.includes(selectedYear)) {
+      return;
+    }
+    const currentYear = new Date().getFullYear();
+    if (yearOptions.includes(currentYear)) {
+      setSelectedYear(currentYear);
+      return;
+    }
+    setSelectedYear(yearOptions[0]);
   }, [selectedYear, yearOptions]);
 
   const snapshot = useMemo(() => orderedSnapshots.find((i) => i.year === selectedYear) ?? null, [selectedYear, orderedSnapshots]);
