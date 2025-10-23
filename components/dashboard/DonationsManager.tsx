@@ -791,37 +791,40 @@ export function DonationsManager() {
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent
-          className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto"
+          className="max-w-lg w-[min(520px,96vw)] max-h-[90vh] flex flex-col gap-0 p-0"
           dir={locale === "he" ? "rtl" : "ltr"}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <HandCoins className="h-5 w-5" />
               {modalMode === "create" ? t("form.title") : tCommon("edit")}
             </DialogTitle>
           </DialogHeader>
           <form
-            className="space-y-4 py-4"
+            className="flex flex-col flex-1 min-h-0"
             onSubmit={(e) => {
               e.preventDefault();
               void submit();
             }}
           >
-            {/* Organization Name */}
-            <div className="space-y-1">
-              <Label htmlFor="d-org">{t("form.organizationLabel")}</Label>
-              <Input
-                id="d-org"
-                value={form.organization}
-                onChange={(e) => onChange("organization", e.target.value)}
-                onFocus={() => clearFieldError("organization")}
-                className={formErrors.organization ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
-              />
-              {formErrors.organization && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.organization}</p>
-              )}
-            </div>
+            <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
+              {/* Organization Name */}
+              <div className="space-y-1">
+                <Label htmlFor="d-org">{t("form.organizationLabel")}</Label>
+                <Input
+                  id="d-org"
+                  value={form.organization}
+                  onChange={(e) => onChange("organization", e.target.value)}
+                  onFocus={() => clearFieldError("organization")}
+                  className={formErrors.organization ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
+                  autoComplete="off"
+                  tabIndex={-1}
+                />
+                {formErrors.organization && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.organization}</p>
+                )}
+              </div>
             {/* Amount & Currency */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
@@ -959,10 +962,12 @@ export function DonationsManager() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+            </div>
 
-            <DialogFooter className="p-0">
+            <DialogFooter className="px-6 pb-6 pt-4 shrink-0">
               <div
                 dir={locale === "he" ? "rtl" : "ltr"}
+                className="w-full"
               >
                 {/* במצב עריכה: שלושה כפתורים; במצב יצירה: שניים */}
                 {modalMode === "edit" ? (
@@ -1059,14 +1064,14 @@ export function DonationsManager() {
         }}
       >
         <DialogContent
-          className="max-w-lg w-[min(520px,96vw)]"
+          className="max-w-lg w-[min(520px,96vw)] max-h-[90vh] flex flex-col gap-0 p-0"
           dir={locale === "he" ? "rtl" : "ltr"}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="text-start">{t("update.dialog.title")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
             <p className="text-sm text-muted-foreground">{t("update.dialog.description")}</p>
             <Select value={updateDialog.mode} onValueChange={(value) => handleUpdateModeChange(value as UpdateScopeMode)}>
               <SelectTrigger>
@@ -1095,7 +1100,7 @@ export function DonationsManager() {
               <p className="text-sm text-red-500">{updateDialog.error}</p>
             ) : null}
           </div>
-          <DialogFooter className="gap-3 sm:gap-2">
+          <DialogFooter className="px-6 pb-6 pt-4 gap-3 sm:gap-2 shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -1139,14 +1144,14 @@ export function DonationsManager() {
         }}
       >
         <DialogContent
-          className="max-w-lg w-[min(520px,96vw)]"
+          className="max-w-lg w-[min(520px,96vw)] max-h-[90vh] flex flex-col gap-0 p-0"
           dir={locale === "he" ? "rtl" : "ltr"}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="text-start">{t("delete.dialog.title")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
             <p className="text-sm text-muted-foreground">{t("delete.dialog.description")}</p>
             <Select value={deleteDialog.mode} onValueChange={(value) => handleDeleteModeChange(value as DeleteScopeMode)}>
               <SelectTrigger>
@@ -1253,7 +1258,7 @@ export function DonationsManager() {
               <p className="text-sm text-red-500">{deleteDialog.error}</p>
             ) : null}
           </div>
-          <DialogFooter className="gap-3 sm:gap-2">
+          <DialogFooter className="px-6 pb-6 pt-4 gap-3 sm:gap-2 shrink-0">
             <Button type="button" variant="outline" onClick={() => {
               closeDeleteDialog();
               if (shouldRestoreEditorRef.current) {

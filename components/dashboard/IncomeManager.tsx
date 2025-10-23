@@ -989,11 +989,11 @@ export function IncomeManager() {
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent
-          className="max-w-lg w-[min(520px,96vw)] max-h-[85vh] overflow-y-auto"
+          className="max-w-lg w-[min(520px,96vw)] max-h-[90vh] flex flex-col gap-0 p-0"
           dir={locale === "he" ? "rtl" : "ltr"}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5" />
               {(() => {
@@ -1005,27 +1005,30 @@ export function IncomeManager() {
             </DialogTitle>
           </DialogHeader>
           <form
-            className="space-y-5 py-4"
+            className="flex flex-col flex-1 min-h-0"
             onSubmit={(e) => {
               e.preventDefault();
               void submit();
             }}
           >
-            {/* Description */}
-            <div className="space-y-1">
-              <Label htmlFor="i-desc">{locale === "he" ? "תיאור ההכנסה" : "Income Description"}</Label>
-              <Input
-                id="i-desc"
-                value={form.description}
-                onChange={(e) => onChange("description", e.target.value)}
-                onFocus={() => clearFieldError("description")}
-                placeholder={locale === "he" ? "לדוגמה: משכורת, מלגה, עבודה זמנית" : "e.g., Salary, scholarship, temp job"}
-                className={formErrors.description ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
-              />
-              {formErrors.description && (
-                <p className="text-sm text-red-500 mt-1">{formErrors.description}</p>
-              )}
-            </div>
+            <div className="overflow-y-auto px-6 py-4 space-y-5 flex-1">
+              {/* Description */}
+              <div className="space-y-1">
+                <Label htmlFor="i-desc">{locale === "he" ? "תיאור ההכנסה" : "Income Description"}</Label>
+                <Input
+                  id="i-desc"
+                  value={form.description}
+                  onChange={(e) => onChange("description", e.target.value)}
+                  onFocus={() => clearFieldError("description")}
+                  placeholder={locale === "he" ? "לדוגמה: משכורת, מלגה, עבודה זמנית" : "e.g., Salary, scholarship, temp job"}
+                  className={formErrors.description ? "border-red-500 border-2 focus-visible:ring-red-500" : ""}
+                  autoComplete="off"
+                  tabIndex={-1}
+                />
+                {formErrors.description && (
+                  <p className="text-sm text-red-500 mt-1">{formErrors.description}</p>
+                )}
+              </div>
 
             {/* Amount & Currency in one row */}
             <div className="grid grid-cols-2 gap-3">
@@ -1363,10 +1366,12 @@ export function IncomeManager() {
                 </Accordion>
               </>
             )}
+            </div>
 
-            <DialogFooter className="p-0">
+            <DialogFooter className="px-6 pb-6 pt-4 shrink-0">
               <div
                 dir={locale === "he" ? "rtl" : "ltr"}
+                className="w-full"
               >
                 {modalMode === "edit" && form.id ? (
                   <div
@@ -1461,14 +1466,14 @@ export function IncomeManager() {
         }}
       >
         <DialogContent
-          className="max-w-lg w-[min(520px,96vw)]"
+          className="max-w-lg w-[min(520px,96vw)] max-h-[90vh] flex flex-col gap-0 p-0"
           dir={locale === "he" ? "rtl" : "ltr"}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="text-start">{t("update.dialog.title")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
             <p className="text-sm text-muted-foreground">{t("update.dialog.description")}</p>
             <Select value={updateDialog.mode} onValueChange={(value) => handleUpdateModeChange(value as UpdateScopeMode)}>
               <SelectTrigger>
@@ -1497,7 +1502,7 @@ export function IncomeManager() {
               <p className="text-sm text-red-500">{updateDialog.error}</p>
             ) : null}
           </div>
-          <DialogFooter className="gap-3 sm:gap-2">
+          <DialogFooter className="px-6 pb-6 pt-4 gap-3 sm:gap-2 shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -1541,14 +1546,14 @@ export function IncomeManager() {
         }}
       >
         <DialogContent
-          className="max-w-lg w-[min(520px,96vw)]"
+          className="max-w-lg w-[min(520px,96vw)] max-h-[90vh] flex flex-col gap-0 p-0"
           dir={locale === "he" ? "rtl" : "ltr"}
           onInteractOutside={(e) => e.preventDefault()}
         >
-          <DialogHeader>
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle className="text-start">{t("delete.dialog.title")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
             <p className="text-sm text-muted-foreground">{t("delete.dialog.description")}</p>
             <Select value={deleteDialog.mode} onValueChange={(value) => handleDeleteModeChange(value as DeleteScopeMode)}>
               <SelectTrigger>
@@ -1655,7 +1660,7 @@ export function IncomeManager() {
               <p className="text-sm text-red-500">{deleteDialog.error}</p>
             ) : null}
           </div>
-          <DialogFooter className="gap-3 sm:gap-2">
+          <DialogFooter className="px-6 pb-6 pt-4 gap-3 sm:gap-2 shrink-0">
             <Button type="button" variant="outline" onClick={() => {
               closeDeleteDialog();
               if (shouldRestoreEditorRef.current) {
