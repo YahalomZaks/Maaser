@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Edit2, HandCoins, Plus, Trash2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Edit2, HandCoins, Plus, Save, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -46,12 +46,37 @@ interface FormErrors {
   installmentsTotal?: string;
 }
 
+type DeleteScopeMode = "forward" | "all" | "range";
+
+interface ScopedDeletePayload {
+  mode: DeleteScopeMode;
+  cursorYear?: number;
+  cursorMonth?: number;
+  rangeStartYear?: number;
+  rangeStartMonth?: number;
+  rangeEndYear?: number;
+  rangeEndMonth?: number;
+}
+
+interface DeleteDialogState {
+  open: boolean;
+  target: DonationEntry | null;
+  mode: DeleteScopeMode;
+  rangeStartYear: number;
+  rangeStartMonth: number;
+  rangeEndYear: number;
+  rangeEndMonth: number;
+  error: string | null;
+}
+
 const getCurrentMonthYear = () => {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
 };
 
 const toMonthStartISO = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}-01`;
+
+const toMonthIndex = (year: number, month: number) => year * 12 + (month - 1);
 
 const parseISOToMonthYear = (iso: string) => {
   const [yearPart, monthPart] = iso.split("-");
@@ -99,6 +124,19 @@ export function DonationsManager() {
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() + 1 }; });
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>(() => {
+    const { year, month } = getCurrentMonthYear();
+    return {
+      open: false,
+      target: null,
+      mode: "forward",
+      rangeStartYear: year,
+      rangeStartMonth: month,
+      rangeEndYear: year,
+      rangeEndMonth: month,
+      error: null,
+    };
+  });
   const monthLabel = useMemo(() => MONTH_FORMAT(new Date(cursor.year, cursor.month - 1, 1), locale), [cursor, locale]);
 
   const load = useCallback(async () => {
@@ -122,6 +160,15 @@ export function DonationsManager() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialog((prev) => ({
+      ...prev,
+      open: false,
+      target: null,
+      error: null,
+    }));
+  }, []);
 
   const openCreate = () => {
     setModalMode("create");
@@ -177,7 +224,46 @@ export function DonationsManager() {
     }
   };
 
-  const visible = useMemo(() => items.filter((i) => { const d = new Date(i.startDate); return d.getFullYear() === cursor.year && d.getMonth() + 1 === cursor.month; }), [items, cursor]);
+  const occursInMonth = useCallback((entry: DonationEntry, targetYear: number, targetMonth: number) => {
+    const startDate = new Date(entry.startDate);
+    const startYear = startDate.getFullYear();
+    const startMonth = startDate.getMonth() + 1;
+
+    const targetIndex = targetYear * 12 + (targetMonth - 1);
+    const startIndex = startYear * 12 + (startMonth - 1);
+
+    if (targetIndex < startIndex) {
+      return false;
+    }
+
+    const limitMonths = entry.installmentsTotal ?? null;
+    const hasLimit = typeof limitMonths === "number" && limitMonths > 0;
+    switch (entry.type) {
+      case "oneTime":
+        return targetIndex === startIndex;
+      case "installments": {
+        if (!hasLimit) {
+          return targetIndex === startIndex;
+        }
+        const endIndex = startIndex + limitMonths - 1;
+        return targetIndex <= endIndex;
+      }
+      case "recurring": {
+        if (hasLimit) {
+          const endIndex = startIndex + limitMonths - 1;
+          return targetIndex <= endIndex;
+        }
+        if (entry.isActive === false) {
+          return targetIndex === startIndex;
+        }
+        return true;
+      }
+      default:
+        return false;
+    }
+  }, []);
+
+  const visible = useMemo(() => items.filter((entry) => occursInMonth(entry, cursor.year, cursor.month)), [items, cursor, occursInMonth]);
 
   const totals = useMemo(() => { const sum = visible.reduce((acc, i) => acc + convertCurrency(i.amount, i.currency, baseCurrency), 0); return { sum }; }, [visible, baseCurrency]);
 
@@ -265,7 +351,12 @@ export function DonationsManager() {
 
     try {
       setIsSaving(true);
-      const res = await fetch(modalMode === "create" ? "/api/financial/donations" : `/api/financial/donations/${form.id}`, { method: modalMode === "create" ? "POST" : "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch(modalMode === "create" ? "/api/financial/donations" : `/api/financial/donations/${form.id}`, { 
+        method: modalMode === "create" ? "POST" : "PATCH", 
+        credentials: "include", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(payload) 
+      });
       if (!res.ok) {
         throw new Error((await res.json())?.error || tCommon("error"));
       }
@@ -294,15 +385,52 @@ export function DonationsManager() {
     finally { setIsSaving(false); }
   };
 
-  const removeRow = async (id: string) => {
+  const removeRow = async (id: string, payload?: ScopedDeletePayload) => {
     try {
       setIsDeleting(true);
-      const res = await fetch(`/api/financial/donations/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/financial/donations/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: payload ? { "Content-Type": "application/json" } : undefined,
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
       if (!res.ok) {
         throw new Error((await res.json())?.error || tCommon("error"));
       }
-      setItems((prev) => prev.filter((x) => x.id !== id));
-      toast.success(t("table.removed"));
+      const data = await res.json();
+      if (data?.deletedId) {
+        setItems((prev) => prev.filter((x) => x.id !== data.deletedId));
+      }
+      if (data?.donation) {
+        setItems((prev) => {
+          const others = prev.filter((x) => x.id !== data.donation.id);
+          return [data.donation as DonationEntry, ...others].sort((a, b) => b.startDate.localeCompare(a.startDate));
+        });
+      }
+
+      // תיקון הלוגיקה: תמיד השתמש ב-mode, ואם אין payload – חשב all כברירת מחדל
+      let successKey = "delete.successAll"; // ברירת מחדל ל-all
+      if (payload && payload.mode) {
+        switch (payload.mode) {
+          case "forward":
+            successKey = "delete.successForward";
+            break;
+          case "range":
+            successKey = "delete.successRange";
+            break;
+          case "all":
+            successKey = "delete.successAll";
+            break;
+          default:
+            successKey = "delete.successAll";
+        }
+      } else {
+        // אם אין payload (מחיקה פשוטה, לא דיאלוג) – all
+        successKey = "delete.successAll";
+      }
+
+      toast.success(t(successKey));
+      closeDeleteDialog();
       setModalOpen(false);
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "donations" } }));
@@ -313,6 +441,97 @@ export function DonationsManager() {
       setIsDeleting(false);
     }
   };
+
+  const initiateDelete = useCallback(
+    (row: DonationEntry) => {
+      if (row.type === "recurring") {
+        const startDate = new Date(row.startDate);
+        const startYear = startDate.getFullYear();
+        const startMonth = startDate.getMonth() + 1;
+        const startIndex = toMonthIndex(startYear, startMonth);
+        const cursorIndex = toMonthIndex(cursor.year, cursor.month);
+        const endYear = cursorIndex < startIndex ? startYear : cursor.year;
+        const endMonth = cursorIndex < startIndex ? startMonth : cursor.month;
+
+        setDeleteDialog({
+          open: true,
+          target: row,
+          mode: "forward",
+          rangeStartYear: startYear,
+          rangeStartMonth: startMonth,
+          rangeEndYear: endYear,
+          rangeEndMonth: endMonth,
+          error: null,
+        });
+        return;
+      }
+
+      // למחיקה פשוטה (לא recurring) – תמיד all, עם payload
+      void removeRow(row.id, { mode: "all" });
+    },
+    [cursor.year, cursor.month, removeRow]
+  );
+
+  const handleDeleteModeChange = useCallback((mode: DeleteScopeMode) => {
+    setDeleteDialog((prev) => ({ ...prev, mode, error: null }));
+  }, []);
+
+  const handleDeleteRangeChange = useCallback(
+    (key: "rangeStartYear" | "rangeStartMonth" | "rangeEndYear" | "rangeEndMonth", value: number) => {
+      setDeleteDialog((prev) => ({ ...prev, [key]: value, error: null }));
+    },
+    []
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteDialog.target) {
+      return;
+    }
+
+    if (deleteDialog.mode === "range") {
+      const startIndex = toMonthIndex(deleteDialog.rangeStartYear, deleteDialog.rangeStartMonth);
+      const endIndex = toMonthIndex(deleteDialog.rangeEndYear, deleteDialog.rangeEndMonth);
+      const originDate = new Date(deleteDialog.target.startDate);
+      const originIndex = toMonthIndex(originDate.getFullYear(), originDate.getMonth() + 1);
+
+      if (startIndex < originIndex) {
+        setDeleteDialog((prev) => ({ ...prev, error: t("delete.errors.beforeStart") }));
+        return;
+      }
+
+      if (endIndex < startIndex) {
+        setDeleteDialog((prev) => ({ ...prev, error: t("delete.errors.invalidRange") }));
+        return;
+      }
+    }
+
+    const payload: ScopedDeletePayload =
+      deleteDialog.mode === "forward"
+        ? { mode: "forward", cursorYear: cursor.year, cursorMonth: cursor.month }
+        : deleteDialog.mode === "range"
+          ? {
+              mode: "range",
+              rangeStartYear: deleteDialog.rangeStartYear,
+              rangeStartMonth: deleteDialog.rangeStartMonth,
+              rangeEndYear: deleteDialog.rangeEndYear,
+              rangeEndMonth: deleteDialog.rangeEndMonth,
+            }
+          : { mode: "all" };
+
+    await removeRow(deleteDialog.target.id, payload);
+  }, [cursor.year, cursor.month, deleteDialog, removeRow, t]);
+
+  const handleModalDelete = useCallback(() => {
+    if (!form.id) {
+      return;
+    }
+    const target = items.find((x) => x.id === form.id);
+    if (!target) {
+      toast.error(tCommon("error"));
+      return;
+    }
+    initiateDelete(target);
+  }, [form.id, items, initiateDelete, tCommon]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -378,9 +597,9 @@ export function DonationsManager() {
                 {visible.length === 0 ? (<tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">{t("table.empty")}</td></tr>) : (
                   visible.map((row) => {
                     const converted = convertCurrency(row.amount, row.currency, baseCurrency);
-                    const total = row.installmentsTotal ?? 0;
+                    const total = row.installmentsTotal ?? null;
                     const paid = row.installmentsPaid ?? 0;
-                    const remaining = Math.max(0, total - paid);
+                    const remaining = total != null ? Math.max(total - paid, 0) : null;
                     return (
                       <tr key={row.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 cursor-pointer text-center" onClick={() => openEdit(row)}>
@@ -391,8 +610,8 @@ export function DonationsManager() {
                         <td className="px-4 py-3 text-center">{formatCurrency(row.amount, row.currency, locale)}<div className="text-xs text-muted-foreground">{formatCurrency(converted, baseCurrency, locale)}</div></td>
                         <td className="px-4 py-3 text-center">
                           {(() => {
-                            if (row.type === "installments" && row.installmentsTotal) {
-                              return <span className="inline-block min-w-[2ch]">{remaining}</span>;
+                            if (total != null) {
+                              return <span className="inline-block min-w-[2ch]">{remaining ?? total}</span>;
                             }
                             if (row.type === "recurring") {
                               return <span className="inline-block text-muted-foreground">{locale === "he" ? "ללא הגבלה" : "Unlimited"}</span>;
@@ -400,7 +619,7 @@ export function DonationsManager() {
                             return <span className="inline-block">-</span>;
                           })()}
                         </td>
-                        <td className="px-4 py-3 text-center"><div className="inline-flex gap-1"><Button size="icon" variant="ghost" onClick={() => openEdit(row)}><Edit2 className="h-4 w-4" /></Button><Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeRow(row.id)}><Trash2 className="h-4 w-4" /></Button></div></td>
+                        <td className="px-4 py-3 text-center"><div className="inline-flex gap-1"><Button size="icon" variant="ghost" onClick={() => openEdit(row)}><Edit2 className="h-4 w-4" /></Button><Button size="icon" variant="ghost" className="text-destructive" onClick={() => initiateDelete(row)}><Trash2 className="h-4 w-4" /></Button></div></td>
                       </tr>
                     );
                   })
@@ -476,7 +695,6 @@ export function DonationsManager() {
                 <p className="text-sm text-red-500 mt-1">{formErrors.organization}</p>
               )}
             </div>
-
             {/* Amount & Currency */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
@@ -597,7 +815,6 @@ export function DonationsManager() {
                 </div>
               </div>
             ) : null}
-
             {/* Add Note (collapsible) */}
             <Accordion type="single" collapsible>
               <AccordionItem value="note" className="border-none">
@@ -619,7 +836,6 @@ export function DonationsManager() {
             <DialogFooter className="p-0">
               <div
                 dir={locale === "he" ? "rtl" : "ltr"}
-                className="flex w-full items-stretch gap-2"
               >
                 {/* במצב עריכה: שלושה כפתורים; במצב יצירה: שניים */}
                 {modalMode === "edit" ? (
@@ -639,19 +855,20 @@ export function DonationsManager() {
                       className="w-full sm:w-auto sm:min-w-[140px]"
                     >
                       {locale === "he" ? "שמירת שינויים" : "Save Changes"}
+                      <Save className="h-4 w-4 ms-2" />
                     </Button>
 
                     {/* מחיקה – פחות צועק */}
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => removeRow(form.id!)}
+                      onClick={handleModalDelete}
                       isLoading={isDeleting}
                       loadingText={tCommon("deleting") as string}
                       className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
                     >
+                      {tCommon("delete")}
                       <Trash2 className="h-4 w-4" />
-                      {locale === "he" ? "מחיקה" : "Delete"}
                     </Button>
 
                     {/* ביטול */}
@@ -681,6 +898,7 @@ export function DonationsManager() {
                       className="w-full sm:w-auto sm:min-w-[140px]"
                     >
                       {locale === "he" ? "שמירת תרומה" : "Save Donation"}
+                      <Save className="h-4 w-4 ms-2" />
                       {/* בעמוד ההכנסות שנה לטקסט: "שמירת הכנסה" / "Save Income" */}
                     </Button>
 
@@ -697,9 +915,148 @@ export function DonationsManager() {
                 )}
               </div>
             </DialogFooter>
-
-
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDeleteDialog();
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-lg w-[min(520px,96vw)]"
+          dir={locale === "he" ? "rtl" : "ltr"}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-start">{t("delete.dialog.title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">{t("delete.dialog.description")}</p>
+            <Select value={deleteDialog.mode} onValueChange={(value) => handleDeleteModeChange(value as DeleteScopeMode)}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("delete.dialog.placeholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="forward">{t("delete.options.forward", { month: monthLabel })}</SelectItem>
+                <SelectItem value="all">{t("delete.options.all")}</SelectItem>
+                <SelectItem value="range">{t("delete.options.range")}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {deleteDialog.mode === "forward" && (
+              <p className="text-xs text-muted-foreground pt-2">
+                {t("delete.descriptions.forward", { month: monthLabel })}
+              </p>
+            )}
+
+            {deleteDialog.mode === "all" && (
+              <p className="text-xs text-muted-foreground pt-2">
+                {t("delete.descriptions.all")}
+              </p>
+            )}
+
+            {deleteDialog.mode === "range" ? (
+              <div className="space-y-3">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>{t("delete.range.start")}</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select
+                        value={String(deleteDialog.rangeStartMonth)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeStartMonth", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                          {monthNames.map((label, idx) => (
+                            <SelectItem key={idx} value={String(idx + 1)}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={String(deleteDialog.rangeStartYear)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeStartYear", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[320px]" dir={locale === "he" ? "rtl" : "ltr"}>
+                          {yearOptions.map((yr) => (
+                            <SelectItem key={yr} value={String(yr)}>
+                              {yr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("delete.range.end")}</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select
+                        value={String(deleteDialog.rangeEndMonth)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeEndMonth", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                          {monthNames.map((label, idx) => (
+                            <SelectItem key={idx} value={String(idx + 1)}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={String(deleteDialog.rangeEndYear)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeEndYear", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[320px]" dir={locale === "he" ? "rtl" : "ltr"}>
+                          {yearOptions.map((yr) => (
+                            <SelectItem key={yr} value={String(yr)}>
+                              {yr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">{t("delete.range.hint")}</p>
+              </div>
+            ) : null}
+
+            {deleteDialog.error ? (
+              <p className="text-sm text-red-500">{deleteDialog.error}</p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button type="button" variant="outline" onClick={closeDeleteDialog} disabled={isDeleting} className="w-full sm:w-auto sm:min-w-[140px]">
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleDeleteConfirm()}
+              disabled={isDeleting}
+              className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
+            >
+              {isDeleting ? tCommon("deleting") : t("delete.confirmButton")}
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

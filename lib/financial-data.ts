@@ -51,6 +51,20 @@ const donationTypeFromDb: Record<DonationTypeDb, DonationEntry["type"]> = {
   INSTALLMENTS: "installments",
 };
 
+export type DeleteScopeMode = "forward" | "all" | "range";
+
+export interface ScopedDeleteOptions {
+  mode: DeleteScopeMode;
+  cursorYear?: number;
+  cursorMonth?: number;
+  rangeStartYear?: number;
+  rangeStartMonth?: number;
+  rangeEndYear?: number;
+  rangeEndMonth?: number;
+}
+
+const toMonthIndex = (year: number, month: number) => year * 12 + (month - 1);
+
 function normalizeCurrency(
   value: CurrencyCode | CurrencyDb | null | undefined
 ): CurrencyCode {
@@ -177,10 +191,106 @@ export async function createVariableIncomeEntry(
   return mapVariableIncome(row);
 }
 
-export async function deleteVariableIncomeEntry(userId: string, id: string) {
-  await prisma.variableIncome.deleteMany({
+export async function deleteVariableIncomeEntry(
+  userId: string,
+  id: string,
+  options?: ScopedDeleteOptions
+): Promise<{ deletedId?: string; income?: VariableIncome }> {
+  const entry = await prisma.variableIncome.findFirst({
     where: { id, userId },
   });
+
+  if (!entry) {
+    return { deletedId: id };
+  }
+
+  const mode: DeleteScopeMode = options?.mode ?? "all";
+
+  if (mode === "all") {
+    await prisma.variableIncome.deleteMany({ where: { id, userId } });
+    return { deletedId: id };
+  }
+
+  if (mode === "forward") {
+    const cursorYear = options?.cursorYear;
+    const cursorMonth = options?.cursorMonth;
+
+    if (!cursorYear || !cursorMonth) {
+      throw new Error("INVALID_CURSOR");
+    }
+
+    const startYear = entry.date.getFullYear();
+    const startMonth = entry.date.getMonth() + 1;
+    const startIndex = toMonthIndex(startYear, startMonth);
+    const cursorIndex = toMonthIndex(cursorYear, cursorMonth);
+
+    const monthsToKeep = cursorIndex - startIndex;
+
+    if (monthsToKeep <= 0) {
+      await prisma.variableIncome.deleteMany({ where: { id, userId } });
+      return { deletedId: id };
+    }
+
+    const existingTotal = entry.schedule === "MULTI_MONTH" ? entry.totalMonths ?? 0 : null;
+    const limitedMonths = existingTotal && existingTotal > 0
+      ? Math.min(existingTotal, monthsToKeep)
+      : monthsToKeep;
+
+    const nextSchedule = limitedMonths <= 1 ? "ONE_TIME" : "MULTI_MONTH";
+    const updated = await prisma.variableIncome.update({
+      where: { id },
+      data: {
+        schedule: nextSchedule,
+        totalMonths: nextSchedule === "MULTI_MONTH" ? limitedMonths : null,
+      },
+    });
+
+    return { income: mapVariableIncome(updated) };
+  }
+
+  if (mode === "range") {
+    const startYear = options?.rangeStartYear;
+    const startMonth = options?.rangeStartMonth;
+    const endYear = options?.rangeEndYear;
+    const endMonth = options?.rangeEndMonth;
+
+    if (!startYear || !startMonth || !endYear || !endMonth) {
+      throw new Error("INVALID_RANGE_PARAMS");
+    }
+
+    const originalStartIndex = toMonthIndex(entry.date.getFullYear(), entry.date.getMonth() + 1);
+    const rangeStartIndex = toMonthIndex(startYear, startMonth);
+    const rangeEndIndex = toMonthIndex(endYear, endMonth);
+
+    if (rangeEndIndex < rangeStartIndex) {
+      throw new Error("INVALID_RANGE_ORDER");
+    }
+
+    if (rangeStartIndex < originalStartIndex) {
+      throw new Error("RANGE_BEFORE_START");
+    }
+
+    const totalSpan = rangeEndIndex - rangeStartIndex + 1;
+    if (totalSpan <= 0) {
+      throw new Error("INVALID_RANGE_ORDER");
+    }
+
+    const dateString = `${startYear}-${String(startMonth).padStart(2, "0")}-01`;
+    const nextSchedule = totalSpan <= 1 ? "ONE_TIME" : "MULTI_MONTH";
+
+    const updated = await prisma.variableIncome.update({
+      where: { id },
+      data: {
+        date: new Date(dateString),
+        schedule: nextSchedule,
+        totalMonths: nextSchedule === "MULTI_MONTH" ? totalSpan : null,
+      },
+    });
+
+    return { income: mapVariableIncome(updated) };
+  }
+
+  throw new Error("UNSUPPORTED_DELETE_MODE");
 }
 
 export async function updateVariableIncomeEntry(
@@ -277,10 +387,118 @@ export async function createDonationEntry(
   return mapDonation(row);
 }
 
-export async function deleteDonationEntry(userId: string, id: string) {
-  await prisma.donation.deleteMany({
+export async function deleteDonationEntry(
+  userId: string,
+  id: string,
+  options?: ScopedDeleteOptions
+): Promise<{ deletedId?: string; donation?: DonationEntry }> {
+  const entry = await prisma.donation.findFirst({
     where: { id, userId },
   });
+
+  if (!entry) {
+    return { deletedId: id };
+  }
+
+  const mode: DeleteScopeMode = options?.mode ?? "all";
+
+  if (mode === "all" || entry.donationType !== "RECURRING") {
+    await prisma.donation.deleteMany({ where: { id, userId } });
+    return { deletedId: id };
+  }
+
+  const now = new Date();
+  const nowIndex = toMonthIndex(now.getFullYear(), now.getMonth() + 1);
+
+  if (mode === "forward") {
+    const cursorYear = options?.cursorYear;
+    const cursorMonth = options?.cursorMonth;
+
+    if (!cursorYear || !cursorMonth) {
+      throw new Error("INVALID_CURSOR");
+    }
+
+    const startYear = entry.startDate.getFullYear();
+    const startMonth = entry.startDate.getMonth() + 1;
+    const startIndex = toMonthIndex(startYear, startMonth);
+    const cursorIndex = toMonthIndex(cursorYear, cursorMonth);
+    const monthsToKeep = cursorIndex - startIndex;
+
+    if (monthsToKeep <= 0) {
+      await prisma.donation.deleteMany({ where: { id, userId } });
+      return { deletedId: id };
+    }
+
+    const existingTotal = entry.installmentsTotal ?? null;
+    const limitedMonths = existingTotal && existingTotal > 0
+      ? Math.min(existingTotal, monthsToKeep)
+      : monthsToKeep;
+
+    const endIndex = startIndex + limitedMonths - 1;
+    const isActive = endIndex >= nowIndex;
+    const updated = await prisma.donation.update({
+      where: { id },
+      data: {
+        installmentsTotal: limitedMonths,
+        installmentsPaid:
+          entry.installmentsPaid != null
+            ? Math.min(entry.installmentsPaid, limitedMonths)
+            : null,
+        isActive,
+      },
+    });
+
+    return { donation: mapDonation(updated) };
+  }
+
+  if (mode === "range") {
+    const startYear = options?.rangeStartYear;
+    const startMonth = options?.rangeStartMonth;
+    const endYear = options?.rangeEndYear;
+    const endMonth = options?.rangeEndMonth;
+
+    if (!startYear || !startMonth || !endYear || !endMonth) {
+      throw new Error("INVALID_RANGE_PARAMS");
+    }
+
+    const originalStartIndex = toMonthIndex(entry.startDate.getFullYear(), entry.startDate.getMonth() + 1);
+    const rangeStartIndex = toMonthIndex(startYear, startMonth);
+    const rangeEndIndex = toMonthIndex(endYear, endMonth);
+
+    if (rangeEndIndex < rangeStartIndex) {
+      throw new Error("INVALID_RANGE_ORDER");
+    }
+
+    if (rangeStartIndex < originalStartIndex) {
+      throw new Error("RANGE_BEFORE_START");
+    }
+
+    const totalSpan = rangeEndIndex - rangeStartIndex + 1;
+    if (totalSpan <= 0) {
+      throw new Error("INVALID_RANGE_ORDER");
+    }
+
+    const dateString = `${startYear}-${String(startMonth).padStart(2, "0")}-01`;
+    const isActive = rangeEndIndex >= nowIndex;
+    const updated = await prisma.donation.update({
+      where: { id },
+      data: {
+        startDate: new Date(dateString),
+        year: startYear,
+        month: startMonth,
+        installmentsTotal: totalSpan,
+        installmentsPaid:
+          entry.installmentsPaid != null
+            ? Math.min(entry.installmentsPaid, totalSpan)
+            : null,
+        isActive,
+      },
+    });
+
+    return { donation: mapDonation(updated) };
+  }
+
+  throw new Error("UNSUPPORTED_DELETE_MODE");
 }
 
 export async function updateDonationEntry(

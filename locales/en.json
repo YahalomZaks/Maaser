@@ -19,7 +19,7 @@
       "start": "Let's sign in",
       "howItWorks": "Register now"
     },
-  "note": "The system is free to use.\nAll data is secure and protected.",
+    "note": "The system is free to use.\nAll data is secure and protected.",
     "dashboard": {
       "title": "Maaser Tracking",
       "status": "Active",
@@ -29,7 +29,7 @@
       },
       "steps": {
         "step1": "Income",
-        "step2": "Calculate", 
+        "step2": "Calculate",
         "step3": "Donate"
       },
       "transactions": {
@@ -87,7 +87,6 @@
       }
     }
   },
-  
   "navigation": {
     "appName": "Maasroti",
     "dashboard": "Home",
@@ -179,7 +178,7 @@
   "auth": {
     "signin": {
       "title": "Welcome back",
-      "subtitle": "Sign in to your account", 
+      "subtitle": "Sign in to your account",
       "email": "Email address",
       "emailPlaceholder": "your@email.com",
       "password": "Password",
@@ -190,7 +189,7 @@
       "orContinueWith": "Or continue with",
       "loading": "Signing in...",
       "success": "Sign in successful",
-      "error": "Sign in error", 
+      "error": "Sign in error",
       "invalidCredentials": "Invalid email or password",
       "verificationEmailSent": "Verification email sent. Please check your inbox.",
       "pleaseVerifyEmail": "Please verify your email address before signing in."
@@ -474,7 +473,7 @@
       "title": "Financial preferences",
       "description": "Set the base currency and tithe percentage used for calculations.",
       "baseCurrency": "Base currency",
-  "baseCurrencyPlaceholder": "Select base currency",
+      "baseCurrencyPlaceholder": "Select base currency",
       "baseCurrencyOptions": {
         "ils": "Israeli Shekel (₪)",
         "usd": "US Dollar ($)"
@@ -547,6 +546,35 @@
       "conversionTotal": "",
       "noConversions": "",
       "helper": "The estimation combines fixed and variable income for the month."
+    },
+    "delete": {
+      "dialog": {
+        "title": "Remove recurring income",
+        "description": "Choose how you'd like to remove this recurring income.",
+        "placeholder": "Please choose how you would like to remove the recurring income"
+      },
+      "options": {
+        "forward": "Stop from {month} onward",
+        "all": "Delete the income completely",
+        "range": "Keep only a specific month range"
+      },
+      "descriptions": {
+        "forward": "All months with this income will be kept until {month} and then removed from the system",
+        "all": "The income will be removed completely, both historically and in the future"
+      },
+      "range": {
+        "start": "Start month to keep",
+        "end": "End month to keep",
+        "hint": "Months outside this range will be removed."
+      },
+      "errors": {
+        "beforeStart": "Start month can't be before the original start.",
+        "invalidRange": "End month must be after the start month."
+      },
+      "confirmButton": "Apply changes",
+      "successForward": "Recurring income trimmed successfully.",
+      "successRange": "Income was limited to the selected range.",
+      "successAll": "Income deleted successfully."
     }
   },
   "donations": {
@@ -654,6 +682,35 @@
       "empty": "No donations recorded",
       "removed": "Donation removed.",
       "helper": "Recurring donations are considered ongoing until paused or completed."
+    },
+    "delete": {
+      "dialog": {
+        "title": "Remove recurring donation",
+        "description": "Choose how you'd like to remove this recurring donation.",
+        "placeholder": "Please choose how you would like to remove the recurring donation"
+      },
+      "options": {
+        "forward": "Stop from {month} onward",
+        "all": "Delete the donation completely",
+        "range": "Keep only a specific month range"
+      },
+      "descriptions": {
+        "forward": "All months with this donation will be kept until {month} and then removed from the system",
+        "all": "The donation will be removed completely, both historically and in the future"
+      },
+      "range": {
+        "start": "Start month to keep",
+        "end": "End month to keep",
+        "hint": "Months outside this range will be removed."
+      },
+      "errors": {
+        "beforeStart": "Start month can't be before the original start.",
+        "invalidRange": "End month must be after the start month."
+      },
+      "confirmButton": "Apply changes",
+      "successForward": "Recurring donation trimmed successfully.",
+      "successRange": "Donation was limited to the selected range.",
+      "successAll": "Donation deleted successfully."
     }
   },
   "settings": {
@@ -680,7 +737,7 @@
       "title": "General Settings",
       "description": "Basic settings for the maaser system",
       "baseCurrency": "Base Currency",
-  "baseCurrencyPlaceholder": "Select base currency",
+      "baseCurrencyPlaceholder": "Select base currency",
       "baseCurrencyHelper": "All calculations will be in this currency",
       "currencyOptions": {
         "ILS": "Israeli Shekel (₪)",
@@ -713,7 +770,7 @@
       "title": "Language Settings",
       "description": "Choose your preferred interface language across all devices",
       "preferredLanguage": "Preferred Language",
-  "preferredLanguagePlaceholder": "Select language",
+      "preferredLanguagePlaceholder": "Select language",
       "preferredLanguageHelper": "The language displayed when you log in from any device",
       "hebrew": "Hebrew",
       "english": "English",
@@ -1056,8 +1113,8 @@
       "amount": "Donation amount",
       "type": "Donation type",
       "currency": "Currency",
-  "installmentsRemainingLabel": "How many payments are left?",
-  "installmentsRemainingNote": "{count} payments remaining",
+      "installmentsRemainingLabel": "How many payments are left?",
+      "installmentsRemainingNote": "{count} payments remaining",
       "helper": "Capture any commitments you already have so we can include them in the first dashboard snapshot.",
       "addButton": "Save donation",
       "listTitle": "Donations you'll start with",
@@ -1090,8 +1147,7 @@
     "minLength": "Must contain at least {min} characters",
     "positiveNumber": "Must be a positive number",
     "passwordMismatch": "Passwords don't match"
-  }
-  ,
+  },
   "terms": {
     "title": "Terms and Conditions",
     "updated": "Last updated: {date}",
@@ -1144,8 +1200,7 @@
     },
     "back": "Back",
     "cta": "Back to home"
-  }
-  ,
+  },
   "faq": {
     "title": "Frequently Asked Questions",
     "intro": "Quick answers to popular questions to help you get the most out of the system.",

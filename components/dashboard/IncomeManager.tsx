@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, ChevronLeft, ChevronRight, Coins, Edit2, Plus, Trash2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Coins, Edit2, Plus, Save, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -30,6 +30,28 @@ const MONTH_FORMAT = (date: Date, locale: string) =>
 
 type IncomeType = "oneTime" | "recurring";
 type RecurringEndType = "unlimited" | "limitedMonths" | "endDate";
+type DeleteScopeMode = "forward" | "all" | "range";
+
+interface ScopedDeletePayload {
+  mode: DeleteScopeMode;
+  cursorYear?: number;
+  cursorMonth?: number;
+  rangeStartYear?: number;
+  rangeStartMonth?: number;
+  rangeEndYear?: number;
+  rangeEndMonth?: number;
+}
+
+interface DeleteDialogState {
+  open: boolean;
+  target: VariableIncome | null;
+  mode: DeleteScopeMode;
+  rangeStartYear: number;
+  rangeStartMonth: number;
+  rangeEndYear: number;
+  rangeEndMonth: number;
+  error: string | null;
+}
 
 interface FormState {
   id?: string;
@@ -62,6 +84,8 @@ const getCurrentMonthYear = () => {
 };
 
 const toMonthStartISO = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}-01`;
+
+const toMonthIndex = (year: number, month: number) => year * 12 + (month - 1);
 
 const parseISOToMonthYear = (iso: string) => {
   const [yearPart, monthPart] = iso.split("-");
@@ -114,6 +138,19 @@ export function IncomeManager() {
     return { year: d.getFullYear(), month: d.getMonth() + 1 };
   });
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>(() => {
+    const { year, month } = getCurrentMonthYear();
+    return {
+      open: false,
+      target: null,
+      mode: "forward",
+      rangeStartYear: year,
+      rangeStartMonth: month,
+      rangeEndYear: year,
+      rangeEndMonth: month,
+      error: null,
+    };
+  });
 
   const monthLabel = useMemo(() => MONTH_FORMAT(new Date(cursor.year, cursor.month - 1, 1), locale), [cursor, locale]);
 
@@ -192,6 +229,15 @@ export function IncomeManager() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialog((prev) => ({
+      ...prev,
+      open: false,
+      target: null,
+      error: null,
+    }));
+  }, []);
 
   const openCreate = () => {
     setModalMode("create");
@@ -272,12 +318,41 @@ export function IncomeManager() {
         return newErrors;
       });
     }
-  };  const visible = useMemo(() => {
-    return items.filter((i) => {
-      const d = new Date(i.date);
-      return d.getFullYear() === cursor.year && d.getMonth() + 1 === cursor.month;
-    });
-  }, [items, cursor]);
+  };
+
+  const occursInMonth = useCallback((entry: VariableIncome, targetYear: number, targetMonth: number) => {
+    const startDate = new Date(entry.date);
+    const startYear = startDate.getFullYear();
+    const startMonth = startDate.getMonth() + 1;
+
+    const targetIndex = targetYear * 12 + (targetMonth - 1);
+    const startIndex = startYear * 12 + (startMonth - 1);
+
+    if (targetIndex < startIndex) {
+      return false;
+    }
+
+    switch (entry.schedule) {
+      case "oneTime":
+        return targetIndex === startIndex;
+      case "multiMonth": {
+        const total = entry.totalMonths ?? 0;
+        if (total <= 0) {
+          return targetIndex === startIndex;
+        }
+        const endIndex = startIndex + total - 1;
+        return targetIndex <= endIndex;
+      }
+      case "recurring":
+        return true;
+      default:
+        return false;
+    }
+  }, []);
+
+  const visible = useMemo(() => {
+    return items.filter((entry) => occursInMonth(entry, cursor.year, cursor.month));
+  }, [items, cursor, occursInMonth]);
 
   const totals = useMemo(() => {
     const sum = visible.reduce((acc, i) => acc + convertCurrency(i.amount, i.currency, baseCurrency), 0);
@@ -301,15 +376,40 @@ export function IncomeManager() {
     return { remaining, total };
   }, [cursor.year, cursor.month]);
 
-  const removeRow = async (id: string) => {
+  const removeRow = async (id: string, payload?: ScopedDeletePayload) => {
     try {
       setIsDeleting(true);
-      const res = await fetch(`/api/financial/incomes/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/financial/incomes/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: payload ? { "Content-Type": "application/json" } : undefined,
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
       if (!res.ok) {
         throw new Error((await res.json())?.error || tCommon("error"));
       }
-      setItems((prev) => prev.filter((x) => x.id !== id));
-      toast.success(t("table.removed"));
+      const data = await res.json();
+      if (data?.deletedId) {
+        setItems((prev) => prev.filter((x) => x.id !== data.deletedId));
+      }
+      if (data?.income) {
+        setItems((prev) => {
+          const others = prev.filter((x) => x.id !== data.income.id);
+          return [data.income as VariableIncome, ...others].sort((a, b) => b.date.localeCompare(a.date));
+        });
+      }
+
+      let successKey = "table.removed";
+      if (payload?.mode === "forward") {
+        successKey = "delete.successForward";
+      } else if (payload?.mode === "range") {
+        successKey = "delete.successRange";
+      } else if (payload?.mode === "all") {
+        successKey = "delete.successAll";
+      }
+
+      toast.success(t(successKey));
+      closeDeleteDialog();
       setModalOpen(false);
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("maaser:data-updated", { detail: { scope: "income" } }));
@@ -320,6 +420,96 @@ export function IncomeManager() {
       setIsDeleting(false);
     }
   };
+
+  const initiateDelete = useCallback(
+    (row: VariableIncome) => {
+      if (row.schedule === "recurring") {
+        const startDate = new Date(row.date);
+        const startYear = startDate.getFullYear();
+        const startMonth = startDate.getMonth() + 1;
+        const startIndex = toMonthIndex(startYear, startMonth);
+        const cursorIndex = toMonthIndex(cursor.year, cursor.month);
+        const endYear = cursorIndex < startIndex ? startYear : cursor.year;
+        const endMonth = cursorIndex < startIndex ? startMonth : cursor.month;
+
+        setDeleteDialog({
+          open: true,
+          target: row,
+          mode: "forward",
+          rangeStartYear: startYear,
+          rangeStartMonth: startMonth,
+          rangeEndYear: endYear,
+          rangeEndMonth: endMonth,
+          error: null,
+        });
+        return;
+      }
+
+      void removeRow(row.id, { mode: "all" });
+    },
+    [cursor.year, cursor.month, removeRow]
+  );
+
+  const handleDeleteModeChange = useCallback((mode: DeleteScopeMode) => {
+    setDeleteDialog((prev) => ({ ...prev, mode, error: null }));
+  }, []);
+
+  const handleDeleteRangeChange = useCallback(
+    (key: "rangeStartYear" | "rangeStartMonth" | "rangeEndYear" | "rangeEndMonth", value: number) => {
+      setDeleteDialog((prev) => ({ ...prev, [key]: value, error: null }));
+    },
+    []
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteDialog.target) {
+      return;
+    }
+
+    if (deleteDialog.mode === "range") {
+      const startIndex = toMonthIndex(deleteDialog.rangeStartYear, deleteDialog.rangeStartMonth);
+      const endIndex = toMonthIndex(deleteDialog.rangeEndYear, deleteDialog.rangeEndMonth);
+      const originDate = new Date(deleteDialog.target.date);
+      const originIndex = toMonthIndex(originDate.getFullYear(), originDate.getMonth() + 1);
+
+      if (startIndex < originIndex) {
+        setDeleteDialog((prev) => ({ ...prev, error: t("delete.errors.beforeStart") }));
+        return;
+      }
+
+      if (endIndex < startIndex) {
+        setDeleteDialog((prev) => ({ ...prev, error: t("delete.errors.invalidRange") }));
+        return;
+      }
+    }
+
+    const payload: ScopedDeletePayload =
+      deleteDialog.mode === "forward"
+        ? { mode: "forward", cursorYear: cursor.year, cursorMonth: cursor.month }
+        : deleteDialog.mode === "range"
+          ? {
+              mode: "range",
+              rangeStartYear: deleteDialog.rangeStartYear,
+              rangeStartMonth: deleteDialog.rangeStartMonth,
+              rangeEndYear: deleteDialog.rangeEndYear,
+              rangeEndMonth: deleteDialog.rangeEndMonth,
+            }
+          : { mode: "all" };
+
+    await removeRow(deleteDialog.target.id, payload);
+  }, [cursor.year, cursor.month, deleteDialog, removeRow, t]);
+
+  const handleModalDelete = useCallback(() => {
+    if (!form.id) {
+      return;
+    }
+    const target = items.find((x) => x.id === form.id);
+    if (!target) {
+      toast.error(tCommon("error"));
+      return;
+    }
+    initiateDelete(target);
+  }, [form.id, items, initiateDelete, tCommon]);
 
   const submit = useCallback(async () => {
     if (isSaving) {
@@ -438,21 +628,21 @@ export function IncomeManager() {
         const raw = (base.variableIncome ?? base.income ?? base.item ?? (data as unknown)) as unknown;
         const returned = typeof raw === "object" && raw !== null ? (raw as Partial<VariableIncome> & { id?: string }) : undefined;
 
-        if (modalMode === "edit" && form.id) {
+        if (returned && typeof returned.id === "string" && modalMode === "edit" && form.id) {
           setItems((prev) =>
             prev.map((it) =>
               it.id === form.id
                 ? {
-                  ...it,
-                  ...(returned && typeof returned === "object" ? returned : {}),
-                  description: trimmedDescription,
-                  amount: amountNumber,
-                  currency: form.currency,
-                  date: dateToUse,
-                  schedule,
-                  totalMonths: totalMonthsValue ?? undefined,
-                  note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined,
-                }
+                    ...it,
+                    ...(returned && typeof returned === "object" ? returned : {}),
+                    description: trimmedDescription,
+                    amount: amountNumber,
+                    currency: form.currency,
+                    date: dateToUse,
+                    schedule,
+                    totalMonths: totalMonthsValue ?? undefined,
+                    note: trimmedNote && trimmedNote.length > 0 ? trimmedNote : undefined,
+                  }
                 : it
             )
           );
@@ -533,7 +723,9 @@ export function IncomeManager() {
             <Calendar className="h-4 w-4" /> {monthLabel}
           </button>
         </div>
-        <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> {t("form.submit")}</Button>
+        <Button onClick={openCreate} className="gap-2">
+          <Plus className="h-4 w-4" /> {t("form.submit")}
+        </Button>
       </div>
 
       {monthPickerOpen ? (
@@ -541,19 +733,26 @@ export function IncomeManager() {
           <button aria-label="Dismiss" className="fixed inset-0 bg-black/20" onClick={() => setMonthPickerOpen(false)} />
           <div className="relative mt-2 w-[min(560px,96%)] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-xl">
             <div className="flex items-center justify-between px-3 py-2">
-              <Button variant="ghost" size="icon" onClick={decYear}><ChevronRight className="h-4 w-4 rtl:hidden" /><ChevronLeft className="h-4 w-4 ltr:hidden" /></Button>
+              <Button variant="ghost" size="icon" onClick={decYear}>
+                <ChevronRight className="h-4 w-4 rtl:hidden" />
+                <ChevronLeft className="h-4 w-4 ltr:hidden" />
+              </Button>
               <div className="text-sm font-semibold">{cursor.year}</div>
-              <Button variant="ghost" size="icon" onClick={incYear}><ChevronLeft className="h-4 w-4 rtl:hidden" /><ChevronRight className="h-4 w-4 ltr:hidden" /></Button>
+              <Button variant="ghost" size="icon" onClick={incYear}>
+                <ChevronLeft className="h-4 w-4 rtl:hidden" />
+                <ChevronRight className="h-4 w-4 ltr:hidden" />
+              </Button>
             </div>
             <div className="grid grid-cols-3 gap-3 p-3 sm:grid-cols-4" dir={locale === "he" ? "rtl" : "ltr"}>
               {gridMonths.map(({ label, idx }) => (
                 <button
                   key={idx}
                   onClick={() => selectMonth(idx)}
-                  className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${idx + 1 === cursor.month
+                  className={`rounded-full border px-4 py-2 text-sm sm:text-base transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                    idx + 1 === cursor.month
                       ? "border-primary text-primary bg-background"
                       : "border-border bg-background hover:bg-muted"
-                    }`}
+                  }`}
                 >
                   {label}
                 </button>
@@ -562,6 +761,7 @@ export function IncomeManager() {
           </div>
         </div>
       ) : null}
+
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("table.title")}</CardTitle>
@@ -580,12 +780,18 @@ export function IncomeManager() {
                   <th className="px-4 py-3 text-center">{t("table.columns.amount")}</th>
                   <th className="px-4 py-3 text-center">{t("table.columns.date")}</th>
                   <th className="px-4 py-3 text-center">{locale === "he" ? "סוג הכנסה" : t("table.columns.schedule")}</th>
-                  <th className="px-4 py-3 text-center"><span className="sr-only">{tCommon("actions")}</span></th>
+                  <th className="px-4 py-3 text-center">
+                    <span className="sr-only">{tCommon("actions")}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
                 {visible.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">{t("table.empty")}</td></tr>
+                  <tr>
+                    <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                      {t("table.empty")}
+                    </td>
+                  </tr>
                 ) : (
                   visible.map((row) => {
                     const converted = convertCurrency(row.amount, row.currency, baseCurrency);
@@ -599,10 +805,14 @@ export function IncomeManager() {
                         <td className="px-4 py-3 text-center">
                           {formatCurrency(row.amount, row.currency, locale)}
                           {row.currency !== baseCurrency ? (
-                            <span className="ml-1 text-xs text-muted-foreground">({formatCurrency(converted, baseCurrency, locale)})</span>
+                            <span className="ml-1 text-xs text-muted-foreground">
+                              ({formatCurrency(converted, baseCurrency, locale)})
+                            </span>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-center">{new Date(row.date).toLocaleDateString(locale === "he" ? "he-IL" : "en-US")}</td>
+                        <td className="px-4 py-3 text-center">
+                          {new Date(row.date).toLocaleDateString(locale === "he" ? "he-IL" : "en-US")}
+                        </td>
                         <td className="px-4 py-3 text-center">
                           {/* Avoid nested ternaries for clarity and lint compliance */}
                           {(() => {
@@ -616,8 +826,16 @@ export function IncomeManager() {
                             if (row.schedule === "multiMonth" && limitInfo) {
                               return (
                                 <div className="leading-tight">
-                                  <div>{locale === "he" ? `קבועה למשך ${limitInfo.total} חודשים` : `Recurring for ${limitInfo.total} months`}</div>
-                                  <div className="text-xs text-muted-foreground">{locale === "he" ? `${limitInfo.remaining} חודשים נותרו` : `${limitInfo.remaining} months remaining`}</div>
+                                  <div>
+                                    {locale === "he"
+                                      ? `קבועה למשך ${limitInfo.total} חודשים`
+                                      : `Recurring for ${limitInfo.total} months`}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {locale === "he"
+                                      ? `${limitInfo.remaining} חודשים נותרו`
+                                      : `${limitInfo.remaining} months remaining`}
+                                  </div>
                                 </div>
                               );
                             }
@@ -626,8 +844,17 @@ export function IncomeManager() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="inline-flex gap-1">
-                            <Button size="icon" variant="ghost" onClick={() => openEdit(row)}><Edit2 className="h-4 w-4" /></Button>
-                            <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeRow(row.id)}><Trash2 className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(row)}>
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => initiateDelete(row)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -640,12 +867,18 @@ export function IncomeManager() {
           {/* Mobile list */}
           <div className="md:hidden space-y-3">
             {visible.length === 0 ? (
-              <div className="rounded-lg border border-border/60 p-4 text-center text-muted-foreground">{t("table.empty")}</div>
+              <div className="rounded-lg border border-border/60 p-4 text-center text-muted-foreground">
+                {t("table.empty")}
+              </div>
             ) : (
               visible.map((row) => {
                 const converted = convertCurrency(row.amount, row.currency, baseCurrency);
                 return (
-                  <button key={row.id} onClick={() => openEdit(row)} className="w-full text-left rounded-lg border border-border/60 bg-background p-4">
+                  <button
+                    key={row.id}
+                    onClick={() => openEdit(row)}
+                    className="w-full text-left rounded-lg border border-border/60 bg-background p-4"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold">{row.description}</p>
@@ -655,7 +888,9 @@ export function IncomeManager() {
                         <p className="text-sm font-medium">
                           {formatCurrency(row.amount, row.currency, locale)}
                           {row.currency !== baseCurrency ? (
-                            <span className="ml-1 text-xs text-muted-foreground">({formatCurrency(converted, baseCurrency, locale)})</span>
+                            <span className="ml-1 text-xs text-muted-foreground">
+                              ({formatCurrency(converted, baseCurrency, locale)})
+                            </span>
                           ) : null}
                         </p>
                       </div>
@@ -828,7 +1063,9 @@ export function IncomeManager() {
                 <Accordion type="single" collapsible>
                   <AccordionItem value="note" className="border-none">
                     <AccordionTrigger className="py-2 hover:no-underline">
-                      <span className="text-sm text-muted-foreground">{locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}
+                      </span>
                     </AccordionTrigger>
                     <AccordionContent>
                       <Textarea
@@ -945,7 +1182,13 @@ export function IncomeManager() {
                       <Label htmlFor="end-month">{locale === "he" ? "תאריך סיום" : "End date"}</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <Select
-                          value={String(form.endMonth ?? (form.startMonth === 12 && (form.endYear ?? form.startYear) === form.startYear ? 1 : Math.min(Math.max((form.endMonth ?? 1), 1), 12)))}
+                          value={String(
+                            form.endMonth ??
+                              (form.startMonth === 12 &&
+                              (form.endYear ?? form.startYear) === form.startYear
+                                ? 1
+                                : Math.min(Math.max((form.endMonth ?? 1), 1), 12))
+                          )}
                           onValueChange={(value) => {
                             const v = Number(value);
                             // Guard: if endYear equals startYear, month must be > startMonth
@@ -979,7 +1222,10 @@ export function IncomeManager() {
                             const safeYear = Math.max(v, form.startYear);
                             onChange("endYear", safeYear);
                             // If same year and current endMonth is invalid, bump it to next valid month
-                            if (safeYear === form.startYear && (form.endMonth ?? 0) <= form.startMonth) {
+                            if (
+                              safeYear === form.startYear &&
+                              (form.endMonth ?? 0) <= form.startMonth
+                            ) {
                               const nextMonth = form.startMonth === 12 ? 1 : form.startMonth + 1;
                               onChange("endMonth", nextMonth);
                               if (form.startMonth === 12) {
@@ -1016,7 +1262,9 @@ export function IncomeManager() {
                 <Accordion type="single" collapsible>
                   <AccordionItem value="note" className="border-none">
                     <AccordionTrigger className="py-2 hover:no-underline">
-                      <span className="text-sm text-muted-foreground">{locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {locale === "he" ? "הוסף הערה (לא חובה)" : "Add note (optional)"}
+                      </span>
                     </AccordionTrigger>
                     <AccordionContent>
                       <Textarea
@@ -1031,88 +1279,229 @@ export function IncomeManager() {
                 </Accordion>
               </>
             )}
+
             <DialogFooter className="p-0">
-  <div
-    dir={locale === "he" ? "rtl" : "ltr"}
-    className="flex w-full items-stretch gap-2"
-  >
-    {modalMode === "edit" && form.id ? (
-      <div
-        className="
+              <div
+                dir={locale === "he" ? "rtl" : "ltr"}
+              >
+                {modalMode === "edit" && form.id ? (
+                  <div
+                    className="
           flex w-full gap-2
           flex-col sm:flex-row
           sm:ms-auto
         "
-      >
-        {/* שמירת שינויים – כמו כפתור 'תרומות' בסרגל (ברירת מחדל) */}
-        <Button
-          type="submit"
-          disabled={isSaving}
-          isLoading={isSaving}
-          loadingText={tCommon('saving') as string}
-          className="w-full sm:w-auto sm:min-w-[140px]"
-        >
-          {locale === 'he' ? 'שמירת שינויים' : 'Save Changes'}
-        </Button>
+                  >
+                    {/* שמירת שינויים – כמו כפתור 'תרומות' בסרגל (ברירת מחדל) */}
+                    <Button
+                      type="submit"
+                      disabled={isSaving}
+                      isLoading={isSaving}
+                      loadingText={tCommon('saving') as string}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === 'he' ? 'שמירת שינויים' : 'Save Changes'}
+                      <Save className="h-4 w-4 ms-2" />
+                    </Button>
 
-        {/* מחיקה – עדין (outline עם טקסט אדום) */}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => removeRow(form.id!)}
-          isLoading={isDeleting}
-          loadingText={tCommon('deleting') as string}
-          className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
-        >
-          <Trash2 className="h-4 w-4" />
-          {tCommon('delete')}
-        </Button>
+                    {/* מחיקה – עדין (outline עם טקסט אדום) */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleModalDelete}
+                      isLoading={isDeleting}
+                      loadingText={tCommon('deleting') as string}
+                      className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
+                    >
+                      {tCommon('delete')}
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
 
-        {/* ביטול */}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setModalOpen(false)}
-          className="w-full sm:w-auto sm:min-w-[140px]"
-        >
-          {locale === 'he' ? 'ביטול' : 'Cancel'}
-        </Button>
-      </div>
-    ) : (
-      <div
-        className="
+                    {/* ביטול */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setModalOpen(false)}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === 'he' ? 'ביטול' : 'Cancel'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="
           flex w-full gap-2
           flex-col sm:flex-row
           sm:ms-auto
         "
-      >
-        {/* שמירת הכנסה */}
-        <Button
-          type="submit"
-          disabled={isSaving}
-          isLoading={isSaving}
-          loadingText={tCommon('saving') as string}
-          className="w-full sm:w-auto sm:min-w-[140px]"
-        >
-          {locale === 'he' ? 'שמירת הכנסה' : 'Save Income'}
-        </Button>
+                  >
+                    {/* שמירת הכנסה */}
+                    <Button
+                      type="submit"
+                      disabled={isSaving}
+                      isLoading={isSaving}
+                      loadingText={tCommon('saving') as string}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === 'he' ? 'שמירת הכנסה' : 'Save Income'}
+                      <Save className="h-4 w-4 ms-2" />
+                    </Button>
 
-        {/* ביטול */}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setModalOpen(false)}
-          className="w-full sm:w-auto sm:min-w-[140px]"
-        >
-          {locale === 'he' ? 'ביטול' : 'Cancel'}
-        </Button>
-      </div>
-    )}
-  </div>
-</DialogFooter>
-
-
+                    {/* ביטול */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setModalOpen(false)}
+                      className="w-full sm:w-auto sm:min-w-[140px]"
+                    >
+                      {locale === 'he' ? 'ביטול' : 'Cancel'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDeleteDialog();
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-lg w-[min(520px,96vw)]"
+          dir={locale === "he" ? "rtl" : "ltr"}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-start">{t("delete.dialog.title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">{t("delete.dialog.description")}</p>
+            <Select value={deleteDialog.mode} onValueChange={(value) => handleDeleteModeChange(value as DeleteScopeMode)}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("delete.dialog.placeholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="forward">{t("delete.options.forward", { month: monthLabel })}</SelectItem>
+                <SelectItem value="all">{t("delete.options.all")}</SelectItem>
+                <SelectItem value="range">{t("delete.options.range")}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {deleteDialog.mode === "forward" && (
+              <p className="text-xs text-muted-foreground pt-2">
+                {t("delete.descriptions.forward", { month: monthLabel })}
+              </p>
+            )}
+
+            {deleteDialog.mode === "all" && (
+              <p className="text-xs text-muted-foreground pt-2">
+                {t("delete.descriptions.all")}
+              </p>
+            )}
+
+            {deleteDialog.mode === "range" ? (
+              <div className="space-y-3">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>{t("delete.range.start")}</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select
+                        value={String(deleteDialog.rangeStartMonth)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeStartMonth", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                          {gridMonths.map(({ idx, label }) => (
+                            <SelectItem key={idx} value={String(idx + 1)}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={String(deleteDialog.rangeStartYear)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeStartYear", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[320px]" dir={locale === "he" ? "rtl" : "ltr"}>
+                          {yearOptions.map((yr) => (
+                            <SelectItem key={yr} value={String(yr)}>
+                              {yr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t("delete.range.end")}</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select
+                        value={String(deleteDialog.rangeEndMonth)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeEndMonth", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={locale === "he" ? "rtl" : "ltr"}>
+                          {gridMonths.map(({ idx, label }) => (
+                            <SelectItem key={idx} value={String(idx + 1)}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={String(deleteDialog.rangeEndYear)}
+                        onValueChange={(value) => handleDeleteRangeChange("rangeEndYear", Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[320px]" dir={locale === "he" ? "rtl" : "ltr"}>
+                          {yearOptions.map((yr) => (
+                            <SelectItem key={yr} value={String(yr)}>
+                              {yr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">{t("delete.range.hint")}</p>
+              </div>
+            ) : null}
+
+            {deleteDialog.error ? (
+              <p className="text-sm text-red-500">{deleteDialog.error}</p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button type="button" variant="outline" onClick={closeDeleteDialog} disabled={isDeleting} className="w-full sm:w-auto sm:min-w-[140px]">
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleDeleteConfirm()}
+              disabled={isDeleting}
+              className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
+            >
+              {isDeleting ? tCommon("deleting") : t("delete.confirmButton")}
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

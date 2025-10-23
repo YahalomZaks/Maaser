@@ -3,7 +3,11 @@ import type { NextRequest } from "next/server";
 
 import { logDonationActivity } from "@/lib/activity-logger";
 import { auth } from "@/lib/auth";
-import { deleteDonationEntry, updateDonationEntry } from "@/lib/financial-data";
+import {
+  deleteDonationEntry,
+  updateDonationEntry,
+  type ScopedDeleteOptions,
+} from "@/lib/financial-data";
 
 export async function DELETE(
   request: NextRequest,
@@ -21,16 +25,45 @@ export async function DELETE(
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
-  await deleteDonationEntry(session.user.id, id);
-  await logDonationActivity(
-    session.user.id,
-    "DELETE",
-    id,
-    "Deleted donation entry",
-    request
-  );
+  let payload: ScopedDeleteOptions | undefined;
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    try {
+      payload = (await request.json()) as ScopedDeleteOptions;
+    } catch (error) {
+      console.warn("Failed to parse donation delete payload", error);
+    }
+  }
 
-  return NextResponse.json({ success: true });
+  try {
+    const result = await deleteDonationEntry(session.user.id, id, payload);
+
+    const mode = payload?.mode ?? "all";
+    const description =
+      mode === "forward"
+        ? "Trimmed recurring donation from current month onward"
+        : mode === "range"
+          ? "Trimmed recurring donation to selected range"
+          : "Deleted donation entry";
+
+    await logDonationActivity(
+      session.user.id,
+      "DELETE",
+      id,
+      description,
+      request
+    );
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Failed to delete donation entry", error);
+    const message =
+      error instanceof Error &&
+      (error.message.includes("INVALID") || error.message.includes("RANGE"))
+        ? "Invalid request"
+        : "Failed to delete donation";
+    const status = message === "Invalid request" ? 400 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
 }
 
 export async function PATCH(

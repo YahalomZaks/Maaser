@@ -772,19 +772,20 @@ export function NotificationsCenter({ initialNotifications, initialUnreadCount: 
                 </div>
               </div>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setSelectedNotification(null)}>
+                <Button variant="outline" onClick={() => setSelectedNotification(null)} className="w-full sm:w-auto sm:min-w-[140px]">
                   {tCommon("close")}
                 </Button>
                 <Button
-                  variant="destructive"
+                  type="button"
+              variant="outline"
+                  className="w-full sm:w-auto sm:min-w-[140px] text-red-600 border-red-300 hover:bg-red-50"
                   onClick={() => {
                     void handleDelete([selectedNotification.id]);
                     setSelectedNotification(null);
                   }}
-                  className="gap-2"
                 >
-                  <Trash2 className="h-4 w-4" />
                   {t("actions.delete")}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </DialogFooter>
             </>
