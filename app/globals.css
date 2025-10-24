@@ -44,6 +44,8 @@
 
 :root {
   --radius: 1rem;
+  /* Navbar height - Used for both mobile and desktop layouts.
+     Dialog components are adjusted to center within the visible area below the navbar. */
   --navbar-height: 80px;
   /* iOS safe area variable for bottom insets */
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);

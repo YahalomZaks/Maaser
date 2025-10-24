@@ -599,7 +599,7 @@ export async function deleteDonationEntry(
       data: {
         installmentsTotal: limitedMonths,
         installmentsPaid:
-          entry.installmentsPaid != null
+          (entry.installmentsPaid !== null && entry.installmentsPaid !== undefined)
             ? Math.min(entry.installmentsPaid, limitedMonths)
             : null,
         isActive,
@@ -646,7 +646,7 @@ export async function deleteDonationEntry(
         month: startMonth,
         installmentsTotal: totalSpan,
         installmentsPaid:
-          entry.installmentsPaid != null
+          (entry.installmentsPaid !== null && entry.installmentsPaid !== undefined)
             ? Math.min(entry.installmentsPaid, totalSpan)
             : null,
         isActive,

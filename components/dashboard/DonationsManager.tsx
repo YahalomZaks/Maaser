@@ -546,18 +546,20 @@ export function DonationsManager() {
       }
     }
 
-    const payload: ScopedDeletePayload =
-      deleteDialog.mode === "forward"
-        ? { mode: "forward", cursorYear: cursor.year, cursorMonth: cursor.month }
-        : deleteDialog.mode === "range"
-          ? {
-              mode: "range",
-              rangeStartYear: deleteDialog.rangeStartYear,
-              rangeStartMonth: deleteDialog.rangeStartMonth,
-              rangeEndYear: deleteDialog.rangeEndYear,
-              rangeEndMonth: deleteDialog.rangeEndMonth,
-            }
-          : { mode: "all" };
+    let payload: ScopedDeletePayload;
+    if (deleteDialog.mode === "forward") {
+      payload = { mode: "forward", cursorYear: cursor.year, cursorMonth: cursor.month };
+    } else if (deleteDialog.mode === "range") {
+      payload = {
+        mode: "range",
+        rangeStartYear: deleteDialog.rangeStartYear,
+        rangeStartMonth: deleteDialog.rangeStartMonth,
+        rangeEndYear: deleteDialog.rangeEndYear,
+        rangeEndMonth: deleteDialog.rangeEndMonth,
+      };
+    } else {
+      payload = { mode: "all" };
+    }
 
     await removeRow(deleteDialog.target.id, payload);
   }, [cursor.year, cursor.month, deleteDialog, removeRow, t]);
@@ -688,7 +690,7 @@ export function DonationsManager() {
       </div>
 
       {monthPickerOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pt-28 sm:pt-32 pb-6 overflow-y-auto" aria-modal="true" role="dialog">
+        <div className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pb-6 overflow-y-auto" style={{ paddingTop: 'calc(var(--navbar-height) + 1.5rem)' }} aria-modal="true" role="dialog">
           <button aria-label="Dismiss" className="fixed inset-0 bg-black/20" onClick={() => setMonthPickerOpen(false)} />
           <div className="relative mt-2 w-[min(560px,96%)] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-xl">
             <div className="flex items-center justify-between px-3 py-2">
@@ -726,7 +728,7 @@ export function DonationsManager() {
                     const converted = convertCurrency(row.amount, row.currency, baseCurrency);
                     const total = row.installmentsTotal ?? null;
                     const paid = row.installmentsPaid ?? 0;
-                    const remaining = total != null ? Math.max(total - paid, 0) : null;
+                    const remaining = (total !== null && total !== undefined) ? Math.max(total - paid, 0) : null;
                     return (
                       <tr key={row.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 cursor-pointer text-center" onClick={() => openEdit(row)}>
@@ -740,7 +742,7 @@ export function DonationsManager() {
                             if (row.type === "recurring") {
                               return <span className="inline-block text-muted-foreground">{locale === "he" ? "ללא הגבלה" : "Unlimited"}</span>;
                             }
-                            if (total != null) {
+                            if (total !== null && total !== undefined) {
                               return <span className="inline-block min-w-[2ch]">{remaining ?? total}</span>;
                             }
                             return <span className="inline-block">-</span>;

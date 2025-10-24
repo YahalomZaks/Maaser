@@ -497,7 +497,8 @@ export function DashboardOverview() {
             </button>
             {isMonthPickerOpen ? (
               <div
-                className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pt-28 sm:pt-32 pb-6 overflow-y-auto"
+                className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pb-6 overflow-y-auto"
+                style={{ paddingTop: 'calc(var(--navbar-height) + 1.5rem)' }}
                 aria-modal="true"
                 role="dialog"
               >
@@ -779,7 +780,7 @@ export function DashboardOverview() {
 
           {/* Year Picker */}
           {isYearPickerOpen ? (
-            <div className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pt-28 sm:pt-32 pb-6 overflow-y-auto" aria-modal="true" role="dialog">
+            <div className="fixed inset-0 z-[80] flex items-start justify-center px-4 sm:px-6 pb-6 overflow-y-auto" style={{ paddingTop: 'calc(var(--navbar-height) + 1.5rem)' }} aria-modal="true" role="dialog">
               <button aria-label="Dismiss" className="fixed inset-0 bg-black/20" onClick={() => setIsYearPickerOpen(false)} />
               <div className="relative mt-2 w-[min(560px,96%)] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-xl">
                 <div className="flex items-center justify-between px-3 py-2">

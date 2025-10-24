@@ -39,12 +39,14 @@ export async function DELETE(
     const result = await deleteVariableIncomeEntry(session.user.id, id, payload);
 
     const mode = payload?.mode ?? "all";
-    const description =
-      mode === "forward"
-        ? "Trimmed recurring income from current month onward"
-        : mode === "range"
-          ? "Trimmed recurring income to selected range"
-          : "Deleted income entry";
+    let description: string;
+    if (mode === "forward") {
+      description = "Trimmed recurring income from current month onward";
+    } else if (mode === "range") {
+      description = "Trimmed recurring income to selected range";
+    } else {
+      description = "Deleted income entry";
+    }
 
     await logIncomeActivity(
       session.user.id,

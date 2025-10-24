@@ -39,12 +39,14 @@ export async function DELETE(
     const result = await deleteDonationEntry(session.user.id, id, payload);
 
     const mode = payload?.mode ?? "all";
-    const description =
-      mode === "forward"
-        ? "Trimmed recurring donation from current month onward"
-        : mode === "range"
-          ? "Trimmed recurring donation to selected range"
-          : "Deleted donation entry";
+    let description: string;
+    if (mode === "forward") {
+      description = "Trimmed recurring donation from current month onward";
+    } else if (mode === "range") {
+      description = "Trimmed recurring donation to selected range";
+    } else {
+      description = "Deleted donation entry";
+    }
 
     await logDonationActivity(
       session.user.id,
