@@ -36,7 +36,11 @@ export async function DELETE(
   }
 
   try {
-    const result = await deleteVariableIncomeEntry(session.user.id, id, payload);
+    const result = await deleteVariableIncomeEntry(
+      session.user.id,
+      id,
+      payload
+    );
 
     const mode = payload?.mode ?? "all";
     let description: string;
@@ -115,7 +119,9 @@ export async function PATCH(
         amount: amountNumber,
         currency: currency === "USD" ? "USD" : "ILS",
         date:
-          typeof date === "string" ? date : new Date().toISOString().slice(0, 10),
+          typeof date === "string"
+            ? date
+            : new Date().toISOString().slice(0, 10),
         schedule:
           schedule === "recurring" || schedule === "multiMonth"
             ? schedule
@@ -123,7 +129,9 @@ export async function PATCH(
         totalMonths:
           schedule === "multiMonth" ? Number(totalMonths) || null : null,
         note:
-          typeof note === "string" && note.trim().length > 0 ? note.trim() : null,
+          typeof note === "string" && note.trim().length > 0
+            ? note.trim()
+            : null,
       },
       scopePayload
     );

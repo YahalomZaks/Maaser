@@ -115,7 +115,8 @@ export async function PATCH(
         organization: String(organization),
         amount: amountNumber,
         currency: currency === "USD" ? "USD" : "ILS",
-        type: type === "installments" || type === "oneTime" ? type : "recurring",
+        type:
+          type === "installments" || type === "oneTime" ? type : "recurring",
         startDate:
           typeof startDate === "string"
             ? startDate
@@ -125,7 +126,9 @@ export async function PATCH(
         installmentsPaid:
           type === "installments" ? Number(installmentsPaid) || null : null,
         note:
-          typeof note === "string" && note.trim().length > 0 ? note.trim() : null,
+          typeof note === "string" && note.trim().length > 0
+            ? note.trim()
+            : null,
       },
       scopePayload
     );

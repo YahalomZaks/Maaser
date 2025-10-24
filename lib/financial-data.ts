@@ -85,7 +85,8 @@ const addMonths = (year: number, month: number, delta: number) => {
   return fromMonthIndex(nextIndex);
 };
 
-const toUTCDate = (year: number, month: number) => new Date(Date.UTC(year, month - 1, 1));
+const toUTCDate = (year: number, month: number) =>
+  new Date(Date.UTC(year, month - 1, 1));
 
 function normalizeCurrency(
   value: CurrencyCode | CurrencyDb | null | undefined
@@ -253,10 +254,12 @@ export async function deleteVariableIncomeEntry(
       return { deletedId: id };
     }
 
-    const existingTotal = entry.schedule === "MULTI_MONTH" ? entry.totalMonths ?? 0 : null;
-    const limitedMonths = existingTotal && existingTotal > 0
-      ? Math.min(existingTotal, monthsToKeep)
-      : monthsToKeep;
+    const existingTotal =
+      entry.schedule === "MULTI_MONTH" ? entry.totalMonths ?? 0 : null;
+    const limitedMonths =
+      existingTotal && existingTotal > 0
+        ? Math.min(existingTotal, monthsToKeep)
+        : monthsToKeep;
 
     const nextSchedule = limitedMonths <= 1 ? "ONE_TIME" : "MULTI_MONTH";
     const updated = await prisma.variableIncome.update({
@@ -280,7 +283,10 @@ export async function deleteVariableIncomeEntry(
       throw new Error("INVALID_RANGE_PARAMS");
     }
 
-    const originalStartIndex = toMonthIndex(entry.date.getFullYear(), entry.date.getMonth() + 1);
+    const originalStartIndex = toMonthIndex(
+      entry.date.getFullYear(),
+      entry.date.getMonth() + 1
+    );
     const rangeStartIndex = toMonthIndex(startYear, startMonth);
     const rangeEndIndex = toMonthIndex(endYear, endMonth);
 
@@ -321,7 +327,9 @@ export async function updateVariableIncomeEntry(
   payload: UpsertVariableIncomePayload,
   options?: ScopedUpdateOptions
 ) {
-  const entry = await prisma.variableIncome.findFirst({ where: { id, userId } });
+  const entry = await prisma.variableIncome.findFirst({
+    where: { id, userId },
+  });
 
   if (!entry) {
     throw new Error("Income not found");
@@ -343,7 +351,9 @@ export async function updateVariableIncomeEntry(
       },
     });
 
-    const updated = await prisma.variableIncome.findFirst({ where: { id, userId } });
+    const updated = await prisma.variableIncome.findFirst({
+      where: { id, userId },
+    });
     if (!updated) {
       throw new Error("Income not found after update");
     }
@@ -382,7 +392,8 @@ export async function updateVariableIncomeEntry(
           where: { id },
           data: {
             schedule: limitedSchedule,
-            totalMonths: limitedSchedule === "MULTI_MONTH" ? monthsToKeep : null,
+            totalMonths:
+              limitedSchedule === "MULTI_MONTH" ? monthsToKeep : null,
           },
         });
       }
@@ -396,7 +407,10 @@ export async function updateVariableIncomeEntry(
           currency: payload.currency,
           date: futureDate,
           schedule: scheduleToDb[payload.schedule],
-          totalMonths: payload.schedule === "multiMonth" ? payload.totalMonths ?? null : null,
+          totalMonths:
+            payload.schedule === "multiMonth"
+              ? payload.totalMonths ?? null
+              : null,
           note: payload.note ?? null,
         },
       });
@@ -424,7 +438,11 @@ export async function updateVariableIncomeEntry(
 
     return prisma.$transaction(async (tx) => {
       const monthsBefore = singleIndex - startIndex;
-      const { year: nextYear, month: nextMonth } = addMonths(singleYear, singleMonth, 1);
+      const { year: nextYear, month: nextMonth } = addMonths(
+        singleYear,
+        singleMonth,
+        1
+      );
       const nextDate = toUTCDate(nextYear, nextMonth);
 
       if (monthsBefore === 0) {
@@ -435,12 +453,14 @@ export async function updateVariableIncomeEntry(
           },
         });
       } else {
-        const previousSchedule = monthsBefore === 1 ? "ONE_TIME" : "MULTI_MONTH";
+        const previousSchedule =
+          monthsBefore === 1 ? "ONE_TIME" : "MULTI_MONTH";
         await tx.variableIncome.update({
           where: { id },
           data: {
             schedule: previousSchedule,
-            totalMonths: previousSchedule === "MULTI_MONTH" ? monthsBefore : null,
+            totalMonths:
+              previousSchedule === "MULTI_MONTH" ? monthsBefore : null,
           },
         });
 
@@ -588,9 +608,10 @@ export async function deleteDonationEntry(
     }
 
     const existingTotal = entry.installmentsTotal ?? null;
-    const limitedMonths = existingTotal && existingTotal > 0
-      ? Math.min(existingTotal, monthsToKeep)
-      : monthsToKeep;
+    const limitedMonths =
+      existingTotal && existingTotal > 0
+        ? Math.min(existingTotal, monthsToKeep)
+        : monthsToKeep;
 
     const endIndex = startIndex + limitedMonths - 1;
     const isActive = endIndex >= nowIndex;
@@ -599,7 +620,8 @@ export async function deleteDonationEntry(
       data: {
         installmentsTotal: limitedMonths,
         installmentsPaid:
-          (entry.installmentsPaid !== null && entry.installmentsPaid !== undefined)
+          entry.installmentsPaid !== null &&
+          entry.installmentsPaid !== undefined
             ? Math.min(entry.installmentsPaid, limitedMonths)
             : null,
         isActive,
@@ -619,7 +641,10 @@ export async function deleteDonationEntry(
       throw new Error("INVALID_RANGE_PARAMS");
     }
 
-    const originalStartIndex = toMonthIndex(entry.startDate.getFullYear(), entry.startDate.getMonth() + 1);
+    const originalStartIndex = toMonthIndex(
+      entry.startDate.getFullYear(),
+      entry.startDate.getMonth() + 1
+    );
     const rangeStartIndex = toMonthIndex(startYear, startMonth);
     const rangeEndIndex = toMonthIndex(endYear, endMonth);
 
@@ -646,7 +671,8 @@ export async function deleteDonationEntry(
         month: startMonth,
         installmentsTotal: totalSpan,
         installmentsPaid:
-          (entry.installmentsPaid !== null && entry.installmentsPaid !== undefined)
+          entry.installmentsPaid !== null &&
+          entry.installmentsPaid !== undefined
             ? Math.min(entry.installmentsPaid, totalSpan)
             : null,
         isActive,
@@ -706,7 +732,8 @@ export async function updateDonationEntry(
   };
 
   const isUnlimitedRecurring =
-    entry.donationType === "RECURRING" && (!entry.installmentsTotal || entry.installmentsTotal <= 0);
+    entry.donationType === "RECURRING" &&
+    (!entry.installmentsTotal || entry.installmentsTotal <= 0);
 
   if (mode === "all" || !isUnlimitedRecurring) {
     return applyDirectUpdate();
@@ -761,9 +788,13 @@ export async function updateDonationEntry(
           month: cursorMonth,
           year: cursorYear,
           installmentsTotal:
-            payload.type === "installments" ? payload.installmentsTotal ?? null : null,
+            payload.type === "installments"
+              ? payload.installmentsTotal ?? null
+              : null,
           installmentsPaid:
-            payload.type === "installments" ? payload.installmentsPaid ?? null : null,
+            payload.type === "installments"
+              ? payload.installmentsPaid ?? null
+              : null,
           isActive: payload.type !== "oneTime",
           note: payload.note ?? null,
         },
@@ -786,7 +817,11 @@ export async function updateDonationEntry(
       throw new Error("SINGLE_BEFORE_START");
     }
 
-    const { year: nextYear, month: nextMonth } = addMonths(singleYear, singleMonth, 1);
+    const { year: nextYear, month: nextMonth } = addMonths(
+      singleYear,
+      singleMonth,
+      1
+    );
     const nextDate = toUTCDate(nextYear, nextMonth);
     const now = new Date();
     const nowIndex = toMonthIndex(now.getFullYear(), now.getMonth() + 1);
